@@ -22,5 +22,6 @@
     <string name="title_activity_moment">MomentActivity</string>
     <string name="logo">Reflect Logo</string>
     <string name="welcome_to_reflect">WELCOME TO REFLECT!</string>
+    <string name="or">OR</string>
 
 </resources>
