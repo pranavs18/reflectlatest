@@ -25,4 +25,5 @@ proguard/
 #Log Files
 *.log
 
+.metadata/
 *.DS_Store
