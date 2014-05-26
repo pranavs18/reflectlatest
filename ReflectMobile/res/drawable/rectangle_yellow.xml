@@ -3,6 +3,6 @@
     android:id="@+id/rectangle_green"
     android:shape="rectangle" >
 
-    <solid android:color="#eee599" />
+    <solid android:color="@color/yellow" />
 
 </shape>

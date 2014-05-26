@@ -15,12 +15,12 @@ public class LoginActivity extends BaseActivity {
 	}
 
 	public void onClickLogInFacebook(View button) {
-		Intent intent = new Intent(this, NetworkActivity.class);
+		Intent intent = new Intent(this, CommunitiesActivity.class);
 		startActivity(intent);
 	}
 
 	public void onClickLogInGoogle(View button) {
-		Intent intent = new Intent(this, NetworkActivity.class);
+		Intent intent = new Intent(this, CommunitiesActivity.class);
 		startActivity(intent);
 	}
 
