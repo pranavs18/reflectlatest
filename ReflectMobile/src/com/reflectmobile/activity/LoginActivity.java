@@ -14,8 +14,14 @@ public class LoginActivity extends BaseActivity {
 		setContentView(R.layout.activity_login);
 	}
 
-	public void onClickLogIn(View button) {
+	public void onClickLogInFacebook(View button) {
 		Intent intent = new Intent(this, NetworkActivity.class);
 		startActivity(intent);
 	}
+
+	public void onClickLogInGoogle(View button) {
+		Intent intent = new Intent(this, NetworkActivity.class);
+		startActivity(intent);
+	}
+
 }
