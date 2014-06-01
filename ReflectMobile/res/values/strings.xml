@@ -23,5 +23,8 @@
     <string name="logo">Reflect Logo</string>
     <string name="welcome_to_reflect">WELCOME TO REFLECT!</string>
     <string name="or">OR</string>
+    <string name="app_id">793031714062790</string>
+    <string name="error_internet_connection">Something wrong with your internet connection. Please check and retry.</string>
+    <string name="error_title">Error</string>
 
 </resources>
