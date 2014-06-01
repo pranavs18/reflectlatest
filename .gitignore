@@ -1,4 +1,4 @@
-lt application files
+#lt application files
 *.apk
 *.ap_
 
@@ -26,4 +26,5 @@ proguard/
 *.log
 
 .metadata/
+.classpath
 *.DS_Store

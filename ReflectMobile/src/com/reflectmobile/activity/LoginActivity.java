@@ -1,5 +1,6 @@
 package com.reflectmobile.activity;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.R.anim;
@@ -22,6 +23,8 @@ import com.facebook.SessionState;
 import com.facebook.Settings;
 import com.facebook.model.GraphUser;
 import com.reflectmobile.R;
+import com.reflectmobile.utility.NetworkManager.HttpPostTask;
+import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
 
 public class LoginActivity extends BaseActivity {
     private static final String URL_PREFIX_FRIENDS = "https://graph.facebook.com/me/friends?access_token=";
@@ -62,9 +65,13 @@ public class LoginActivity extends BaseActivity {
 //		Intent intent = new Intent(this, NetworkActivity.class);
 //		startActivity(intent);
 //	}
+	public void onClickLogInFacebook(View button) {
+		Intent intent = new Intent(this, CommunitiesActivity.class);
+		startActivity(intent);
+	}
 
 	public void onClickLogInGoogle(View button) {
-		Intent intent = new Intent(this, NetworkActivity.class);
+		Intent intent = new Intent(this, CommunitiesActivity.class);
 		startActivity(intent);
 	}
 
@@ -113,7 +120,7 @@ public class LoginActivity extends BaseActivity {
     private class SessionStatusCallback implements Session.StatusCallback {
         @Override
         public void call(final Session session, SessionState state, Exception exception) {
-            String accessToken = session.getAccessToken();
+            final String accessToken = session.getAccessToken();
             // error handle
             if(session.getState() == SessionState.CLOSED_LOGIN_FAILED){
 //            	Toast.makeText(LoginActivity.this, R.string.error_internet_connection, Toast.LENGTH_LONG).show();
@@ -138,7 +145,40 @@ public class LoginActivity extends BaseActivity {
 					public void onCompleted(GraphUser user, Response response) {
 						// TODO Auto-generated method stub
 						JSONObject userData = user.getInnerJSONObject();
-						Toast.makeText(LoginActivity.this, userData.toString(), Toast.LENGTH_LONG).show();
+						
+						//start interact with truefit backend
+		        		HttpTaskHandler httpPostTaskHandler = new HttpTaskHandler() {
+
+		        			@Override
+		        			public void taskSuccessful(String result) {
+		        				Log.d("POST", result);
+		        			}
+
+		        			@Override
+		        			public void taskFailed(String reason) {
+		        				Log.e("POST", "Error within POST request: " + reason);
+		        			}
+		        		};
+		        		
+		        		//create json object for truefit
+		        		//possible bugs
+		        		JSONObject truefitLoginData = new JSONObject();
+		        		JSONObject truefitUserData = new JSONObject();
+		        		try {
+		        			truefitUserData.put("uid", userData.get("id"));
+		        			truefitUserData.put("token", accessToken);
+		        			truefitUserData.put("expires_in", 6340);
+		        			truefitUserData.put("provider", "facebook");
+		        			
+		        			truefitLoginData.put("user_data", truefitUserData);
+						} catch (JSONException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+		        		String payload = truefitLoginData.toString();
+		        		new HttpPostTask(httpPostTaskHandler, payload)
+        				.execute("http://rewyndr.truefitdemo.com/api/authentication/login");
+						
 					}
 				});
             	Request.executeBatchAsync(request);

@@ -17,7 +17,7 @@
     <string name="name_community">COMMUNITY</string>
     <string name="name_moment">MOMENT</string>
     <string name="name_photo">PHOTO</string>
-    <string name="title_activity_network">NetworkActivity</string>
+    <string name="title_activity_network">My Communities</string>
     <string name="title_activity_community">CommunityActivity</string>
     <string name="title_activity_moment">MomentActivity</string>
     <string name="logo">Reflect Logo</string>
@@ -25,6 +25,9 @@
     <string name="or">OR</string>
     <string name="app_id">793031714062790</string>
     <string name="error_internet_connection">Something wrong with your internet connection. Please check and retry.</string>
-    <string name="error_title">Error</string>
+    <string name="error_title">Error</string>  
+    <color name="green">#2f7a6f</color>
+    <color name="yellow">#eee599</color>
+    <string name="action_add_community">Add Community</string>
 
 </resources>
