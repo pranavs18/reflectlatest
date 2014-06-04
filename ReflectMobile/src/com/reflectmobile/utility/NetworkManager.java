@@ -12,34 +12,30 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
-import java.util.concurrent.CountDownLatch;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.util.Log;
 
 public class NetworkManager {
-
+	
+	private static final String hostName = "http://rewyndr.truefitdemo.com";
+	
 	private static HashMap<String, String> cookie = new HashMap<String, String>();
-
-	public static Drawable LoadImageFromWebOperations(String url) {
-		try {
-			InputStream inputStream = (InputStream) new URL(url).getContent();
-			Drawable drawable = Drawable.createFromStream(inputStream, null);
-			return drawable;
-		} catch (Exception e) {
-			return null;
-		}
-	}
 
 	public static interface HttpTaskHandler {
 		void taskSuccessful(String result);
 
 		void taskFailed(String reason);
 	}
+	
+	public static interface HttpImageTaskHandler {
+		void taskSuccessful(Drawable drawable);
+
+		void taskFailed(String reason);
+	}
+	
+		
 
 	private static void setCookies(HttpURLConnection httpURLConnection) {
 		StringBuilder cookiesToSet = new StringBuilder();
@@ -94,6 +90,7 @@ public class NetworkManager {
 		}
 		return data.toString();
 	}
+	
 
 	public static class HttpGetTask extends AsyncTask<String, Void, String> {
 
@@ -203,6 +200,53 @@ public class NetworkManager {
 		@Override
 		protected void onPostExecute(String result) {
 			this.handler.taskSuccessful(result);
+		}
+	}
+	
+	public static class HttpGetImageTask extends AsyncTask<String, Void, Drawable> {
+
+		private HttpImageTaskHandler handler;
+
+		public HttpGetImageTask(HttpImageTaskHandler handler) {
+			this.handler = handler;
+		}
+
+		private String TAG = "HttpGetImageTask";
+
+		@Override
+		protected Drawable doInBackground(String... params) {
+			Drawable drawable = null;
+			HttpURLConnection httpUrlConnection = null;
+
+			try {
+				httpUrlConnection = (HttpURLConnection) new URL(hostName + params[0])
+						.openConnection();
+
+				setCookies(httpUrlConnection);
+
+				httpUrlConnection.connect();
+
+				InputStream in = new BufferedInputStream(
+						httpUrlConnection.getInputStream());
+
+				drawable = Drawable.createFromStream(in, null);
+
+				getCookies(httpUrlConnection);
+
+			} catch (MalformedURLException exception) {
+				this.handler.taskFailed("MalformedURLException");
+			} catch (IOException exception) {
+				this.handler.taskFailed("IOException");
+			} finally {
+				if (null != httpUrlConnection)
+					httpUrlConnection.disconnect();
+			}
+			return drawable;
+		}
+
+		@Override
+		protected void onPostExecute(Drawable drawable) {
+			this.handler.taskSuccessful(drawable);
 		}
 	}
 }

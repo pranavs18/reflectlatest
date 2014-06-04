@@ -25,9 +25,15 @@
     <string name="or">OR</string>
     <string name="app_id">793031714062790</string>
     <string name="error_internet_connection">Something wrong with your internet connection. Please check and retry.</string>
-    <string name="error_title">Error</string>  
+    <string name="error_title">Error</string>
+    <string name="action_add_community">Add Community</string>
+    <string name="community_image">Community image</string>
+
     <color name="green">#2f7a6f</color>
     <color name="yellow">#eee599</color>
-    <string name="action_add_community">Add Community</string>
+    <color name="black">#000000</color>
+    <color name="card_white">#ffffffff</color>
+    <color name="card_shadow">#8c666666</color>
+    <string name="community_menu">Community menu</string>
 
 </resources>

@@ -45,7 +45,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/yellow_margin"
-        android:background="@drawable/background_repeat" >
+        android:background="@drawable/bg" >
 
         <Button
             android:id="@+id/button_log_in_facebook"
@@ -55,7 +55,7 @@
             android:layout_marginTop="62dp"
             android:background="@drawable/rectangle_blue"
             android:drawableLeft="@drawable/fb"
-            android:onClick="onClickLogInGoogle"
+            android:onClick="onClickLogInFacebook"
             android:paddingLeft="25dp"
             android:text="@string/log_in_facebook"
             android:textSize="17sp" />
@@ -80,7 +80,7 @@
             android:layout_marginTop="50dp"
             android:background="@drawable/rectangle_red"
             android:drawableLeft="@drawable/google"
-            android:onClick="onClickLogInFacebook"
+            android:onClick="onClickLogInGoogle"
             android:paddingLeft="25dp"
             android:text="@string/log_in_google"
             android:textSize="17sp" />
