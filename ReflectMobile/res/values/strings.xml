@@ -30,6 +30,7 @@
     <string name="community_image">Community image</string>
 
     <color name="green">#2f7a6f</color>
+    <color name="white">#ffffff</color>
     <color name="yellow">#eee599</color>
     <color name="black">#000000</color>
     <color name="card_white">#ffffffff</color>

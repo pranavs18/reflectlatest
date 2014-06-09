@@ -6,7 +6,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.google.android.gms.internal.im;
 import com.reflectmobile.R;
 import com.reflectmobile.utility.NetworkManager.HttpGetImageTask;
 import com.reflectmobile.utility.NetworkManager.HttpImageTaskHandler;
