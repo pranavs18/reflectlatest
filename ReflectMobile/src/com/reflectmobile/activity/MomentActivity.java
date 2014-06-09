@@ -15,7 +15,7 @@ public class MomentActivity extends BaseActivity {
 	}
 	
 	public void onClickPhotoVideo(View image) {
-		Intent intent = new Intent(this, PhotoVideoActivity.class);
+		Intent intent = new Intent(this, PhotoActivity.class);
 		startActivity(intent);
 	}
 }

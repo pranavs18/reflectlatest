@@ -6,10 +6,12 @@ import org.json.JSONObject;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentSender.SendIntentException;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.View;
+import android.widget.Toast;
 
 import com.facebook.LoggingBehavior;
 import com.facebook.Request;
@@ -18,46 +20,37 @@ import com.facebook.Session;
 import com.facebook.SessionState;
 import com.facebook.Settings;
 import com.facebook.model.GraphUser;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
+import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
+import com.google.android.gms.plus.Plus;
+import com.google.android.gms.plus.model.people.Person;
 import com.reflectmobile.R;
 import com.reflectmobile.utility.NetworkManager.HttpGetTask;
 import com.reflectmobile.utility.NetworkManager.HttpPostTask;
 import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
 
-import android.content.IntentSender.SendIntentException;
-
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesClient.ConnectionCallbacks;
-import com.google.android.gms.common.GooglePlayServicesClient.OnConnectionFailedListener;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.plus.Plus;
-import com.google.android.gms.plus.model.people.Person;
-
-import android.widget.Toast;
-
-public class LoginActivity extends BaseActivity
-		implements
-		ConnectionCallbacks,
-		OnConnectionFailedListener,
-		com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks,
-		com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener {
+public class LoginActivity extends BaseActivity implements ConnectionCallbacks,
+		OnConnectionFailedListener {
 	private static final String URL_PREFIX_FRIENDS = "https://graph.facebook.com/me/friends?access_token=";
 	private static final String TAG = "LoginActivity";
 
+	private boolean signInClicked;
+
 	private Session.StatusCallback facebookSessionCallback = new SessionStatusCallback();
 
-	/* Google +API login specific variables */
-	private boolean mSignInClicked;
-	/* Request code used to invoke sign in user interactions. */
-	private static final int RC_SIGN_IN = 0;
+	// A flag indicating that a PendingIntent is in progress and prevents us
+	// from starting further intents.
+	private boolean mGoogleIntentInProgress;
 
-	/* Client used to interact with Google APIs. */
-	private GoogleApiClient mGoogleApiClient;
+	// Store the connection result from onConnectionFailed callbacks so that we
+	// can resolve them
+	private ConnectionResult mGoogleConnectionResult;
 
-	/*
-	 * A flag indicating that a PendingIntent is in progress and prevents us
-	 * from starting further intents.
-	 */
-	private boolean mIntentInProgress;
+	// Request code used to invoke sign in user interactions.
+	private static final int RC_SIGN_IN = 1001;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -95,49 +88,53 @@ public class LoginActivity extends BaseActivity
 				.addScope(Plus.SCOPE_PLUS_LOGIN).build();
 	}
 
-	public void onClickLogInFacebook(View button) {
-		Session session = Session.getActiveSession();
-		if (!session.isOpened() && !session.isClosed()) {
-			session.openForRead(new Session.OpenRequest(this)
-					.setCallback(facebookSessionCallback));
-		} else {
-			Session.openActiveSession(this, true, facebookSessionCallback);
-		}
-	}
-
-	public void onClickLogInGoogle(View button) {
+	@Override
+	protected void onStart() {
+		super.onStart();
+		// Add Facebook callback
+		Session.getActiveSession().addCallback(facebookSessionCallback);
+		// Connect to Google API
 		mGoogleApiClient.connect();
 	}
 
 	@Override
-	public void onStart() {
-		super.onStart();
-		Session.getActiveSession().addCallback(facebookSessionCallback);
-	}
-
-	@Override
-	public void onStop() {
+	protected void onStop() {
 		super.onStop();
 		Session.getActiveSession().removeCallback(facebookSessionCallback);
-		if (mGoogleApiClient.isConnected()) {
-			mGoogleApiClient.disconnect();
+	}
+
+	public void onClickLogInFacebook(View button) {
+		if (!signInClicked) {
+			signInClicked = true;
+			Session session = Session.getActiveSession();
+			if (!session.isOpened() && !session.isClosed()) {
+				session.openForRead(new Session.OpenRequest(this)
+						.setCallback(facebookSessionCallback));
+			} else {
+				Session.openActiveSession(this, true, facebookSessionCallback);
+			}
 		}
 	}
 
-	@Override
-	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		super.onActivityResult(requestCode, resultCode, data);
-		Session.getActiveSession().onActivityResult(this, requestCode,
-				resultCode, data);
-		if (requestCode == RC_SIGN_IN) {
-			if (resultCode != RESULT_OK) {
-				mSignInClicked = false;
-			}
+	public void onClickLogInGoogle(View button) {
+		if (!signInClicked && !mGoogleApiClient.isConnecting()) {
+			signInClicked = true;
+			googleSignIn();
+		}
+	}
 
-			mIntentInProgress = false;
-
-			if (!mGoogleApiClient.isConnecting()
-					&& resultCode != RESULT_CANCELED) {
+	// Method for signing in with google in both first attempt and retry
+	private void googleSignIn() {
+		if (mGoogleConnectionResult!=null && mGoogleConnectionResult.hasResolution()) {
+			try {
+				mGoogleIntentInProgress = true;
+				mGoogleConnectionResult.startResolutionForResult(this,
+						RC_SIGN_IN);
+			} catch (SendIntentException e) {
+				// The intent was canceled before it was sent. Return to the
+				// default state and attempt to connect to get an updated
+				// ConnectionResult.
+				mGoogleIntentInProgress = false;
 				mGoogleApiClient.connect();
 			}
 		}
@@ -148,13 +145,6 @@ public class LoginActivity extends BaseActivity
 		super.onSaveInstanceState(outState);
 		Session facebookSession = Session.getActiveSession();
 		Session.saveSession(facebookSession, outState);
-	}
-
-	private void onClickLogout() {
-		Session facebookSession = Session.getActiveSession();
-		if (!facebookSession.isClosed()) {
-			facebookSession.closeAndClearTokenInformation();
-		}
 	}
 
 	private class SessionStatusCallback implements Session.StatusCallback {
@@ -190,6 +180,9 @@ public class LoginActivity extends BaseActivity
 							@Override
 							public void onCompleted(GraphUser user,
 									Response response) {
+								
+								setSignInStatus(SIGNED_IN_FACEBOOK);
+								
 								JSONObject userData = user.getInnerJSONObject();
 
 								// start interact with truefit backend
@@ -237,17 +230,35 @@ public class LoginActivity extends BaseActivity
 
 	@Override
 	public void onConnectionFailed(ConnectionResult result) {
-		if (!mIntentInProgress && result.hasResolution()) {
-			try {
+		// Allow user to retry
+		signInClicked = false;
 
-				mIntentInProgress = true;
-				startIntentSenderForResult(result.getResolution()
-						.getIntentSender(), RC_SIGN_IN, null, 0, 0, 0);
-			} catch (SendIntentException e) {
-				// The intent was canceled before it was sent. Return to the
-				// default state and attempt to connect to get an updated
-				// ConnectionResult.
-				mIntentInProgress = false;
+		if (!result.hasResolution()) {
+			GooglePlayServicesUtil.getErrorDialog(result.getErrorCode(), this,
+					0).show();
+			return;
+		}
+
+		if (!mGoogleIntentInProgress) {
+			// Store the ConnectionResult for later usage
+			mGoogleConnectionResult = result;
+		}
+	}
+
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		Session.getActiveSession().onActivityResult(this, requestCode,
+				resultCode, data);
+		if (requestCode == RC_SIGN_IN) {
+			if (resultCode != RESULT_OK) {
+				signInClicked = false;
+			}
+
+			mGoogleIntentInProgress = false;
+
+			if (!mGoogleApiClient.isConnecting()
+					&& resultCode != RESULT_CANCELED) {
 				mGoogleApiClient.connect();
 			}
 		}
@@ -257,20 +268,20 @@ public class LoginActivity extends BaseActivity
 	public void onConnected(Bundle connectionHint) {
 		// We've resolved any connection errors. mGoogleApiClient can be used to
 		// access Google APIs on behalf of the user.
-		mSignInClicked = false;
+		signInClicked = false;
+		setSignInStatus(SIGNED_IN_GOOGLE);
 		Toast.makeText(this, "User is connected!", Toast.LENGTH_LONG).show();
-		
+
 		String userId = null;
-		
 		try {
 			if (Plus.PeopleApi.getCurrentPerson(mGoogleApiClient) != null) {
-                Person currentPerson = Plus.PeopleApi
-                        .getCurrentPerson(mGoogleApiClient);
-                userId = currentPerson.getId();
-            } else {
-                Toast.makeText(getApplicationContext(),
-                        "Person information is null", Toast.LENGTH_LONG).show();
-            }
+				Person currentPerson = Plus.PeopleApi
+						.getCurrentPerson(mGoogleApiClient);
+				userId = currentPerson.getId();
+			} else {
+				Toast.makeText(getApplicationContext(),
+						"Person information is null", Toast.LENGTH_LONG).show();
+			}
 		} catch (Exception e) {
 			Log.e(TAG, "Error getting Google profile information");
 		}
@@ -279,23 +290,26 @@ public class LoginActivity extends BaseActivity
 			@Override
 			public void taskSuccessful(String result) {
 				Log.d("GET", result);
-				Intent intent = new Intent(LoginActivity.this, CommunitiesActivity.class);
+				Intent intent = new Intent(LoginActivity.this,
+						CommunitiesActivity.class);
 				intent.putExtra("communities_data", result);
 				startActivity(intent);
 			}
+
 			@Override
 			public void taskFailed(String reason) {
 				Log.e(TAG, "Error within GET request: " + reason);
 			}
 		};
-		
+
 		final HttpTaskHandler loginReflectWebHandler = new HttpTaskHandler() {
 			@Override
 			public void taskSuccessful(String result) {
 				Log.d("POST", result);
 				new HttpGetTask(getCommunitiesHandler)
-					.execute("http://rewyndr.truefitdemo.com/api/communities");
+						.execute("http://rewyndr.truefitdemo.com/api/communities");
 			}
+
 			@Override
 			public void taskFailed(String reason) {
 				Log.e("POST", "Error within POST request: " + reason);
@@ -321,14 +335,8 @@ public class LoginActivity extends BaseActivity
 	}
 
 	@Override
-	public void onConnectionSuspended(int arg0) {
+	public void onConnectionSuspended(int cause) {
 		mGoogleApiClient.connect();
-	}
-
-	@Override
-	public void onDisconnected() {
-		// TODO Auto-generated method stub
-
 	}
 
 }
