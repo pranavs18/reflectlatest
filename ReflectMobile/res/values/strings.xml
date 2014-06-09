@@ -31,6 +31,8 @@
     <string name="open_drawer">Open navigation drawer</string>
     <string name="close_drawer">Close navigation drawer</string>
     <string name="community_menu">Community menu</string>
+    <string name="photo_preview">Photo preview</string>
+    <string name="action_add_photo">Add photo</string>
     
     <color name="green">#2f7a6f</color>
     <color name="yellow">#eee599</color>
@@ -40,5 +42,6 @@
     <color name="side_menu_bg">#f5f5f5</color>
     <color name="side_menu_divider">#cfcfcf</color>
     <color name="side_menu_text">#313131</color>
+    
 
 </resources>

@@ -51,9 +51,10 @@ public class LoginActivity extends BaseActivity implements ConnectionCallbacks,
 
 	// Request code used to invoke sign in user interactions.
 	private static final int RC_SIGN_IN = 1001;
-
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		hasNavigationDrawer = false;
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_login);
 

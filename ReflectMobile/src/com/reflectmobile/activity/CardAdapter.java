@@ -5,6 +5,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -104,6 +105,15 @@ public class CardAdapter extends BaseAdapter {
 				public void onClick(View v) {
 					int position = ((ViewHolder) v.getTag()).position;
 					Log.d(TAG, "Position is " + position);
+					try {
+						JSONObject communityData = mJSONArray.getJSONObject(position);
+						Intent intent = new Intent(mContext, CommunityActivity.class);
+						intent.putExtra("community_data", communityData.toString());
+						mContext.startActivity(intent);
+					} catch (JSONException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 			});
 			convertView.setTag(holder);
