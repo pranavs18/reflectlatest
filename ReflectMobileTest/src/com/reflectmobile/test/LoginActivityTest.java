@@ -3,10 +3,7 @@ package com.reflectmobile.test;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.json.JSONObject;
-
 import com.reflectmobile.activity.LoginActivity;
-import com.reflectmobile.utility.NetworkManager;
 import com.reflectmobile.utility.NetworkManager.HttpPostTask;
 import com.reflectmobile.utility.NetworkManager.HttpGetTask;
 import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
@@ -28,14 +25,21 @@ public class LoginActivityTest extends
 		super(LoginActivity.class);
 	}
 
-	@Override
+	/*@Override
 	protected void setUp() throws Exception {
 		super.setUp();
 		loginActivity = getActivity();
 		button = (Button) loginActivity
 				.findViewById(R.id.button_log_in_facebook);
-	}
+	}*/
 
+	@Override
+	protected void setUp() throws Exception {
+		super.setUp();
+		loginActivity = getActivity();
+		button = (Button) loginActivity
+				.findViewById(R.id.button_log_in_google);
+	}
 	public void testPreconditions() {
 		assertNotNull("Login Activity is null", loginActivity);
 		assertNotNull("Button is null", button);
@@ -63,7 +67,7 @@ public class LoginActivityTest extends
         			}
         		};
 
-        		String payload = "{\"user_data\":{\"uid\":\"100001908160407\",\"token\":\"CAAJVI83Cz98BANKUwdVQZCEjfB6fwBHsfCHCbBcKskM49aap8sQKZBehhdLTZAld8XRTBdd3ZBaEL6ixDixiAlj7tU4dUUBckMRkyKpPRqINh6Sd9s1XCZAlAZAwE1PfnzLdVKGNLiBjx8A0xVUGJczAZAKMxfZBxlDZCRbyAGy28gf80IqfHVMbIEZBnFTb1YkZBIHvZBBQe5tIRwZDZD\",\"expires_in\":5994,\"first_name\":\"Zakhar\",\"last_name\":\"Herych\",\"email\":\"zmolodchenko@gmail.com\",\"provider\":\"facebook\"},\"_utf8\":\"\u2603\"}";
+        		String payload = "{\"user_data\":{\"uid\":\"101913420909954842982\",\"token\":\"ya29.KgC0ZSfXun6IRyMAAABB6UwLVnz9IgYqbJzlxzfwC0Dt7dgN6YZsscNtcGjEyQjIY3y8DLUsvNmWURtu7Cw\",\"expires_in\":3600,\"first_name\":\"Pranav\",\"last_name\":\"Saxena\",\"email\":\"psbits@gmail.com\",\"provider\":\"google\"},\"_utf8\":\"\u2603\"}";
 
         		new HttpPostTask(httpPostTaskHandler, payload)
         				.execute("http://rewyndr.truefitdemo.com/api/authentication/login");            } 

@@ -42,7 +42,7 @@ public class NetworkManager {
 		for (String key : cookie.keySet()) {
 			cookiesToSet.append(key + "=" + cookie.get(key) + "; ");
 		}
-		Log.d("SentCookies", cookiesToSet.toString());
+		//Log.d("SentCookies", cookiesToSet.toString());
 		httpURLConnection.setRequestProperty("Cookie", cookiesToSet.toString());
 	}
 
@@ -51,7 +51,7 @@ public class NetworkManager {
 		for (int i = 1; (headerName = httpURLConnection.getHeaderFieldKey(i)) != null; i++) {
 			if (headerName.equals("Set-Cookie")) {
 				String cookies = httpURLConnection.getHeaderField(i);
-				Log.d("ReceivedCookies", cookies);
+				//Log.d("ReceivedCookies", cookies);
 				for (String keyValue : cookies.split(";")) {
 					String[] splittedKeyValue = keyValue.trim().split("=");
 					if (splittedKeyValue.length >= 2) {
@@ -110,6 +110,7 @@ public class NetworkManager {
 			try {
 				httpUrlConnection = (HttpURLConnection) new URL(params[0])
 						.openConnection();
+				httpUrlConnection.setUseCaches(true);
 
 				setCookies(httpUrlConnection);
 
@@ -211,8 +212,6 @@ public class NetworkManager {
 			this.handler = handler;
 		}
 
-		private String TAG = "HttpGetImageTask";
-
 		@Override
 		protected Drawable doInBackground(String... params) {
 			Drawable drawable = null;
@@ -221,6 +220,7 @@ public class NetworkManager {
 			try {
 				httpUrlConnection = (HttpURLConnection) new URL(hostName + params[0])
 						.openConnection();
+				httpUrlConnection.setUseCaches(true);
 
 				setCookies(httpUrlConnection);
 

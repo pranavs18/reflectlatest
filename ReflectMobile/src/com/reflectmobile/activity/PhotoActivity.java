@@ -1,12 +1,10 @@
 package com.reflectmobile.activity;
 
-import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
 
 import com.reflectmobile.R;
 
-public class PhotoVideoActivity extends BaseActivity {
+public class PhotoActivity extends BaseActivity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {

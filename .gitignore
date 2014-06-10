@@ -26,5 +26,7 @@ proguard/
 *.log
 
 .metadata/
-.classpath
 *.DS_Store
+
+# Facebook files
+facebook-android-sdk-3.14.1/
