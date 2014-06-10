@@ -56,13 +56,25 @@
             android:configChanges="orientation"
             android:label="@string/title_activity_community"
             android:parentActivityName="com.reflectmobile.activity.BaseActivity"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait"
+            android:theme="@style/CustomActionBarTheme" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.reflectmobile.activity.BaseActivity" />
         </activity>
         <activity
             android:name=".activity.MomentActivity"
+            android:configChanges="orientation"
+            android:label="@string/title_activity_moment"
+            android:parentActivityName="com.reflectmobile.activity.BaseActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/CustomActionBarTheme" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.reflectmobile.activity.BaseActivity" />
+        </activity>
+        <activity
+            android:name=".activity.PhotoActivity"
             android:configChanges="orientation"
             android:label="@string/title_activity_moment"
             android:parentActivityName="com.reflectmobile.activity.BaseActivity"

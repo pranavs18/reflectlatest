@@ -1,21 +1,12 @@
 package com.reflectmobile.activity;
 
-import android.content.Intent;
-import android.content.res.Configuration;
-import android.content.res.TypedArray;
 import android.graphics.Typeface;
 import android.os.Bundle;
-import android.support.v4.app.ActionBarDrawerToggle;
-import android.support.v4.widget.DrawerLayout;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.GridView;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import com.reflectmobile.R;
@@ -32,6 +23,9 @@ public class CommunitiesActivity extends BaseActivity {
 		int titleId = getResources().getIdentifier("action_bar_title", "id",
 				"android");
 		TextView title = (TextView) findViewById(titleId);
+		ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) title
+		        .getLayoutParams();
+		mlp.setMargins(5, 0, 0, 0);
 		title.setTextColor(getResources().getColor(R.color.yellow));
 		title.setTypeface(Typeface.createFromAsset(getAssets(),
 				"fonts/RobotoCondensed-Regular.ttf"));
@@ -59,11 +53,6 @@ public class CommunitiesActivity extends BaseActivity {
 		// default:
 		// return super.onOptionsItemSelected(item);
 		// }
-	}
-
-	public void onClickCommunity(View image) {
-		Intent intent = new Intent(this, CommunityActivity.class);
-		startActivity(intent);
 	}
 	
 }
