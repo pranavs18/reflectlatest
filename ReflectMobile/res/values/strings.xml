@@ -38,10 +38,11 @@
     <color name="yellow">#eee599</color>
     <color name="black">#000000</color>
     <color name="card_white">#ffffffff</color>
-    <color name="card_shadow">#8c666666</color>
+    <color name="card_shadow">#d7d7d7</color>
     <color name="side_menu_bg">#f5f5f5</color>
     <color name="side_menu_divider">#cfcfcf</color>
     <color name="side_menu_text">#313131</color>
+    <string name="moment_photo">Moment photo</string>
     
 
 </resources>
