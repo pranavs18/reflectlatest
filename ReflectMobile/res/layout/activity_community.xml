@@ -13,10 +13,19 @@
         tools:context="com.reflectmobile.activity.CommunityActivity"
         tools:ignore="MergeRootFrame" >
 
+        <com.reflectmobile.utility.HorizontalListView
+            android:id="@+id/horizontal_listview_year_list"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_alignParentBottom="true"
+            android:background="@color/card_white">
+        </com.reflectmobile.utility.HorizontalListView>
+
         <ListView
             android:id="@+id/listview_community_card_list"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_above="@+id/horizontal_listview_year_list"
             android:layout_alignParentLeft="true"
             android:layout_marginLeft="8dp"
             android:layout_marginRight="8dp"

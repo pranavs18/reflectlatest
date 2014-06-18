@@ -20,6 +20,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.ContextThemeWrapper;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,6 +34,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.ImageView.ScaleType;
 
+import com.google.android.gms.internal.bu;
 import com.google.android.gms.internal.ca;
 import com.reflectmobile.R;
 import com.reflectmobile.activity.CardAdapter.ViewHolder;
@@ -56,7 +58,7 @@ public class CommunityActivity extends BaseActivity {
 		super.onCreate(savedInstanceState);
 
 		String jsonString = getIntent().getStringExtra("community_data");
-		
+
 		// generate data object (community -> moment -> photo)
 		getCommunityInfo(jsonString);
 
@@ -66,6 +68,10 @@ public class CommunityActivity extends BaseActivity {
 				CommunityActivity.this);
 		cardListView.setAdapter(cardListViewAdapter);
 
+		// set year view
+		HorizontalListView yearListView = (HorizontalListView) findViewById(R.id.horizontal_listview_year_list);
+		YearHorizontalListViewAdapter yearHorizontalListViewAdapter = new YearHorizontalListViewAdapter(CommunityActivity.this);
+		yearListView.setAdapter(yearHorizontalListViewAdapter);
 	}
 
 	public void getCommunityInfo(String jsonString) {
@@ -92,7 +98,8 @@ public class CommunityActivity extends BaseActivity {
 				// create moment obj
 				int momentID = truefitMomentJSONObj.getInt("id");
 				String momentName = truefitMomentJSONObj.getString("name");
-				Moment moment = new Moment(momentID, momentName, truefitMomentJSONObj.toString());
+				Moment moment = new Moment(momentID, momentName,
+						truefitMomentJSONObj.toString());
 
 				// get date
 				String date = truefitMomentJSONObj.getString("date");
@@ -114,7 +121,8 @@ public class CommunityActivity extends BaseActivity {
 							.getString("image_medium_url");
 					String photoMediumURL = truefitPhotoJSONObj
 							.getString("image_medium_url");
-					Photo photo = new Photo(photoID, photoName, photoMediumURL, truefitPhotoJSONObj.toString());
+					Photo photo = new Photo(photoID, photoName, photoMediumURL,
+							truefitPhotoJSONObj.toString());
 					// add photo to moment
 					moment.addPhoto(photo);
 				}
@@ -201,14 +209,13 @@ public class CommunityActivity extends BaseActivity {
 
 			final CardViewHolder holder = (CardViewHolder) cardView.getTag();
 			// set moment name, when the name is too long, cut it
-			if (moment.getName().length() >= 20){
-				String shortcutName = moment.getName().substring(0, 12)+"...";
+			if (moment.getName().length() >= 20) {
+				String shortcutName = moment.getName().substring(0, 12) + "...";
 				holder.name.setText(shortcutName);
-			}
-			else{
+			} else {
 				holder.name.setText(moment.getName());
 			}
-			
+
 			// set moment date
 			holder.date.setText(moment.getDate());
 			// set moment photo total
@@ -318,13 +325,55 @@ public class CommunityActivity extends BaseActivity {
 		}
 	}
 
+	private class YearHorizontalListViewAdapter extends BaseAdapter {
+
+		private Context context;
+		private LayoutInflater inflater;
+
+		public YearHorizontalListViewAdapter(Context context) {
+			this.context = context;
+			this.inflater = (LayoutInflater) context
+					.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		}
+
+		@Override
+		public int getCount() {
+			// TODO Auto-generated method stub
+
+			return 5;
+		}
+
+		@Override
+		public Object getItem(int item) {
+			// TODO Auto-generated method stub
+			return item;
+		}
+
+		@Override
+		public long getItemId(int id) {
+			// TODO Auto-generated method stub
+			return id;
+		}
+
+		@Override
+		public View getView(int position, View view, ViewGroup parent) {
+			// TODO Auto-generated method stub
+			TextView textView = (TextView) view;
+			if (textView == null){
+				textView = (TextView) inflater.inflate(R.layout.textview_community_year, null);
+			}
+			Log.d(TAG, "TextView"+textView.getHeight());
+			return textView;
+		}
+
+	}
 
 	public Bitmap getCenterChoppedBitmap(Bitmap bitmap, int newHeightDP) {
 
 		Resources r = getResources();
-		float newHeightPX = TypedValue.applyDimension(
-				TypedValue.COMPLEX_UNIT_DIP, newHeightDP,
-				r.getDisplayMetrics());
+		float newHeightPX = TypedValue
+				.applyDimension(TypedValue.COMPLEX_UNIT_DIP, newHeightDP,
+						r.getDisplayMetrics());
 
 		int height = bitmap.getHeight();
 		int width = bitmap.getWidth();
@@ -338,27 +387,24 @@ public class CommunityActivity extends BaseActivity {
 		matrix.postScale(scaleHeight, scaleHeight);
 
 		// recreate the new Bitmap
-		Bitmap resizedBitmap = Bitmap.createBitmap(bitmap, 0, 0, width,
-				height, matrix, false);
+		Bitmap resizedBitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height,
+				matrix, false);
 
 		// center chop
 		Bitmap choppedBitmap = null;
 		if (resizedBitmap.getWidth() >= resizedBitmap.getHeight()) {
 
-			choppedBitmap = Bitmap.createBitmap(
-					resizedBitmap,
-					resizedBitmap.getWidth() / 2
-							- resizedBitmap.getHeight() / 2, 0,
-					resizedBitmap.getHeight(), resizedBitmap.getHeight());
+			choppedBitmap = Bitmap.createBitmap(resizedBitmap,
+					resizedBitmap.getWidth() / 2 - resizedBitmap.getHeight()
+							/ 2, 0, resizedBitmap.getHeight(),
+					resizedBitmap.getHeight());
 
 		} else {
 
-			choppedBitmap = Bitmap.createBitmap(
-					resizedBitmap,
-					0,
-					resizedBitmap.getHeight() / 2
-							- resizedBitmap.getWidth() / 2,
-					resizedBitmap.getWidth(), resizedBitmap.getWidth());
+			choppedBitmap = Bitmap.createBitmap(resizedBitmap, 0,
+					resizedBitmap.getHeight() / 2 - resizedBitmap.getWidth()
+							/ 2, resizedBitmap.getWidth(),
+					resizedBitmap.getWidth());
 		}
 		return choppedBitmap;
 	}

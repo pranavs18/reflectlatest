@@ -20,6 +20,9 @@
     <string name="title_activity_network">My Communities</string>
     <string name="title_activity_community">CommunityActivity</string>
     <string name="title_activity_moment">MomentActivity</string>
+    <string name="title_dialog_community_filter">Filter Connections</string>
+    <string name="dialog_cancel">Cancel</string>
+    <string name="dialog_apply">Apply</string>
     <string name="logo">Reflect Logo</string>
     <string name="welcome_to_reflect">WELCOME TO REFLECT!</string>
     <string name="or">OR</string>
