@@ -44,6 +44,15 @@
     <color name="side_menu_divider">#cfcfcf</color>
     <color name="side_menu_text">#313131</color>
     <string name="moment_photo">Moment photo</string>
+    <string name="action_add_moment">Add moment</string>
+    <string name="action_filter_moments">Filter moments</string>
+    <string name="add_photo">Add photo</string>
+    <string name="community_name">Community name</string>
+    <string name="moment_name">Moment name</string>
+    <string name="moment_date">Moment date</string>
+    <string name="number_of_photos">Number of photos</string>
+    <string name="people_icon">People icon</string>
+    <string name="people_names">People names</string>
     
 
 </resources>

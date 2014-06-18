@@ -28,13 +28,12 @@ import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListe
 import com.google.android.gms.plus.Plus;
 import com.google.android.gms.plus.model.people.Person;
 import com.reflectmobile.R;
-import com.reflectmobile.utility.NetworkManager.HttpGetTask;
 import com.reflectmobile.utility.NetworkManager.HttpPostTask;
 import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
 
 public class LoginActivity extends BaseActivity implements ConnectionCallbacks,
 		OnConnectionFailedListener {
-	private static final String URL_PREFIX_FRIENDS = "https://graph.facebook.com/me/friends?access_token=";
+	//private static final String URL_PREFIX_FRIENDS = "https://graph.facebook.com/me/friends?access_token=";
 	private static final String TAG = "LoginActivity";
 
 	private boolean signInClicked;
@@ -287,28 +286,13 @@ public class LoginActivity extends BaseActivity implements ConnectionCallbacks,
 			Log.e(TAG, "Error getting Google profile information");
 		}
 
-		final HttpTaskHandler getCommunitiesHandler = new HttpTaskHandler() {
-			@Override
-			public void taskSuccessful(String result) {
-				Log.d("GET", result);
-				Intent intent = new Intent(LoginActivity.this,
-						CommunitiesActivity.class);
-				intent.putExtra("communities_data", result);
-				startActivity(intent);
-			}
-
-			@Override
-			public void taskFailed(String reason) {
-				Log.e(TAG, "Error within GET request: " + reason);
-			}
-		};
-
 		final HttpTaskHandler loginReflectWebHandler = new HttpTaskHandler() {
 			@Override
 			public void taskSuccessful(String result) {
 				Log.d("POST", result);
-				new HttpGetTask(getCommunitiesHandler)
-						.execute("http://rewyndr.truefitdemo.com/api/communities");
+				Intent intent = new Intent(LoginActivity.this,
+						CommunitiesActivity.class);
+				startActivity(intent);
 			}
 
 			@Override

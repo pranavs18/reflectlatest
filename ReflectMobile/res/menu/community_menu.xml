@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item
+        android:id="@+id/action_add_moment"
+        android:icon="@drawable/action_bar_icon_plus"
+        android:showAsAction="always"
+        android:title="@string/action_add_moment"/>
+    <item
+        android:id="@+id/action_filter_moments"
+        android:icon="@drawable/filter"
+        android:showAsAction="always"
+        android:title="@string/action_filter_moments"/>
+    <item
+        android:id="@+id/action"
+        android:icon="@drawable/filter"
+        android:showAsAction="never"
+        android:title="@string/action_filter_moments"/>
+    
+
+</menu>

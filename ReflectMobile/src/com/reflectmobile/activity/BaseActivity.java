@@ -164,6 +164,7 @@ public abstract class BaseActivity extends Activity {
 		}
 		signInStatus = SIGNED_OUT;
 		Intent intent = new Intent(this, LoginActivity.class);
+		intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		startActivity(intent);
 	}
 }

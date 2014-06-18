@@ -1,19 +1,19 @@
 package com.reflectmobile.data;
 
-import android.graphics.Bitmap;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.util.Log;
 
 public class Photo {
+	private static String TAG = "Photo";
+
 	private int id;
-	private String name;
 	private String imageMediumURL;
-	private Bitmap choppedBitmap;
-	private String jsonString;
-	
-	public Photo(int id, String name, String imageMediumURL, String jsonString){
-		this.id = id;
-		this.name = name;
-		this.setImageMediumURL(imageMediumURL);
-		this.jsonString = jsonString;
+	private String imageMediumThumbURL;
+
+	public Photo(int id) {
+		this.setId(id);
 	}
 
 	public String getImageMediumURL() {
@@ -24,11 +24,41 @@ public class Photo {
 		this.imageMediumURL = imageMediumURL;
 	}
 
-	public Bitmap getChoppedBitmap() {
-		return choppedBitmap;
+	public String getImageMediumThumbURL() {
+		return imageMediumThumbURL;
 	}
 
-	public void setChoppedBitmap(Bitmap choppedBitmap) {
-		this.choppedBitmap = choppedBitmap;
+	public void setImageMediumThumbURL(String imageMediumThumbURL) {
+		this.imageMediumThumbURL = imageMediumThumbURL;
 	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public static Photo getPhotoInfo(String jsonString) {
+		try {
+			JSONObject photoJSONObject = new JSONObject(jsonString);
+			int photoID = photoJSONObject.getInt("id");
+
+			Photo photo = new Photo(photoID);
+			String photoImageMediumURL = photoJSONObject
+					.getString("image_medium_url");
+			photo.setImageMediumURL(photoImageMediumURL);
+			String photoImageMediumThumbURL = photoJSONObject
+					.getString("image_medium_thumb_url");
+			photo.setImageMediumThumbURL(photoImageMediumThumbURL);
+			
+			return photo;
+		} catch (JSONException e) {
+			Log.e(TAG, "Error parsing JSON");
+			e.printStackTrace();
+		}
+		return null;
+	}
+
 }
