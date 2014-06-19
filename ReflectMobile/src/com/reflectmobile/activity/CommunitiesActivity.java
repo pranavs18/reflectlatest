@@ -1,56 +1,80 @@
 package com.reflectmobile.activity;
 
-import java.util.ArrayList;
-
-import android.animation.AnimatorSet.Builder;
-import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.view.Gravity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.GridView;
-import android.widget.ListView;
-import android.widget.PopupWindow;
+import android.widget.ImageView;
+import android.widget.ImageView.ScaleType;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.reflectmobile.R;
-import com.reflectmobile.activity.CommunityActivity.CardViewHolder;
-import com.reflectmobile.utility.HorizontalListView;
+import com.reflectmobile.data.Community;
+import com.reflectmobile.utility.NetworkManager.HttpGetImageTask;
+import com.reflectmobile.utility.NetworkManager.HttpGetTask;
+import com.reflectmobile.utility.NetworkManager.HttpImageTaskHandler;
+import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
 
 public class CommunitiesActivity extends BaseActivity {
 
 	private String TAG = "CommunitiesActivity";
 
+	private Community[] communities;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		// It is important to set content view before calling super.onCreate
+		// because BaseActivity uses references to side menu
 		setContentView(R.layout.activity_communities);
 		super.onCreate(savedInstanceState);
 
+		// Modify action bar title
 		int titleId = getResources().getIdentifier("action_bar_title", "id",
 				"android");
 		TextView title = (TextView) findViewById(titleId);
-		ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) title
-				.getLayoutParams();
-		mlp.setMargins(5, 0, 0, 0);
 		title.setTextColor(getResources().getColor(R.color.yellow));
 		title.setTypeface(Typeface.createFromAsset(getAssets(),
 				"fonts/RobotoCondensed-Regular.ttf"));
 
-		String jsonString = getIntent().getStringExtra("communities_data");
-		GridView parentView = (GridView) findViewById(R.id.parentView);
-		parentView.setAdapter(new CardAdapter(this, jsonString));
+		// Set margin before title
+		ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) title
+				.getLayoutParams();
+		mlp.setMargins(5, 0, 0, 0);
+
+		// Retreive data from the web
+		final HttpTaskHandler getCommunitiesHandler = new HttpTaskHandler() {
+			@Override
+			public void taskSuccessful(String result) {
+				// Parse JSON to the list of communities
+				communities = Community.getCommunitiesInfo(result);
+				GridView parentView = (GridView) findViewById(R.id.parentView);
+				parentView.setAdapter(new CardAdapter(CommunitiesActivity.this));
+			}
+
+			@Override
+			public void taskFailed(String reason) {
+				Log.e(TAG, "Error within GET request: " + reason);
+			}
+		};
+
+		new HttpGetTask(getCommunitiesHandler)
+				.execute("http://rewyndr.truefitdemo.com/api/communities");
+
+	}
+
+	@Override
+	public void onBackPressed() {
+		signOut();
 	}
 
 	@Override
@@ -60,124 +84,100 @@ public class CommunitiesActivity extends BaseActivity {
 		inflater.inflate(R.menu.communities_menu, menu);
 		return super.onCreateOptionsMenu(menu);
 	}
+	
+	
+	// Specific adapter for Communities Activity
+	private class CardAdapter extends BaseAdapter {
 
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		// return super.onOptionsItemSelected(item);
-		// Handle action buttons
-		switch (item.getItemId()) {
-		case R.id.action_add_community:
-			// Initialze dialog window and set content
-			View dialogView = getLayoutInflater().inflate(
-					R.layout.dialog_community_filter, null);
-			ListView filterListView = (ListView) dialogView
-					.findViewById(R.id.listView_community_dialog_filter);
+		private LayoutInflater mInflater;
+		private Context mContext;
+		private Drawable[] mDrawables;
 
-			ArrayList<String> nameList = new ArrayList<String>();
-			nameList.add("123");
-			nameList.add("234");
-			nameList.add("234");
-			nameList.add("234");
-			nameList.add("234");
-			nameList.add("234");
-			nameList.add("234");
-			nameList.add("234");
-			nameList.add("234");
-			nameList.add("234");
-			nameList.add("234");
-			nameList.add("234");
-			FilterListViewAdapter adapter = new FilterListViewAdapter(
-					CommunitiesActivity.this, nameList);
-			
-			filterListView.setAdapter(adapter);
+		public CardAdapter(Context context) {
+			mDrawables = new Drawable[communities.length];
+			mContext = context;
+			mInflater = (LayoutInflater) mContext
+						.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+			for (int count = 0; count < communities.length; count++) {
+				final int index = count;
 
-			// Custom center title
-			TextView title = new TextView(this);
-			title.setText(R.string.title_dialog_community_filter);
-			title.setPadding(20, 20, 20, 20);
-			title.setGravity(Gravity.CENTER);
-			title.setTextSize(25);
+				// Load images asynchronously and notify about their loading
+				new HttpGetImageTask(new HttpImageTaskHandler() {
+					private int drawableIndex = index;
 
-			new AlertDialog.Builder(CommunitiesActivity.this)
-					.setView(dialogView)
-					.setPositiveButton("Apply",
-							new DialogInterface.OnClickListener() {
+					@Override
+					public void taskSuccessful(Drawable drawable) {
+						mDrawables[drawableIndex] = drawable;
+						notifyDataSetChanged();
+					}
 
-								@Override
-								public void onClick(DialogInterface dialog,
-										int which) {
-
-								}
-							})
-					.setNegativeButton("Cancel",
-							new DialogInterface.OnClickListener() {
-
-								@Override
-								public void onClick(DialogInterface dialog,
-										int which) {
-								}
-							}).setCustomTitle(title).setCancelable(false)
-					.show();
-			return true;
-		default:
-			return super.onOptionsItemSelected(item);
-		}
-	}
-
-	static class FilterItemHolder {
-		public TextView name;
-		public CheckBox checkBox;
-	}
-
-	private class FilterListViewAdapter extends BaseAdapter {
-		private ArrayList<String> nameList;
-		private LayoutInflater inflater;
-		private Context context;
-
-		public FilterListViewAdapter(Context context, ArrayList<String> nameList) {
-			this.nameList = nameList;
-			this.context = context;
-			this.inflater = (LayoutInflater) context
-					.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+					@Override
+					public void taskFailed(String reason) {
+						Log.e(TAG, "Error downloading the image");
+					}
+				}).execute(communities[count].getFirstPhoto());
+			}
 		}
 
 		@Override
 		public int getCount() {
-			// TODO Auto-generated method stub
-			return nameList.size();
+			return communities.length;
 		}
 
 		@Override
 		public Object getItem(int item) {
-			// TODO Auto-generated method stub
 			return item;
 		}
 
 		@Override
 		public long getItemId(int id) {
-			// TODO Auto-generated method stub
 			return id;
 		}
 
-		@Override
-		public View getView(int position, View view, ViewGroup parentView) {
-			// TODO Auto-generated method stub
-			if (view == null) {
-				view = inflater.inflate(
-						R.layout.item_community_filter_dialog_listview, null);
-				final FilterItemHolder holder = new FilterItemHolder();
-				holder.name = (TextView) view
-						.findViewById(R.id.textView_community_filter_listview_item_name);
-				holder.checkBox = (CheckBox) view
-						.findViewById(R.id.checkbox_community_filter_listview_item);
-				view.setTag(holder);
-			}
 
-			final FilterItemHolder holder = (FilterItemHolder) view.getTag();
-			holder.name.setText(nameList.get(position));
-			return view;
+		// Uses common Android ViewHolder pattern
+		private class CardViewHolder {
+			public View view;
+			public ImageView image;
+			public TextView text;
+			public int position;
 		}
 
+		@Override
+		public View getView(int position, View convertView, ViewGroup parentView) {
+			// If there is no view to recycle - create a new one
+			if (convertView == null) {
+				convertView = mInflater
+						.inflate(R.layout.card, parentView, false);
+				final CardViewHolder holder = new CardViewHolder();
+				holder.view = convertView;
+				holder.text = (TextView) convertView
+						.findViewById(R.id.card_text);
+				holder.image = (ImageView) convertView
+						.findViewById(R.id.card_image);
+				holder.image.setScaleType(ScaleType.CENTER_CROP);
+				holder.view.setOnClickListener(new View.OnClickListener() {
+					@Override
+					public void onClick(View v) {
+						int position = ((CardViewHolder) v.getTag()).position;
+						Intent intent = new Intent(mContext,
+								CommunityActivity.class);
+						intent.putExtra("community_id",
+								communities[position].getId());
+						mContext.startActivity(intent);
+					}
+				});
+				convertView.setTag(holder);
+			}
+			
+			final CardViewHolder holder = (CardViewHolder) convertView.getTag();
+			holder.position = position;
+			
+			holder.text.setText(communities[position].getName());
+			holder.image.setImageDrawable(mDrawables[position]);
+
+			return convertView;
+		}
 	}
 
 }

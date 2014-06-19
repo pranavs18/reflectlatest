@@ -1,32 +1,44 @@
 package com.reflectmobile.activity;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
 import android.widget.GridView;
+import android.widget.ImageView;
+import android.widget.ImageView.ScaleType;
 import android.widget.TextView;
 
 import com.reflectmobile.R;
+import com.reflectmobile.data.Moment;
+import com.reflectmobile.utility.NetworkManager.HttpGetImageTask;
 import com.reflectmobile.utility.NetworkManager.HttpGetTask;
-import com.reflectmobile.utility.NetworkManager.HttpPostTask;
+import com.reflectmobile.utility.NetworkManager.HttpImageTaskHandler;
 import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
 
 public class MomentActivity extends BaseActivity {
-	
+
 	private String TAG = "MomentActivity";
+
+	private Moment moment;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		// It is important to set content view before calling super.onCreate
+		// because BaseActivity uses references to side menu
 		setContentView(R.layout.activity_moment);
 		super.onCreate(savedInstanceState);
-		
+
+		// Modify action bar title
 		int titleId = getResources().getIdentifier("action_bar_title", "id",
 				"android");
 		TextView title = (TextView) findViewById(titleId);
@@ -34,19 +46,35 @@ public class MomentActivity extends BaseActivity {
 		title.setTypeface(Typeface.createFromAsset(getAssets(),
 				"fonts/RobotoCondensed-Regular.ttf"));
 
-		String jsonString = getIntent().getStringExtra("moment_data");
-		jsonString = "{ \"community_id\" : 27,\r\n  \"date\" : null,\r\n  \"first_photo\" : { \"created_at\" : \"2014-05-07T06:33:32.108Z\",\r\n      \"id\" : 36,\r\n      \"image_content_type\" : \"image/jpeg\",\r\n      \"image_file_name\" : \"Pizza1.jpg\",\r\n      \"image_file_size\" : 58125,\r\n      \"image_large_url\" : \"/system/photos/images/000/000/036/large/Pizza1.jpg?1399444411\",\r\n      \"image_medium_thumb_url\" : \"/system/photos/images/000/000/036/medium_thumb/Pizza1.jpg?1399444411\",\r\n      \"image_medium_url\" : \"/system/photos/images/000/000/036/medium/Pizza1.jpg?1399444411\",\r\n      \"image_thumb_url\" : \"/system/photos/images/000/000/036/thumb/Pizza1.jpg?1399444411\",\r\n      \"image_updated_at\" : \"2014-05-07T06:33:31.399Z\",\r\n      \"image_url\" : \"/system/photos/images/000/000/036/original/Pizza1.jpg?1399444411\",\r\n      \"moment_id\" : 34,\r\n      \"taken_at\" : \"2014-05-07T06:33:32.106Z\",\r\n      \"updated_at\" : \"2014-05-07T06:33:32.108Z\",\r\n      \"user_id\" : 18\r\n    },\r\n  \"id\" : 34,\r\n  \"name\" : \"Eduardo's Pizza Night\",\r\n  \"owner\" : { \"email\" : \"zmolodchenko@gmail.com\",\r\n      \"first_name\" : \"Zakhar\",\r\n      \"graduating_class\" : 2013,\r\n      \"id\" : 18,\r\n      \"last_name\" : \"Herych\"\r\n    },\r\n  \"photos\" : [ { \"id\" : 36,\r\n        \"image_content_type\" : \"image/jpeg\",\r\n        \"image_file_name\" : \"Pizza1.jpg\",\r\n        \"image_file_size\" : 58125,\r\n        \"image_large_url\" : \"/system/photos/images/000/000/036/large/Pizza1.jpg?1399444411\",\r\n        \"image_medium_thumb_url\" : \"/system/photos/images/000/000/036/medium_thumb/Pizza1.jpg?1399444411\",\r\n        \"image_medium_url\" : \"/system/photos/images/000/000/036/medium/Pizza1.jpg?1399444411\",\r\n        \"image_thumb_url\" : \"/system/photos/images/000/000/036/thumb/Pizza1.jpg?1399444411\",\r\n        \"image_updated_at\" : \"2014-05-07T06:33:31.399Z\",\r\n        \"image_url\" : \"/system/photos/images/000/000/036/original/Pizza1.jpg?1399444411\",\r\n        \"moment_id\" : 34,\r\n        \"taken_at\" : \"2014-05-07T06:33:32.106Z\",\r\n        \"user_id\" : 18\r\n      },\r\n      { \"id\" : 37,\r\n        \"image_content_type\" : \"image/jpeg\",\r\n        \"image_file_name\" : \"Pizza2.jpg\",\r\n        \"image_file_size\" : 72921,\r\n        \"image_large_url\" : \"/system/photos/images/000/000/037/large/Pizza2.jpg?1399444463\",\r\n        \"image_medium_thumb_url\" : \"/system/photos/images/000/000/037/medium_thumb/Pizza2.jpg?1399444463\",\r\n        \"image_medium_url\" : \"/system/photos/images/000/000/037/medium/Pizza2.jpg?1399444463\",\r\n        \"image_thumb_url\" : \"/system/photos/images/000/000/037/thumb/Pizza2.jpg?1399444463\",\r\n        \"image_updated_at\" : \"2014-05-07T06:34:23.196Z\",\r\n        \"image_url\" : \"/system/photos/images/000/000/037/original/Pizza2.jpg?1399444463\",\r\n        \"moment_id\" : 34,\r\n        \"taken_at\" : \"2014-05-07T06:34:24.076Z\",\r\n        \"user_id\" : 18\r\n      },\r\n      { \"id\" : 38,\r\n        \"image_content_type\" : \"image/jpeg\",\r\n        \"image_file_name\" : \"Pizza3.jpg\",\r\n        \"image_file_size\" : 69062,\r\n        \"image_large_url\" : \"/system/photos/images/000/000/038/large/Pizza3.jpg?1399444495\",\r\n        \"image_medium_thumb_url\" : \"/system/photos/images/000/000/038/medium_thumb/Pizza3.jpg?1399444495\",\r\n        \"image_medium_url\" : \"/system/photos/images/000/000/038/medium/Pizza3.jpg?1399444495\",\r\n        \"image_thumb_url\" : \"/system/photos/images/000/000/038/thumb/Pizza3.jpg?1399444495\",\r\n        \"image_updated_at\" : \"2014-05-07T06:34:55.857Z\",\r\n        \"image_url\" : \"/system/photos/images/000/000/038/original/Pizza3.jpg?1399444495\",\r\n        \"moment_id\" : 34,\r\n        \"taken_at\" : \"2014-05-07T06:34:56.707Z\",\r\n        \"user_id\" : 18\r\n      }\r\n    ]\r\n}";
-		try {
-			JSONObject data = new JSONObject(jsonString);
-			String momentTitle = data.getString("name");
-			title.setText(momentTitle);
-		} catch (JSONException e) {
-			Log.e(TAG, "Error parsing JSON");
-			e.printStackTrace();
-		}
-		GridView parentView = (GridView) findViewById(R.id.parentView);
-		parentView.setAdapter(new ImageAdapter(this, jsonString));
+		// Set margin before title
+		ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) title
+				.getLayoutParams();
+		mlp.setMargins(5, 0, 0, 0);
+
+		int momentId = getIntent().getIntExtra("moment_id", 0);
+
+		// Retreive data from the web
+		final HttpTaskHandler getMomentHandler = new HttpTaskHandler() {
+			@Override
+			public void taskSuccessful(String result) {
+				// Parse JSON to the list of communities
+				moment = Moment.getMomentInfo(result);
+				setTitle(moment.getName());
+				GridView parentView = (GridView) findViewById(R.id.parentView);
+				parentView.setAdapter(new ImageAdapter(MomentActivity.this));
+			}
+
+			@Override
+			public void taskFailed(String reason) {
+				Log.e(TAG, "Error within GET request: " + reason);
+			}
+		};
+
+		new HttpGetTask(getMomentHandler)
+				.execute("http://rewyndr.truefitdemo.com/api/moments/"
+						+ momentId);
 	}
+
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -66,6 +94,95 @@ public class MomentActivity extends BaseActivity {
 		// default:
 		// return super.onOptionsItemSelected(item);
 		// }
+	}
+
+	private class ImageAdapter extends BaseAdapter {
+
+		private String TAG = "Image";
+
+		private Context mContext;
+		private Drawable[] mDrawables;
+
+		public ImageAdapter(Context context) {
+
+			mContext = context;
+
+			mDrawables = new Drawable[moment.getNumOfPhotos()];
+			for (int count = 0; count < moment.getNumOfPhotos(); count++) {
+				final int index = count;
+
+				new HttpGetImageTask(new HttpImageTaskHandler() {
+					private int drawableIndex = index;
+
+					@Override
+					public void taskSuccessful(Drawable drawable) {
+						mDrawables[drawableIndex] = drawable;
+						notifyDataSetChanged();
+					}
+
+					@Override
+					public void taskFailed(String reason) {
+						Log.e(TAG, "Error downloading the image");
+					}
+				}).execute(moment.getPhoto(count).getImageMediumThumbURL());
+
+			}
+
+		}
+
+		@Override
+		public int getCount() {
+			return moment.getNumOfPhotos();
+		}
+
+		@Override
+		public Object getItem(int arg0) {
+			return null;
+		}
+
+		@Override
+		public long getItemId(int arg0) {
+			return 0;
+		}
+
+		private class ImageViewHolder {
+			public ImageView image;
+			public int position;
+		}
+
+		@Override
+		public View getView(int position, View convertView, ViewGroup parentView) {
+			// If there is no view to recycle - create a new one
+			if (convertView == null) {
+				LayoutInflater inflater = (LayoutInflater) mContext
+						.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+				convertView = inflater.inflate(R.layout.moment_photo,
+						parentView, false);
+				final ImageViewHolder holder = new ImageViewHolder();
+				holder.image = (ImageView) convertView.findViewById(R.id.photo);
+				holder.image.setScaleType(ScaleType.CENTER_CROP);
+				holder.image.setOnClickListener(new View.OnClickListener() {
+					@Override
+					public void onClick(View v) {
+						// TODO temp change to tag view to test
+						int position = ((ImageViewHolder) v.getTag()).position;
+						Intent intent = new Intent(mContext, TagActivity.class);
+						intent.putExtra("photo_id", moment.getPhoto(position).getId());
+						intent.putExtra("moment_id", moment.getId());
+						mContext.startActivity(intent);
+					}
+				});
+				convertView.setTag(holder);
+			}
+			
+			final ImageViewHolder holder = (ImageViewHolder) convertView
+					.getTag();
+			holder.image.setImageDrawable(mDrawables[position]);
+			holder.position = position;
+
+			return convertView;
+		}
+
 	}
 
 }

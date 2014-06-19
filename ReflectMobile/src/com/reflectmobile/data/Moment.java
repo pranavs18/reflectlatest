@@ -2,7 +2,15 @@ package com.reflectmobile.data;
 
 import java.util.ArrayList;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.util.Log;
+
 public class Moment {
+	private static String TAG = "Moment";
+
 	private int id;
 	private String name;
 	private String date;
@@ -10,10 +18,10 @@ public class Moment {
 	private String jsonString;
 
 	public Moment(int id, String name, String jsonString) {
-		this.id = id;
+		this.setId(id);
 		this.setName(name);
 		this.photoList = new ArrayList<Photo>();
-		this.jsonString = jsonString;
+		this.setJsonString(jsonString);
 	}
 
 	public ArrayList<Photo> getPhotoList() {
@@ -54,5 +62,43 @@ public class Moment {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public String getJsonString() {
+		return jsonString;
+	}
+
+	public void setJsonString(String jsonString) {
+		this.jsonString = jsonString;
+	}
+
+	public static Moment getMomentInfo(String jsonString) {
+		try {
+			JSONObject momentJSONObject = new JSONObject(jsonString);
+			int momentID = momentJSONObject.getInt("id");
+			String momentName = momentJSONObject.getString("name");
+			Moment moment = new Moment(momentID, momentName, jsonString);
+
+			JSONArray photoJSONArray = new JSONArray(
+					momentJSONObject.getString("photos"));
+			for (int j = 0; j <= photoJSONArray.length() - 1; j++) {
+				Photo photo = Photo.getPhotoInfo(photoJSONArray.getString(j));
+				moment.addPhoto(photo);
+			}
+			return moment;
+
+		} catch (JSONException e) {
+			Log.e(TAG, "Error parsing JSON");
+			e.printStackTrace();
+		}
+		return null;
 	}
 }
