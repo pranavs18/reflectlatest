@@ -8,9 +8,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.util.HashMap;
 
 import android.graphics.drawable.Drawable;
@@ -18,9 +20,9 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 public class NetworkManager {
-	
+
 	private static final String hostName = "http://rewyndr.truefitdemo.com";
-	
+
 	private static HashMap<String, String> cookie = new HashMap<String, String>();
 
 	public static interface HttpTaskHandler {
@@ -28,22 +30,28 @@ public class NetworkManager {
 
 		void taskFailed(String reason);
 	}
-	
+
 	public static interface HttpImageTaskHandler {
 		void taskSuccessful(Drawable drawable);
 
 		void taskFailed(String reason);
 	}
-	
-		
 
 	private static void setCookies(HttpURLConnection httpURLConnection) {
 		StringBuilder cookiesToSet = new StringBuilder();
 		for (String key : cookie.keySet()) {
 			cookiesToSet.append(key + "=" + cookie.get(key) + "; ");
 		}
-		//Log.d("SentCookies", cookiesToSet.toString());
+		Log.d("SentCookies", cookiesToSet.toString());
 		httpURLConnection.setRequestProperty("Cookie", cookiesToSet.toString());
+		if (cookie.containsKey("XSRF-TOKEN")) {
+			try {
+				httpURLConnection.setRequestProperty("X-XSRF-TOKEN",
+						URLDecoder.decode(cookie.get("XSRF-TOKEN"), "UTF-8"));
+			} catch (UnsupportedEncodingException e) {
+				Log.e("SetCookies", "Error with decoding XSRF token");
+			}
+		}
 	}
 
 	private static void getCookies(HttpURLConnection httpURLConnection) {
@@ -51,9 +59,9 @@ public class NetworkManager {
 		for (int i = 1; (headerName = httpURLConnection.getHeaderFieldKey(i)) != null; i++) {
 			if (headerName.equals("Set-Cookie")) {
 				String cookies = httpURLConnection.getHeaderField(i);
-				//Log.d("ReceivedCookies", cookies);
+				// Log.d("ReceivedCookies", cookies);
 				for (String keyValue : cookies.split(";")) {
-					String[] splittedKeyValue = keyValue.trim().split("=");
+					String[] splittedKeyValue = keyValue.trim().split("=", 2);
 					if (splittedKeyValue.length >= 2) {
 						String key = splittedKeyValue[0];
 						String value = splittedKeyValue[1];
@@ -90,7 +98,6 @@ public class NetworkManager {
 		}
 		return data.toString();
 	}
-	
 
 	public static class HttpGetTask extends AsyncTask<String, Void, String> {
 
@@ -203,8 +210,9 @@ public class NetworkManager {
 			this.handler.taskSuccessful(result);
 		}
 	}
-	
-	public static class HttpGetImageTask extends AsyncTask<String, Void, Drawable> {
+
+	public static class HttpGetImageTask extends
+			AsyncTask<String, Void, Drawable> {
 
 		private HttpImageTaskHandler handler;
 
@@ -218,8 +226,8 @@ public class NetworkManager {
 			HttpURLConnection httpUrlConnection = null;
 
 			try {
-				httpUrlConnection = (HttpURLConnection) new URL(hostName + params[0])
-						.openConnection();
+				httpUrlConnection = (HttpURLConnection) new URL(hostName
+						+ params[0]).openConnection();
 				httpUrlConnection.setUseCaches(true);
 
 				setCookies(httpUrlConnection);
