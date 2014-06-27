@@ -72,5 +72,6 @@
     <string name="new_community">New Community</string>
     <string name="new_moment">New Moment</string>
     <string name="background">Background</string>
-
+    <string name="title_photo_gallery">Select Photos</string>
+    <string name="done">DONE</string>
 </resources>

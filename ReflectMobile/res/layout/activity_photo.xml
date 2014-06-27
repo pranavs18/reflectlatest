@@ -1,8 +1,10 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@color/gray"
-    android:orientation="vertical" >
+    android:orientation="vertical"
+    tools:context=".activity.PhotoActivity" >
 
     <LinearLayout
         android:id="@+id/photo_description"
@@ -112,7 +114,7 @@
         android:layout_above="@id/tab_view"
         android:layout_below="@id/photo_description" >
 
-        <LinearLayout
+      <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical" >
@@ -126,6 +128,8 @@
                 android:paddingBottom="1dp"
                 android:paddingTop="1dp" >
             </android.support.v4.view.ViewPager>
+
+           
 
             <TextView
                 android:id="@+id/memories_caption"

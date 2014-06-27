@@ -1,18 +1,25 @@
 package com.reflectmobile.activity;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.support.v4.content.CursorLoader;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+
 import android.widget.ImageView;
 import android.widget.TextView;
+
 
 import com.reflectmobile.R;
 import com.reflectmobile.data.Memory;
@@ -22,12 +29,24 @@ import com.reflectmobile.utility.NetworkManager.HttpGetTask;
 import com.reflectmobile.utility.NetworkManager.HttpImageTaskHandler;
 import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
 
+
+import android.database.Cursor;
+import android.net.Uri;
+import android.provider.MediaStore;
+
+
 public class PhotoActivity extends BaseActivity {
 
 	private String TAG = "PhotoActivity";
 	private Moment moment;
 	private Memory[] mMemories;
 	private LayoutInflater mInflater;
+	
+	/* photo gallery variables */
+	private static final int SELECT_PICTURE = 1;
+
+	private String selectedImagePath;
+	private ImageView img;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +71,8 @@ public class PhotoActivity extends BaseActivity {
 		final int photoId = getIntent().getIntExtra("photo_id", 0);
 
 		mInflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+		img = (ImageView) findViewById(R.id.imageView1);
 
 		// Retreive data from the web
 		final HttpTaskHandler getMomentHandler = new HttpTaskHandler() {
@@ -87,11 +108,11 @@ public class PhotoActivity extends BaseActivity {
 					}
 				});
 				viewPager.setCurrentItem(index);
-				if (index==0){
-					// Special case for the first item (page is not changed)  
+				if (index == 0) {
+					// Special case for the first item (page is not changed)
 					loadMemories(0);
 				}
-				
+
 			}
 
 			@Override
@@ -103,6 +124,56 @@ public class PhotoActivity extends BaseActivity {
 		new HttpGetTask(getMomentHandler)
 				.execute("http://rewyndr.truefitdemo.com/api/moments/"
 						+ momentId);
+
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu items for use in the action bar
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.photo_menu, menu);
+		return super.onCreateOptionsMenu(menu);
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// Handle action buttons
+		switch (item.getItemId()) {
+		case R.id.action_add_photo:
+			/*
+			 * Intent intent = new Intent(); intent.setType("image/*");
+			 * intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+			 * intent.setAction(Intent.ACTION_GET_CONTENT);
+			 * startActivityForResult
+			 * (Intent.createChooser(intent,"Select Picture"), SELECT_PICTURE);
+			 */
+			Intent intent = new Intent(PhotoActivity.this, MultiPhotoSelectActivity.class);
+			startActivity(intent);
+			return true;
+		default:
+			return super.onOptionsItemSelected(item);
+		}
+	}
+
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (resultCode == RESULT_OK) {
+			if (requestCode == SELECT_PICTURE) {
+				Uri selectedImageUri = data.getData();
+				selectedImagePath = getPath(selectedImageUri);
+				System.out.println("Image Path : " + selectedImagePath);
+				img.setImageURI(selectedImageUri);
+			}
+		}
+	}
+
+	public String getPath(Uri uri) {
+		String[] projection = { MediaStore.Images.Media.DATA };
+		CursorLoader cursor = new CursorLoader(getApplication(), uri,
+				projection, null, null, null);
+		int column_index = ((Cursor) cursor)
+				.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+		((Cursor) cursor).moveToFirst();
+		return ((Cursor) cursor).getString(column_index);
 	}
 
 	public void loadMemories(int position) {
@@ -116,10 +187,9 @@ public class PhotoActivity extends BaseActivity {
 			public void taskSuccessful(String result) {
 				// Parse JSON to the list of memories
 				mMemories = Memory.getMemoriesInfo(result);
-				if (mMemories.length == 1){
+				if (mMemories.length == 1) {
 					memoryCaption.setText(mMemories.length + " MEMORY");
-				}
-				else {
+				} else {
 					memoryCaption.setText(mMemories.length + " MEMORIES");
 				}
 				for (int count = 0; count < mMemories.length; count++) {

@@ -20,7 +20,12 @@ import com.facebook.Session;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.plus.Plus;
 import com.reflectmobile.R;
+
 import com.reflectmobile.utility.NetworkManager;
+
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
+
 
 public abstract class BaseActivity extends Activity {
 
@@ -38,10 +43,14 @@ public abstract class BaseActivity extends Activity {
 	protected boolean hasNavigationDrawer = true;
 
 	private ActionBarDrawerToggle drawerToggle;
+	
+	protected static ImageLoader imageLoader = ImageLoader.getInstance();
+  
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		ImageLoaderConfiguration.createDefault(this);
 		if (hasNavigationDrawer) {
 			ListView sideMenuView = (ListView) findViewById(R.id.left_drawer);
 			String[] menuItemTitles = getResources().getStringArray(
