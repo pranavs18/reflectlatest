@@ -70,5 +70,7 @@
     <string name="cancel">CANCEL</string>
     <string name="save">SAVE</string>
     <string name="new_community">New Community</string>
+    <string name="new_moment">New Moment</string>
+    <string name="background">Background</string>
 
 </resources>

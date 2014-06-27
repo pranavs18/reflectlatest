@@ -1,19 +1,29 @@
 package com.reflectmobile.activity;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.app.DialogFragment;
+import android.app.FragmentManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.ListView;
@@ -25,12 +35,14 @@ import com.reflectmobile.data.Moment;
 import com.reflectmobile.utility.NetworkManager.HttpGetImageTask;
 import com.reflectmobile.utility.NetworkManager.HttpGetTask;
 import com.reflectmobile.utility.NetworkManager.HttpImageTaskHandler;
+import com.reflectmobile.utility.NetworkManager.HttpPostTask;
 import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
 
 public class CommunityActivity extends BaseActivity {
 
-	private String TAG = "CommunityActivity";
-	Community community;
+	private static String TAG = "CommunityActivity";
+	private Community community;
+	private static int communityId;	
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -52,7 +64,7 @@ public class CommunityActivity extends BaseActivity {
 				.getLayoutParams();
 		mlp.setMargins(5, 0, 0, 0);
 
-		int communityId = getIntent().getIntExtra("community_id", 0);
+		communityId = getIntent().getIntExtra("community_id", 0);
 
 		// Retreive data from the web
 		final HttpTaskHandler getCommunityHandler = new HttpTaskHandler() {
@@ -79,7 +91,6 @@ public class CommunityActivity extends BaseActivity {
 						+ communityId);
 
 	}
-	
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -87,6 +98,128 @@ public class CommunityActivity extends BaseActivity {
 		MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.community_menu, menu);
 		return super.onCreateOptionsMenu(menu);
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// Handle action buttons
+		switch (item.getItemId()) {
+		case R.id.action_add_moment:
+			createMoment();
+			return true;
+		default:
+			return super.onOptionsItemSelected(item);
+		}
+	}
+
+	public static class AddMomentDialog extends DialogFragment {
+
+		private boolean nameSet = false;
+
+		private String name;
+
+		private Button saveButton;
+
+		public AddMomentDialog() {
+
+		}
+
+		@Override
+		public View onCreateView(LayoutInflater inflater, ViewGroup container,
+				Bundle savedInstanceState) {
+			getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
+
+			final View view = inflater.inflate(R.layout.add_moment, container);
+			Button cancelButton = (Button) view.findViewById(R.id.cancel);
+			saveButton = (Button) view.findViewById(R.id.save);
+			saveButton.setOnClickListener(new OnClickListener() {
+
+				@Override
+				public void onClick(View v) {
+					saveButton.setEnabled(false);
+					HttpTaskHandler httpPostTaskHandler = new HttpTaskHandler() {
+						@Override
+						public void taskSuccessful(String result) {
+							Log.d("POST", result);
+							dismiss();
+							getActivity().finish();
+							startActivity(getActivity().getIntent());
+						}
+
+						@Override
+						public void taskFailed(String reason) {
+							Log.e("POST", "Error within POST request: "
+									+ reason);
+						}
+					};
+					JSONObject momentData = new JSONObject();
+					try {
+						momentData.put("community_id", communityId);
+						momentData.put("name", name);
+					} catch (JSONException e) {
+						Log.e(TAG, "Error forming JSON");
+					}
+					String payload = momentData.toString();
+					new HttpPostTask(httpPostTaskHandler, payload)
+							.execute("http://rewyndr.truefitdemo.com/api/communities/"
+									+ communityId + "/moments");
+				}
+			});
+			EditText momentName = (EditText) view
+					.findViewById(R.id.moment_name);
+
+			momentName.addTextChangedListener(new TextWatcher() {
+				@Override
+				public void onTextChanged(CharSequence s, int start,
+						int before, int count) {
+					nameSet = count > 0;
+					modifySaveButton();
+					if (nameSet) {
+						name = s.toString();
+					}
+				}
+
+				@Override
+				public void beforeTextChanged(CharSequence s, int start,
+						int count, int after) {
+				}
+
+				@Override
+				public void afterTextChanged(Editable s) {
+				}
+			});
+
+			cancelButton.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					dismiss();
+				}
+			});
+
+			return view;
+		}
+
+		private void modifySaveButton() {
+			if (nameSet) {
+				saveButton.setTextColor(getResources().getColor(R.color.green));
+				saveButton.setCompoundDrawablesWithIntrinsicBounds(
+						R.drawable.tick_active, 0, 0, 0);
+				saveButton.setEnabled(true);
+			} else {
+				saveButton.setTextColor(getResources().getColor(
+						R.color.dark_gray));
+				saveButton.setCompoundDrawablesWithIntrinsicBounds(
+						R.drawable.tick_disabled, 0, 0, 0);
+				saveButton.setEnabled(false);
+			}
+		}
+
+	}
+
+	public void createMoment() {
+		FragmentManager fm = getFragmentManager();
+		AddMomentDialog addMomentDialog = new AddMomentDialog();
+		addMomentDialog.show(fm, "fragment_add_moment");
 	}
 
 	// Specific adapter for Community Activity
@@ -217,7 +350,7 @@ public class CommunityActivity extends BaseActivity {
 					holder.photos[count].setImageDrawable(mDrawables[3
 							* position + count]);
 					holder.photos[count].setScaleType(ScaleType.CENTER_CROP);
-					
+
 					holder.photos[count]
 							.setOnClickListener(new OnClickListener() {
 								@Override

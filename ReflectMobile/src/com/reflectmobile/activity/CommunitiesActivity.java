@@ -145,6 +145,7 @@ public class CommunitiesActivity extends BaseActivity {
 
 				@Override
 				public void onClick(View v) {
+					saveButton.setEnabled(false);
 					HttpTaskHandler httpPostTaskHandler = new HttpTaskHandler() {
 						@Override
 						public void taskSuccessful(String result) {
@@ -246,28 +247,29 @@ public class CommunitiesActivity extends BaseActivity {
 					for (int count = 0; count < mNetworks.length; count++) {
 						choices[count + 1] = mNetworks[count].getName();
 					}
+					if (getActivity() != null) {
+						final ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<String>(
+								getActivity(), R.layout.spinner, choices);
+						spinnerArrayAdapter
+								.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+						spinner.setAdapter(spinnerArrayAdapter);
 
-					final ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<String>(
-							getActivity(), R.layout.spinner, choices);
-					spinnerArrayAdapter
-							.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-					spinner.setAdapter(spinnerArrayAdapter);
+						spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
 
-					spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
-
-						public void onItemSelected(AdapterView<?> parent,
-								View view, int pos, long id) {
-							networkChosen = pos > 0;
-							modifySaveButton();
-							if (networkChosen) {
-								networkId = mNetworks[pos - 1].getId();
+							public void onItemSelected(AdapterView<?> parent,
+									View view, int pos, long id) {
+								networkChosen = pos > 0;
+								modifySaveButton();
+								if (networkChosen) {
+									networkId = mNetworks[pos - 1].getId();
+								}
 							}
-						}
 
-						public void onNothingSelected(AdapterView<?> parent) {
+							public void onNothingSelected(AdapterView<?> parent) {
 
-						}
-					});
+							}
+						});
+					}
 
 				}
 
@@ -301,7 +303,7 @@ public class CommunitiesActivity extends BaseActivity {
 	public void createCommunity() {
 		FragmentManager fm = getFragmentManager();
 		AddCommunityDialog addCommunityDialog = new AddCommunityDialog();
-		addCommunityDialog.show(fm, "fragment_edit_name");
+		addCommunityDialog.show(fm, "fragment_add_community");
 	}
 
 	// Specific adapter for Communities Activity

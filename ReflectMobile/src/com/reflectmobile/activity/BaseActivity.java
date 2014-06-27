@@ -20,6 +20,7 @@ import com.facebook.Session;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.plus.Plus;
 import com.reflectmobile.R;
+import com.reflectmobile.utility.NetworkManager;
 
 public abstract class BaseActivity extends Activity {
 
@@ -163,6 +164,7 @@ public abstract class BaseActivity extends Activity {
 			break;
 		}
 		signInStatus = SIGNED_OUT;
+		NetworkManager.clearCookies();
 		Intent intent = new Intent(this, LoginActivity.class);
 		intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		startActivity(intent);

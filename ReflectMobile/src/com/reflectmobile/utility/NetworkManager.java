@@ -36,6 +36,10 @@ public class NetworkManager {
 
 		void taskFailed(String reason);
 	}
+	
+	public static void clearCookies(){
+		cookie = new HashMap<String, String>();
+	}
 
 	private static void setCookies(HttpURLConnection httpURLConnection) {
 		StringBuilder cookiesToSet = new StringBuilder();
@@ -143,7 +147,12 @@ public class NetworkManager {
 
 		@Override
 		protected void onPostExecute(String result) {
-			this.handler.taskSuccessful(result);
+			if (result.isEmpty()){
+				this.handler.taskFailed("Empty response");
+			}
+			else {
+				this.handler.taskSuccessful(result);
+			}
 		}
 	}
 
@@ -202,6 +211,7 @@ public class NetworkManager {
 				if (null != httpUrlConnection)
 					httpUrlConnection.disconnect();
 			}
+
 			return data;
 		}
 
