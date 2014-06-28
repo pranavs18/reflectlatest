@@ -1,110 +1,146 @@
-<android.support.v4.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/drawer_layout"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" >
+    android:layout_height="wrap_content"
+    android:background="@color/gray"
+    android:orientation="vertical" >
 
-    <RelativeLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
+    <LinearLayout
+        android:id="@+id/photo_description"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical" >
+        android:background="@android:color/white"
+        android:orientation="horizontal"
+        android:padding="8dp" >
 
-        <android.support.v4.view.ViewPager
-            xmlns:android="http://schemas.android.com/apk/res/android"
-            android:id="@+id/view_pager"
-            android:layout_width="match_parent"
-            android:layout_height="470dp"
-            android:layout_above="@+id/textView2"
-            android:layout_below="@+id/TextView01" >
-        </android.support.v4.view.ViewPager>
-
-        <ImageView
-            android:id="@+id/photo"
-            android:layout_width="match_parent"
-            android:layout_height="0dp" />
-
-        <View
-            android:id="@+id/textView1"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentLeft="true"
-            android:background="#2f7b70" />
-
-        <ImageView
-            android:id="@+id/imageView4"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-            android:layout_alignTop="@+id/textView1"
-            android:layout_marginRight="36dp"
-            android:layout_marginTop="6dp"
-            android:clickable="true"
-            android:src="@drawable/story" />
+            android:orientation="vertical" >
 
-        <ImageView
-            android:id="@+id/imageView1"
+            <TextView
+                android:id="@+id/when"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/when_was_this"
+                android:textColor="@color/green"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/who"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/whos_here"
+                android:textColor="@color/green"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignTop="@+id/textView1"
-            android:layout_marginLeft="46dp"
-            android:layout_marginTop="6dp"
-            android:layout_toRightOf="@+id/imageView2"
-            android:clickable="true"
-            android:src="@drawable/sound" />
+            android:layout_marginLeft="8dp"
+            android:orientation="vertical" >
 
-        <ImageView
-            android:id="@+id/imageView2"
-            android:layout_width="wrap_content"
+            <TextView
+                android:id="@+id/date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/when_was_this"
+                android:textColor="@color/black"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/people"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/whos_here"
+                android:textColor="@color/black"
+                android:textSize="14sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/tab_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="@color/green"
+        android:orientation="horizontal" >
+
+        <ImageButton
+            android:id="@+id/button_photo_tag"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_alignTop="@+id/textView1"
-            android:layout_marginLeft="42dp"
-            android:layout_marginTop="6dp"
-            android:clickable="true"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:contentDescription="@string/add_tag"
+            android:padding="8dp"
             android:src="@drawable/tag" />
 
-        <ImageView
-            android:id="@+id/imageView3"
-            android:layout_width="wrap_content"
+        <ImageButton
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_alignTop="@+id/imageView1"
-            android:layout_marginLeft="42dp"
-            android:layout_toRightOf="@+id/imageView1"
-            android:clickable="true"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:contentDescription="@string/add_sound"
+            android:padding="8dp"
+            android:src="@drawable/sound" />
+
+        <ImageButton
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:contentDescription="@string/add_detail"
+            android:padding="8dp"
             android:src="@drawable/detail" />
 
-        <TextView
-            android:id="@+id/textView2"
-            android:layout_width="wrap_content"
-            android:layout_height="27dp"
-            android:layout_above="@+id/textView1"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentRight="true"
-            android:layout_marginBottom="153dp"
-            android:background="#e6e7e2"
-            android:gravity="center_horizontal"
-            android:text="Memories" />
+        <ImageButton
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:contentDescription="@string/add_story"
+            android:padding="8dp"
+            android:src="@drawable/story" />
+    </LinearLayout>
 
-        <ListView
-            android:id="@+id/listView1"
-            android:layout_width="match_parent"
-            android:layout_height="150dp"
-            android:layout_above="@+id/textView1" >
-        </ListView>
-    </RelativeLayout>
-
-    <!-- The navigation drawer -->
-
-    <ListView
-        android:id="@+id/left_drawer"
-        android:layout_width="320dp"
+    <ScrollView
+        android:id="@+id/scroll_view"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_gravity="start"
-        android:background="@color/side_menu_bg"
-        android:choiceMode="singleChoice"
-        android:divider="@color/side_menu_divider"
-        android:dividerHeight="1dp" >
-    </ListView>
+        android:layout_above="@id/tab_view"
+        android:layout_below="@id/photo_description" >
 
-</android.support.v4.widget.DrawerLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+
+            <android.support.v4.view.ViewPager
+                xmlns:android="http://schemas.android.com/apk/res/android"
+                android:id="@+id/view_pager"
+                android:layout_width="match_parent"
+                android:layout_height="260dp"
+                android:background="@drawable/border_community_card_photo"
+                android:paddingBottom="1dp"
+                android:paddingTop="1dp" >
+            </android.support.v4.view.ViewPager>
+
+            <TextView
+                android:id="@+id/memories_caption"
+                android:layout_width="match_parent"
+                android:layout_height="27dp"
+                android:gravity="center"
+                android:textColor="@color/green" />
+
+            <LinearLayout
+                android:id="@+id/memories_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </LinearLayout>
+    </ScrollView>
+
+</RelativeLayout>

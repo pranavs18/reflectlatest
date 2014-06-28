@@ -11,17 +11,18 @@
         android:layout_height="match_parent"
         android:background="@drawable/bg"
         tools:context="com.reflectmobile.activity.CommunityActivity"
-        tools:ignore="MergeRootFrame" >
+        tools:ignore="MergeRootFrame" 
+        android:paddingTop="8dp">
 
         <ListView
             android:id="@+id/listview_community_card_list"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
-            android:layout_marginLeft="8dp"
-            android:layout_marginRight="8dp"
+            android:layout_marginLeft="10dp"
             android:divider="@android:color/transparent"
-            android:dividerHeight="8dp" >
+            android:dividerHeight="8dp" 
+            android:scrollbarStyle="outsideInset">
         </ListView>
     </RelativeLayout>
 

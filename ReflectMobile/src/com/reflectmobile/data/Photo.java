@@ -5,6 +5,12 @@ import java.util.ArrayList;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.R.integer;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.RectF;
 import android.util.Log;
 
 public class Photo {
@@ -15,6 +21,8 @@ public class Photo {
 	private String imageMediumThumbURL;
 	private String imageLargeURL;
 	private ArrayList<Tag> tagList;
+	private Bitmap largeBitmap;
+	private Bitmap taggedBitmap;
 
 	public Photo(int id) {
 		this.setId(id);
@@ -86,5 +94,97 @@ public class Photo {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	public Bitmap getLargeBitmap() {
+		return largeBitmap;
+	}
+
+	public void setLargeBitmap(Bitmap bitmap) {
+		this.largeBitmap = bitmap;
+	}
+	
+	public Bitmap generateTaggedBitmap() {
+		Bitmap bitmap = largeBitmap;
+		// Create buffer new bitmap
+		Bitmap newBitmap = Bitmap.createBitmap(bitmap.getWidth(),
+				bitmap.getHeight(), Bitmap.Config.RGB_565);
+		Canvas canvas = new Canvas(newBitmap);
+		canvas.drawBitmap(bitmap, 0, 0, null);
+
+		// Generate brush
+		Paint paint = new Paint();
+		paint.setColor(Color.BLACK);
+		paint.setStyle(Paint.Style.STROKE);
+		paint.setStrokeWidth(5);
+
+		// Draw tags based on tag coordinate
+		for (Tag tag : tagList) {
+			RectF rect = new RectF(tag.getUpLeftX(), tag.getUpLeftY(),
+					tag.getUpLeftX() + tag.getBoxWidth(), tag.getUpLeftY()
+							+ tag.getBoxLength());
+			canvas.drawRoundRect(rect, 2, 2, paint);
+		}
+		taggedBitmap = newBitmap;
+		return newBitmap;
+	}
+	
+	public Bitmap drawOnPhoto(int imageViewHeight, int imageViewWidth, float imageViewX, float imageViewY, float startX, float startY) {
+		float scaleFactor = imageViewHeight / largeBitmap.getHeight();
+		float offsetX = (int) ((imageViewWidth - scaleFactor * largeBitmap.getWidth()) / 2);
+		float bitmapX = imageViewX - offsetX;
+		float bitmapY = imageViewY;
+		startX = startX - offsetX;
+		
+		Bitmap bitmap = largeBitmap;
+		// Create buffer new bitmap
+		Bitmap newBitmap = Bitmap.createBitmap(bitmap.getWidth(),
+				bitmap.getHeight(), Bitmap.Config.RGB_565);
+		Canvas canvas = new Canvas(newBitmap);
+		canvas.drawBitmap(bitmap, 0, 0, null);
+
+		// Generate brush
+		Paint paint = new Paint();
+		paint.setColor(Color.BLACK);
+		paint.setStyle(Paint.Style.STROKE);
+		paint.setStrokeWidth(10);
+		
+		canvas.drawLine(startX, startY, bitmapX, bitmapY, paint);
+		largeBitmap = newBitmap;
+		return newBitmap;
+	}
+	
+	public Bitmap generateHighlightedTagBitmap(int imageViewHeight, int imageViewWidth, float imageViewX, float imageViewY) {
+		float scaleFactor = imageViewHeight / largeBitmap.getHeight();
+		float offsetX = (int) ((imageViewWidth - scaleFactor * largeBitmap.getWidth()) / 2);
+		float bitmapX = imageViewX - offsetX;
+		float bitmapY = imageViewY;
+		
+		Bitmap bitmap = taggedBitmap;
+		// Create buffer new bitmap
+		Bitmap newBitmap = Bitmap.createBitmap(bitmap.getWidth(),
+				bitmap.getHeight(), Bitmap.Config.RGB_565);
+		Canvas canvas = new Canvas(newBitmap);
+		canvas.drawBitmap(bitmap, 0, 0, null);
+
+		// Generate brush
+		Paint paint = new Paint();
+		paint.setColor(Color.RED);
+		paint.setStyle(Paint.Style.STROKE);
+		paint.setStrokeWidth(10);		
+		
+		boolean isInTagRegion = false;
+		for (Tag tag : tagList) {
+			boolean isInXRange = bitmapX <= tag.getUpLeftX() + tag.getBoxWidth() && bitmapX >= tag.getUpLeftX();
+			boolean isInYRange = bitmapY <= tag.getUpLeftY() + tag.getBoxLength() && bitmapY >= tag.getUpLeftY();
+			if (isInXRange && isInYRange) {
+				isInTagRegion = true;
+				RectF rect = new RectF(tag.getUpLeftX(), tag.getUpLeftY(),
+						tag.getUpLeftX() + tag.getBoxWidth(), tag.getUpLeftY()
+								+ tag.getBoxLength());
+				canvas.drawRoundRect(rect, 2, 2, paint);				
+			}
+		}
+		return isInTagRegion ? newBitmap : taggedBitmap;
 	}
 }

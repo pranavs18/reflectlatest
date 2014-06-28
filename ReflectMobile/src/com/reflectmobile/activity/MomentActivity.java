@@ -166,7 +166,7 @@ public class MomentActivity extends BaseActivity {
 					public void onClick(View v) {
 						// TODO temp change to tag view to test
 						int position = ((ImageViewHolder) v.getTag()).position;
-						Intent intent = new Intent(mContext, TagActivity.class);
+						Intent intent = new Intent(mContext, PhotoActivity.class);
 						intent.putExtra("photo_id", moment.getPhoto(position).getId());
 						intent.putExtra("moment_id", moment.getId());
 						mContext.startActivity(intent);
