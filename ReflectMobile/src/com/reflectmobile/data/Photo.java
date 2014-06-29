@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.reflectmobile.widget.ImageProcessor;
+
 import android.R.integer;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -22,7 +24,9 @@ public class Photo {
 	private String imageLargeURL;
 	private ArrayList<Tag> tagList;
 	private Bitmap largeBitmap;
-	private Bitmap taggedBitmap;
+	private Bitmap darkenLargeBitmap;
+	private Bitmap darkenTaggedLargeBitmap;
+	private Bitmap taggedLargeBitmap;
 
 	public Photo(int id) {
 		this.setId(id);
@@ -102,89 +106,30 @@ public class Photo {
 
 	public void setLargeBitmap(Bitmap bitmap) {
 		this.largeBitmap = bitmap;
+		this.darkenLargeBitmap = ImageProcessor.generateDarkenImage(bitmap, -50);
 	}
-	
-	public Bitmap generateTaggedBitmap() {
-		Bitmap bitmap = largeBitmap;
-		// Create buffer new bitmap
-		Bitmap newBitmap = Bitmap.createBitmap(bitmap.getWidth(),
-				bitmap.getHeight(), Bitmap.Config.RGB_565);
-		Canvas canvas = new Canvas(newBitmap);
-		canvas.drawBitmap(bitmap, 0, 0, null);
-
-		// Generate brush
-		Paint paint = new Paint();
-		paint.setColor(Color.BLACK);
-		paint.setStyle(Paint.Style.STROKE);
-		paint.setStrokeWidth(5);
-
-		// Draw tags based on tag coordinate
-		for (Tag tag : tagList) {
-			RectF rect = new RectF(tag.getUpLeftX(), tag.getUpLeftY(),
-					tag.getUpLeftX() + tag.getBoxWidth(), tag.getUpLeftY()
-							+ tag.getBoxLength());
-			canvas.drawRoundRect(rect, 2, 2, paint);
-		}
-		taggedBitmap = newBitmap;
-		return newBitmap;
+	public Bitmap getDarkenTaggedLargeBitmap() {
+		return darkenTaggedLargeBitmap;
 	}
-	
-	public Bitmap drawOnPhoto(int imageViewHeight, int imageViewWidth, float imageViewX, float imageViewY, float startX, float startY) {
-		float scaleFactor = imageViewHeight / largeBitmap.getHeight();
-		float offsetX = (int) ((imageViewWidth - scaleFactor * largeBitmap.getWidth()) / 2);
-		float bitmapX = imageViewX - offsetX;
-		float bitmapY = imageViewY;
-		startX = startX - offsetX;
-		
-		Bitmap bitmap = largeBitmap;
-		// Create buffer new bitmap
-		Bitmap newBitmap = Bitmap.createBitmap(bitmap.getWidth(),
-				bitmap.getHeight(), Bitmap.Config.RGB_565);
-		Canvas canvas = new Canvas(newBitmap);
-		canvas.drawBitmap(bitmap, 0, 0, null);
 
-		// Generate brush
-		Paint paint = new Paint();
-		paint.setColor(Color.BLACK);
-		paint.setStyle(Paint.Style.STROKE);
-		paint.setStrokeWidth(10);
-		
-		canvas.drawLine(startX, startY, bitmapX, bitmapY, paint);
-		largeBitmap = newBitmap;
-		return newBitmap;
+	public void setDarkenTaggedLargeBitmap(Bitmap darkenTaggedLargeBitmap) {
+		this.darkenTaggedLargeBitmap = darkenTaggedLargeBitmap;
 	}
-	
-	public Bitmap generateHighlightedTagBitmap(int imageViewHeight, int imageViewWidth, float imageViewX, float imageViewY) {
-		float scaleFactor = imageViewHeight / largeBitmap.getHeight();
-		float offsetX = (int) ((imageViewWidth - scaleFactor * largeBitmap.getWidth()) / 2);
-		float bitmapX = imageViewX - offsetX;
-		float bitmapY = imageViewY;
-		
-		Bitmap bitmap = taggedBitmap;
-		// Create buffer new bitmap
-		Bitmap newBitmap = Bitmap.createBitmap(bitmap.getWidth(),
-				bitmap.getHeight(), Bitmap.Config.RGB_565);
-		Canvas canvas = new Canvas(newBitmap);
-		canvas.drawBitmap(bitmap, 0, 0, null);
 
-		// Generate brush
-		Paint paint = new Paint();
-		paint.setColor(Color.RED);
-		paint.setStyle(Paint.Style.STROKE);
-		paint.setStrokeWidth(10);		
-		
-		boolean isInTagRegion = false;
-		for (Tag tag : tagList) {
-			boolean isInXRange = bitmapX <= tag.getUpLeftX() + tag.getBoxWidth() && bitmapX >= tag.getUpLeftX();
-			boolean isInYRange = bitmapY <= tag.getUpLeftY() + tag.getBoxLength() && bitmapY >= tag.getUpLeftY();
-			if (isInXRange && isInYRange) {
-				isInTagRegion = true;
-				RectF rect = new RectF(tag.getUpLeftX(), tag.getUpLeftY(),
-						tag.getUpLeftX() + tag.getBoxWidth(), tag.getUpLeftY()
-								+ tag.getBoxLength());
-				canvas.drawRoundRect(rect, 2, 2, paint);				
-			}
-		}
-		return isInTagRegion ? newBitmap : taggedBitmap;
+	public Bitmap getTaggedLargeBitmap() {
+		return taggedLargeBitmap;
+	}
+
+	public void setTaggedLargeBitmap(Bitmap taggedLargeBitmap) {
+		this.taggedLargeBitmap = taggedLargeBitmap;
+		this.darkenTaggedLargeBitmap = ImageProcessor.generateDarkenImage(taggedLargeBitmap, -50);
+	}
+
+	public Bitmap getDarkenLargeBitmap() {
+		return darkenLargeBitmap;
+	}
+
+	public void setDarkenLargeBitmap(Bitmap darkenLargeBitmap) {
+		this.darkenLargeBitmap = darkenLargeBitmap;
 	}
 }

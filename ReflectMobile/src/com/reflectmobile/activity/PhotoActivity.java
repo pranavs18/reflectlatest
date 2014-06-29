@@ -1,5 +1,10 @@
 package com.reflectmobile.activity;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 
 import org.json.JSONArray;
@@ -11,14 +16,17 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PointF;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -42,6 +50,7 @@ import com.reflectmobile.utility.NetworkManager.HttpGetImageTask;
 import com.reflectmobile.utility.NetworkManager.HttpGetTask;
 import com.reflectmobile.utility.NetworkManager.HttpImageTaskHandler;
 import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
+import com.reflectmobile.widget.ImageProcessor;
 
 public class PhotoActivity extends BaseActivity {
 
@@ -49,9 +58,18 @@ public class PhotoActivity extends BaseActivity {
 	private Moment moment;
 	private Memory[] mMemories;
 	private LayoutInflater mInflater;
+
+	// TODO
 	private int currentPhotoIndex = 1;
 	private ImageView currentImageView = null;
-	private boolean isTouchable = true;
+	private static int photoImageViewHeightDP = 258;
+	private static int photoImageViewWidthDP = 360;
+	private static int photoImageViewHeightPX = 0;
+	private static int photoImageViewWidthPX = 0;
+	private float photoOffsetX = 0;
+	private float photoOffsetY = 0;
+	private float photoScaleFactor = 1;
+	private boolean isExpandHorizontal = false;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -129,67 +147,11 @@ public class PhotoActivity extends BaseActivity {
 				.execute("http://rewyndr.truefitdemo.com/api/moments/"
 						+ momentId);
 
-		ImageButton tagButton = (ImageButton) findViewById(R.id.button_photo_tag);
-		tagButton.setOnClickListener(new OnClickListener() {
-
-			@Override
-			public void onClick(View v) {
-				currentImageView.setDrawingCacheEnabled(true);
-				currentImageView.buildDrawingCache();
-				final Bitmap imageViewBitmap = currentImageView.getDrawingCache();
-				currentImageView.setDrawingCacheEnabled(false);
-				isTouchable = true;
-				// First download large size image from web
-				// Second download tags from the web
-				// Finally draw tags on the photo
-				new HttpGetImageTask(new HttpImageTaskHandler() {
-					@Override
-					public void taskSuccessful(Drawable drawable) {
-						Bitmap bitmap = ((BitmapDrawable) drawable)
-								.getBitmap();
-						moment.getPhoto(currentPhotoIndex).setLargeBitmap(((BitmapDrawable) drawable)
-													.getBitmap());						
-						// Continue download tag
-						new HttpGetTask(new HttpTaskHandler() {
-
-							@Override
-							public void taskSuccessful(String result) {
-								Log.d(TAG, result);
-								JSONArray tagJSONArray;
-								try {
-									tagJSONArray = new JSONArray(result);
-									for (int j = 0; j <= tagJSONArray.length() - 1; j++) {
-										Tag tag = Tag.getTagInfo(tagJSONArray
-												.getString(j));
-										moment.getPhoto(currentPhotoIndex)
-												.addTag(tag);
-									}
-									// Draw tags
-									currentImageView.setImageBitmap(moment
-											.getPhoto(currentPhotoIndex)
-											.generateTaggedBitmap());
-								} catch (JSONException e) {
-									Log.e(TAG, "Error parse the tag json");
-								}
-							}
-
-							@Override
-							public void taskFailed(String reason) {
-								Log.e(TAG, "Error downloading the tag");
-							}
-						}).execute("http://rewyndr.truefitdemo.com/api/photos/"
-								+ moment.getPhoto(currentPhotoIndex).getId()
-								+ "/tags");
-					}
-
-					@Override
-					public void taskFailed(String reason) {
-						Log.e(TAG, "Error downloading the image");
-					}
-				}).execute(moment.getPhoto(currentPhotoIndex)
-						.getImageLargeURL());
-			}
-		});
+		// TODO
+		handleTagButton();
+		// Transfer image view size from dp to px
+		photoImageViewHeightPX = dpToPx(photoImageViewHeightDP);
+		photoImageViewWidthPX = dpToPx(photoImageViewWidthDP);
 	}
 
 	public void loadMemories(int position) {
@@ -268,18 +230,7 @@ public class PhotoActivity extends BaseActivity {
 			if (position == currentPhotoIndex) {
 				currentImageView = imageView;
 			}
-			imageView.setOnTouchListener(new OnTouchListener() {
-				@Override
-				public boolean onTouch(View v, MotionEvent event) {
-					Log.d(TAG, event.getX() + " " + event.getY());
-					if (isTouchable) {
-						Bitmap newBitmap = moment.getPhoto(currentPhotoIndex).generateHighlightedTagBitmap(516, 720, event.getX(), event.getY());
-						currentImageView.setImageBitmap(newBitmap);
-					}
-					return false;
-				}
-			});
-			//
+
 			imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
 			imageView.setTag(position);
 			((ViewPager) container).addView(imageView);
@@ -299,6 +250,8 @@ public class PhotoActivity extends BaseActivity {
 						if (imageView != null) {
 							imageView.setImageDrawable(drawable);
 						}
+						moment.getPhoto(index).setLargeBitmap(
+								((BitmapDrawable) drawable).getBitmap());
 					}
 
 					@Override
@@ -309,18 +262,18 @@ public class PhotoActivity extends BaseActivity {
 			}
 			if (mDrawables[position] == null) {
 				new HttpGetImageTask(httpImageTaskHandlers[1]).execute(moment
-						.getPhoto(position).getImageMediumURL());
+						.getPhoto(position).getImageLargeURL());
 			} else {
 				imageView.setImageDrawable(mDrawables[position]);
 			}
 			if (position > 0 && mDrawables[position - 1] == null) {
 				new HttpGetImageTask(httpImageTaskHandlers[0]).execute(moment
-						.getPhoto(position - 1).getImageMediumURL());
+						.getPhoto(position - 1).getImageLargeURL());
 			}
 			if (position < moment.getNumOfPhotos() - 1
 					&& mDrawables[position + 1] == null) {
 				new HttpGetImageTask(httpImageTaskHandlers[2]).execute(moment
-						.getPhoto(position + 1).getImageMediumURL());
+						.getPhoto(position + 1).getImageLargeURL());
 			}
 			return imageView;
 		}
@@ -328,6 +281,123 @@ public class PhotoActivity extends BaseActivity {
 		@Override
 		public void destroyItem(ViewGroup container, int position, Object object) {
 			((ViewPager) container).removeView((ImageView) object);
+		}
+	}
+
+	// Add ontouch listener for the tag button
+	public void handleTagButton() {
+		// Calculate photo offset of this image view
+
+		// Add ontouch listener
+		ImageButton tagButton = (ImageButton) findViewById(R.id.button_photo_tag);
+		tagButton.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				// TODO
+				// Currently hardcode
+				setPhotoOffset();
+
+				// Down the tag for this photo from rewyndr
+				new HttpGetTask(new HttpTaskHandler() {
+
+					@Override
+					public void taskSuccessful(String result) {
+						Log.d(TAG, result);
+						JSONArray tagJSONArray;
+						try {
+							tagJSONArray = new JSONArray(result);
+							for (int j = 0; j <= tagJSONArray.length() - 1; j++) {
+								Tag tag = Tag.getTagInfo(tagJSONArray
+										.getString(j));
+								moment.getPhoto(currentPhotoIndex).addTag(tag);
+							}
+							Photo currentPhoto = moment
+									.getPhoto(currentPhotoIndex);
+							// Draw tags for the photo
+							Bitmap taggedBitmap = ImageProcessor
+									.generateTaggedBitmap(
+											currentPhoto.getLargeBitmap(),
+											currentPhoto.getTagList());
+							// Cache the tagged photo bitmap
+							currentPhoto.setTaggedLargeBitmap(taggedBitmap);
+							currentImageView.setImageBitmap(taggedBitmap);
+						} catch (JSONException e) {
+							Log.e(TAG, "Error parse the tag json");
+						}
+					}
+
+					@Override
+					public void taskFailed(String reason) {
+						Log.e(TAG, "Error downloading the tag");
+					}
+				}).execute("http://rewyndr.truefitdemo.com/api/photos/"
+						+ moment.getPhoto(currentPhotoIndex).getId() + "/tags");
+
+				// Add on touch listener for the current image view on screen
+				currentImageView.setOnTouchListener(new OnTouchListener() {
+					public boolean onTouch(View v, MotionEvent event) {
+						Log.d(TAG, event.getX() + " " + event.getY());
+						// Transfer the coordinate from the image view to the
+						// photo bitmap
+						// Location on the enlarged photo
+						float bitmapX = event.getX() + photoOffsetX;
+						float bitmapY = event.getY() + photoOffsetY;
+						// Location to original photo
+						if (isExpandHorizontal) {
+							bitmapX = bitmapX / photoScaleFactor;
+						} else {
+							bitmapY = bitmapY / photoScaleFactor;
+						}
+						Photo currentPhoto = moment.getPhoto(currentPhotoIndex);
+//						Bitmap newBitmap = ImageProcessor
+//								.generateHighlightedTaggedBitmap(
+//										currentPhoto.getLargeBitmap(),
+//										currentPhoto.getTaggedLargeBitmap(),
+//										currentPhoto.getDarkenTaggedLargeBitmap(),
+//										currentPhoto.getTagList(), bitmapX,
+//										bitmapY);
+						Bitmap newBitmap = ImageProcessor.drawEditSquare(currentPhoto.getLargeBitmap(), currentPhoto.getDarkenLargeBitmap(), 20, 20, (int)bitmapX, (int)bitmapY);
+						currentImageView.setImageBitmap(newBitmap);
+						return true;
+					}
+				});
+
+			}
+		});
+	}
+
+	
+	// Change dp to px
+	private int dpToPx(int dp) {
+		DisplayMetrics displayMetrics = PhotoActivity.this.getResources()
+				.getDisplayMetrics();
+		int px = Math.round(dp * displayMetrics.density);
+		return px;
+	}
+
+	// This function calculates the offset of the photo in the image view
+	// This shoud be called when the current image view change
+	// Currently hardcode to tagbutton onclick listener
+	private void setPhotoOffset() {
+		Photo currentPhoto = moment.getPhoto(currentPhotoIndex);
+		isExpandHorizontal = ((float) currentPhoto.getLargeBitmap().getHeight() / currentPhoto
+				.getLargeBitmap().getWidth()) > ((float) photoImageViewHeightPX / photoImageViewWidthPX);
+		// If the photo in image view is expanded horizontally
+		if (isExpandHorizontal) {
+			photoScaleFactor = (float) photoImageViewHeightPX
+					/ currentPhoto.getLargeBitmap().getHeight();
+			float offsetX = ((photoImageViewWidthPX - photoScaleFactor
+					* currentPhoto.getLargeBitmap().getWidth()) / 2);
+			photoOffsetX = -offsetX;
+			photoOffsetY = 0;
+		} else {
+			photoScaleFactor = (float) photoImageViewWidthPX
+					/ currentPhoto.getLargeBitmap().getWidth();
+			float offsetY = ((photoImageViewHeightPX - photoScaleFactor
+					* currentPhoto.getLargeBitmap().getHeight()) / 2);
+			photoOffsetX = 0;
+			photoOffsetY = -offsetY;
 		}
 	}
 }

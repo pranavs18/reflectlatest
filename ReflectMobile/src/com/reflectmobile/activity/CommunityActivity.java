@@ -1,14 +1,30 @@
 package com.reflectmobile.activity;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 import android.app.AlertDialog;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.app.DialogFragment;
+import android.app.FragmentManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -18,9 +34,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.ListView;
@@ -32,13 +50,21 @@ import com.reflectmobile.data.Moment;
 import com.reflectmobile.utility.NetworkManager.HttpGetImageTask;
 import com.reflectmobile.utility.NetworkManager.HttpGetTask;
 import com.reflectmobile.utility.NetworkManager.HttpImageTaskHandler;
+import com.reflectmobile.utility.NetworkManager.HttpPostTask;
 import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
 
 public class CommunityActivity extends BaseActivity {
 
-	private String TAG = "CommunityActivity";
-	Community community;
+	private static String TAG = "CommunityActivity";
+	private Community community;
+	private static int communityId;	
 
+	//TODO
+	// Static identifier for receiving camera apps call back
+	private static final int REQUEST_TAKE_PHOTO = 1;
+	public static final int MEDIA_TYPE_IMAGE = 1;
+	String photoPath;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		// It is important to set content view before calling super.onCreate
@@ -59,7 +85,7 @@ public class CommunityActivity extends BaseActivity {
 				.getLayoutParams();
 		mlp.setMargins(5, 0, 0, 0);
 
-		int communityId = getIntent().getIntExtra("community_id", 0);
+		communityId = getIntent().getIntExtra("community_id", 0);
 
 		// Retreive data from the web
 		final HttpTaskHandler getCommunityHandler = new HttpTaskHandler() {
@@ -150,9 +176,126 @@ public class CommunityActivity extends BaseActivity {
 							}).setCustomTitle(title).setCancelable(false)
 					.show();
 			return true;
+		case R.id.action_add_moment:
+			createMoment();
+			return true;
+		case R.id.action_take_photo:
+			// create Intent to take a picture and return control to the rewyndr application
+			takePhoto();
+			return true;
 		default:
 			return super.onOptionsItemSelected(item);
 		}
+	}
+
+	public static class AddMomentDialog extends DialogFragment {
+
+		private boolean nameSet = false;
+
+		private String name;
+
+		private Button saveButton;
+
+		public AddMomentDialog() {
+
+		}
+
+		@Override
+		public View onCreateView(LayoutInflater inflater, ViewGroup container,
+				Bundle savedInstanceState) {
+			getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
+
+			final View view = inflater.inflate(R.layout.add_moment, container);
+			Button cancelButton = (Button) view.findViewById(R.id.cancel);
+			saveButton = (Button) view.findViewById(R.id.save);
+			saveButton.setOnClickListener(new OnClickListener() {
+
+				@Override
+				public void onClick(View v) {
+					saveButton.setEnabled(false);
+					HttpTaskHandler httpPostTaskHandler = new HttpTaskHandler() {
+						@Override
+						public void taskSuccessful(String result) {
+							Log.d("POST", result);
+							dismiss();
+							getActivity().finish();
+							startActivity(getActivity().getIntent());
+						}
+
+						@Override
+						public void taskFailed(String reason) {
+							Log.e("POST", "Error within POST request: "
+									+ reason);
+						}
+					};
+					JSONObject momentData = new JSONObject();
+					try {
+						momentData.put("community_id", communityId);
+						momentData.put("name", name);
+					} catch (JSONException e) {
+						Log.e(TAG, "Error forming JSON");
+					}
+					String payload = momentData.toString();
+					new HttpPostTask(httpPostTaskHandler, payload)
+							.execute("http://rewyndr.truefitdemo.com/api/communities/"
+									+ communityId + "/moments");
+				}
+			});
+			EditText momentName = (EditText) view
+					.findViewById(R.id.moment_name);
+
+			momentName.addTextChangedListener(new TextWatcher() {
+				@Override
+				public void onTextChanged(CharSequence s, int start,
+						int before, int count) {
+					nameSet = count > 0;
+					modifySaveButton();
+					if (nameSet) {
+						name = s.toString();
+					}
+				}
+
+				@Override
+				public void beforeTextChanged(CharSequence s, int start,
+						int count, int after) {
+				}
+
+				@Override
+				public void afterTextChanged(Editable s) {
+				}
+			});
+
+			cancelButton.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					dismiss();
+				}
+			});
+
+			return view;
+		}
+
+		private void modifySaveButton() {
+			if (nameSet) {
+				saveButton.setTextColor(getResources().getColor(R.color.green));
+				saveButton.setCompoundDrawablesWithIntrinsicBounds(
+						R.drawable.tick_active, 0, 0, 0);
+				saveButton.setEnabled(true);
+			} else {
+				saveButton.setTextColor(getResources().getColor(
+						R.color.dark_gray));
+				saveButton.setCompoundDrawablesWithIntrinsicBounds(
+						R.drawable.tick_disabled, 0, 0, 0);
+				saveButton.setEnabled(false);
+			}
+		}
+
+	}
+
+	public void createMoment() {
+		FragmentManager fm = getFragmentManager();
+		AddMomentDialog addMomentDialog = new AddMomentDialog();
+		addMomentDialog.show(fm, "fragment_add_moment");
 	}
 
 	// Specific adapter for Community Activity
@@ -286,7 +429,6 @@ public class CommunityActivity extends BaseActivity {
 
 					holder.photos[count]
 							.setOnClickListener(new OnClickListener() {
-								@Override
 								public void onClick(View v) {
 									int position = (Integer) v.getTag();
 									Intent intent = new Intent(mContext,
@@ -358,6 +500,58 @@ public class CommunityActivity extends BaseActivity {
 			holder.name.setText(nameList.get(position));
 			return view;
 		}
+	}
+	
+	//TODO
+	// Create a image file on external storage and return the file
+	private File createImageFile() throws IOException {
+	    // Create an image file name
+	    String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+	    String imageFileName = "JPEG_" + timeStamp + "_";
+	    File storageDir = Environment.getExternalStoragePublicDirectory(
+	            Environment.DIRECTORY_PICTURES);
+	    File image = File.createTempFile(
+	        imageFileName,  /* prefix */
+	        ".jpg",         /* suffix */
+	        storageDir      /* directory */
+	    );
+
+	    // Save a file: path for use with ACTION_VIEW intents
+	    photoPath = "file:" + image.getAbsolutePath();
+	    return image;
+	}
+	
+	private void takePhoto() {
+	    Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+	    // Ensure that there's a camera activity to handle the intent
+	    if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+	        // Create the File where the photo should go
+	        File photoFile = null;
+	        try {
+	            photoFile = createImageFile();
+	        } catch (IOException ex) {
+	            // Error occurred while creating the File
+	        }
+	        // Continue only if the File was successfully created
+	        if (photoFile != null) {
+	            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT,
+	                    Uri.fromFile(photoFile));
+	            startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
+	        }
+	    }
+	}
+	
+	// Photo app callback function (define how to handle the photo)
+	// Currently only add the photo to the gallery
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+	    if (requestCode == REQUEST_TAKE_PHOTO && resultCode == RESULT_OK) {
+	        // Save to gallery
+	        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+	        File f = new File(photoPath);
+	        Uri contentUri = Uri.fromFile(f);
+	        mediaScanIntent.setData(contentUri);
+	        this.sendBroadcast(mediaScanIntent);
+	    }
 	}
 
 }
