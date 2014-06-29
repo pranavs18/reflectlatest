@@ -15,8 +15,13 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+<<<<<<< Updated upstream
 
+=======
+import android.widget.ImageButton;
+>>>>>>> Stashed changes
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -95,7 +100,7 @@ public class PhotoActivity extends BaseActivity {
 				viewPager.setAdapter(adapter);
 				viewPager.setOnPageChangeListener(new OnPageChangeListener() {
 					@Override
-					public void onPageSelected(int position) {
+					public void onPageSelected(final int position) {
 						loadMemories(position);
 					}
 
@@ -176,12 +181,23 @@ public class PhotoActivity extends BaseActivity {
 		return ((Cursor) cursor).getString(column_index);
 	}
 
-	public void loadMemories(int position) {
+	public void loadMemories(final int position) {
 		final ViewGroup memoryContainer = (ViewGroup) findViewById(R.id.memories_container);
 		memoryContainer.removeAllViews();
 		final TextView memoryCaption = (TextView) findViewById(R.id.memories_caption);
 		memoryCaption.setText("0 MEMORIES");
 
+		ImageButton addStoryButton = (ImageButton) findViewById(R.id.add_story);
+		addStoryButton.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View arg0) {
+				Intent intent = new Intent(PhotoActivity.this, AddStoryActivity.class);
+				intent.putExtra("photo_id", moment.getPhoto(position).getId());
+				startActivity(intent);
+			}
+		});
+		
 		final HttpTaskHandler getMemoriesHandler = new HttpTaskHandler() {
 			@Override
 			public void taskSuccessful(String result) {
@@ -220,6 +236,13 @@ public class PhotoActivity extends BaseActivity {
 						+ moment.getPhoto(position).getId());
 
 	}
+	
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		finish();
+		startActivity(this.getIntent());
+		super.onActivityResult(requestCode, resultCode, data);
+	}
 
 	public class ImagePagerAdapter extends PagerAdapter {
 
@@ -243,50 +266,38 @@ public class PhotoActivity extends BaseActivity {
 		}
 
 		@Override
-		public Object instantiateItem(final ViewGroup container, int position) {
+		public Object instantiateItem(final ViewGroup container,
+				final int position) {
 			Log.d(TAG, position + "");
 			ImageView imageView = new ImageView(PhotoActivity.this);
 			imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
 			imageView.setTag(position);
 			((ViewPager) container).addView(imageView);
 
-			HttpImageTaskHandler[] httpImageTaskHandlers = new HttpImageTaskHandler[3];
-			for (int count = 0; count < 3; count++) {
-				final int index = position - 1 + count;
+			HttpImageTaskHandler httpImageTaskHandler = new HttpImageTaskHandler() {
+				private int drawableIndex = position;
 
-				httpImageTaskHandlers[count] = new HttpImageTaskHandler() {
-					private int drawableIndex = index;
-
-					@Override
-					public void taskSuccessful(Drawable drawable) {
-						mDrawables[drawableIndex] = drawable;
-						ImageView imageView = (ImageView) ((ViewPager) container)
-								.findViewWithTag(drawableIndex);
-						if (imageView != null) {
-							imageView.setImageDrawable(drawable);
-						}
+				@Override
+				public void taskSuccessful(Drawable drawable) {
+					mDrawables[drawableIndex] = drawable;
+					ImageView imageView = (ImageView) ((ViewPager) container)
+							.findViewWithTag(drawableIndex);
+					if (imageView != null) {
+						imageView.setImageDrawable(drawable);
 					}
+				}
 
-					@Override
-					public void taskFailed(String reason) {
-						Log.e(TAG, "Error downloading the image");
-					}
-				};
-			}
+				@Override
+				public void taskFailed(String reason) {
+					Log.e(TAG, "Error downloading the image");
+				}
+			};
+
 			if (mDrawables[position] == null) {
-				new HttpGetImageTask(httpImageTaskHandlers[1]).execute(moment
+				new HttpGetImageTask(httpImageTaskHandler).execute(moment
 						.getPhoto(position).getImageMediumURL());
 			} else {
 				imageView.setImageDrawable(mDrawables[position]);
-			}
-			if (position > 0 && mDrawables[position - 1] == null) {
-				new HttpGetImageTask(httpImageTaskHandlers[0]).execute(moment
-						.getPhoto(position - 1).getImageMediumURL());
-			}
-			if (position < moment.getNumOfPhotos() - 1
-					&& mDrawables[position + 1] == null) {
-				new HttpGetImageTask(httpImageTaskHandlers[2]).execute(moment
-						.getPhoto(position + 1).getImageMediumURL());
 			}
 			return imageView;
 		}

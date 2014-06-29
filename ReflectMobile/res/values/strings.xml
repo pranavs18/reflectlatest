@@ -72,6 +72,13 @@
     <string name="new_community">New Community</string>
     <string name="new_moment">New Moment</string>
     <string name="background">Background</string>
+<<<<<<< Updated upstream
     <string name="title_photo_gallery">Select Photos</string>
     <string name="done">DONE</string>
+=======
+    <string name="add">ADD</string>
+    <string name="add_new_story">Add New Story</string>
+    <string name="log_in_with_reflect">Log In with Reflect</string>
+
+>>>>>>> Stashed changes
 </resources>

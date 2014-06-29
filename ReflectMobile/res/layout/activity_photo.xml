@@ -80,6 +80,7 @@
             android:src="@drawable/tag" />
 
         <ImageButton
+            android:id="@+id/add_sound"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -89,6 +90,7 @@
             android:src="@drawable/sound" />
 
         <ImageButton
+            android:id="@+id/add_detail"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -98,6 +100,7 @@
             android:src="@drawable/detail" />
 
         <ImageButton
+            android:id="@+id/add_story"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"

@@ -42,7 +42,7 @@ public class CommunityActivity extends BaseActivity {
 
 	private static String TAG = "CommunityActivity";
 	private Community community;
-	private static int communityId;	
+	private static int communityId;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -324,13 +324,7 @@ public class CommunityActivity extends BaseActivity {
 			final CardViewHolder holder = (CardViewHolder) convertView.getTag();
 			holder.totalPhoto.setTag(position);
 
-			// set moment name, when the name is too long, cut it
-			if (moment.getName().length() >= 20) {
-				String shortcutName = moment.getName().substring(0, 17) + "...";
-				holder.name.setText(shortcutName);
-			} else {
-				holder.name.setText(moment.getName());
-			}
+			holder.name.setText(moment.getName());
 
 			// set moment date
 			holder.date.setText(moment.getDate());

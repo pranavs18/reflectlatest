@@ -15,18 +15,19 @@
         android:layout_alignParentTop="true"
         android:orientation="vertical" >
 
-        <TextView
-            android:id="@+id/text_community_card_community_name"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_alignParentLeft="true"
+        <Button
+            android:id="@+id/button_community_card_total_photo"
+            android:layout_width="wrap_content"
+            android:layout_height="26dp"
+            android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
-            android:layout_marginLeft="8dp"
-            android:gravity="center_vertical|left"
-            android:text="@string/moment_name"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:textColor="@android:color/black"
-            android:textSize="18sp" />
+            android:layout_marginRight="5dp"
+            android:background="@drawable/button_photos"
+            android:gravity="center"
+            android:minWidth="75dp"
+            android:text="@string/number_of_photos"
+            android:textColor="@color/yellow"
+            android:textSize="13sp" />
 
         <TextView
             android:id="@+id/text_community_card_date"
@@ -41,19 +42,20 @@
             android:textColor="@android:color/black"
             android:textSize="13sp" />
 
-        <Button
-            android:id="@+id/button_community_card_total_photo"
-            android:layout_width="wrap_content"
-            android:layout_height="26dp"
-            android:layout_alignParentRight="true"
+        <TextView
+            android:id="@+id/text_community_card_community_name"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentLeft="true"
+            android:layout_toLeftOf="@id/text_community_card_date"
             android:layout_centerVertical="true"
-            android:layout_marginRight="5dp"
-            android:background="@drawable/button_photos"
-            android:gravity="center"
-            android:minWidth="75dp"
-            android:text="@string/number_of_photos"
-            android:textColor="@color/yellow"
-            android:textSize="13sp" />
+            android:layout_marginLeft="8dp"
+            android:gravity="center_vertical|left"
+            android:singleLine="true"
+            android:text="@string/moment_name"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textColor="@android:color/black"
+            android:textSize="18sp" />
     </RelativeLayout>
 
     <LinearLayout

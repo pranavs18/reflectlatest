@@ -87,10 +87,17 @@
                 android:value="com.reflectmobile.activity.BaseActivity" />
         </activity>
         <activity
+<<<<<<< Updated upstream
             android:name=".activity.MultiPhotoSelectActivity"
             android:configChanges="orientation"
             android:icon="@drawable/action_bar_icon_logo"
             android:label="@string/title_photo_gallery"
+=======
+            android:name=".activity.AddStoryActivity"
+            android:configChanges="orientation"
+            android:icon="@drawable/action_bar_icon_logo"
+            android:label="@string/add_new_story"
+>>>>>>> Stashed changes
             android:parentActivityName="com.reflectmobile.activity.BaseActivity"
             android:screenOrientation="portrait"
             android:theme="@style/CustomActionBarTheme" >
@@ -98,8 +105,12 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.reflectmobile.activity.BaseActivity" />
         </activity>
+<<<<<<< Updated upstream
         
         
+=======
+
+>>>>>>> Stashed changes
         <meta-data
             android:name="com.facebook.sdk.ApplicationId"
             android:value="@string/app_id" />
