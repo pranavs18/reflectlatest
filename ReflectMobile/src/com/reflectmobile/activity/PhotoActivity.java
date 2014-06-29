@@ -17,11 +17,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-<<<<<<< Updated upstream
-
-=======
 import android.widget.ImageButton;
->>>>>>> Stashed changes
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -169,6 +165,8 @@ public class PhotoActivity extends BaseActivity {
 				img.setImageURI(selectedImageUri);
 			}
 		}
+		finish();
+		startActivity(this.getIntent());
 	}
 
 	public String getPath(Uri uri) {
@@ -235,13 +233,6 @@ public class PhotoActivity extends BaseActivity {
 				.execute("http://rewyndr.truefitdemo.com/api/memories?photo_id="
 						+ moment.getPhoto(position).getId());
 
-	}
-	
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		finish();
-		startActivity(this.getIntent());
-		super.onActivityResult(requestCode, resultCode, data);
 	}
 
 	public class ImagePagerAdapter extends PagerAdapter {
