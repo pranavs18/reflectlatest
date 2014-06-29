@@ -34,6 +34,7 @@ public abstract class BaseActivity extends Activity {
 	public static final int SIGNED_OUT = 1001;
 	public static final int SIGNED_IN_GOOGLE = 1002;
 	public static final int SIGNED_IN_FACEBOOK = 1003;
+	public static final int SIGNED_IN_REFLECT = 1004;
 
 	private static int signInStatus;
 
