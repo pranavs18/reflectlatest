@@ -33,7 +33,8 @@ import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
 
 public class LoginActivity extends BaseActivity implements ConnectionCallbacks,
 		OnConnectionFailedListener {
-	//private static final String URL_PREFIX_FRIENDS = "https://graph.facebook.com/me/friends?access_token=";
+	// private static final String URL_PREFIX_FRIENDS =
+	// "https://graph.facebook.com/me/friends?access_token=";
 	private static final String TAG = "LoginActivity";
 
 	private boolean signInClicked;
@@ -50,7 +51,7 @@ public class LoginActivity extends BaseActivity implements ConnectionCallbacks,
 
 	// Request code used to invoke sign in user interactions.
 	private static final int RC_SIGN_IN = 1001;
-	
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		hasNavigationDrawer = false;
@@ -123,9 +124,49 @@ public class LoginActivity extends BaseActivity implements ConnectionCallbacks,
 		}
 	}
 
+	public void onClickLogInReflect(View button) {
+		if (!signInClicked) {
+			signInClicked = true;
+			setSignInStatus(SIGNED_IN_REFLECT);
+
+			final HttpTaskHandler loginReflectWebHandler = new HttpTaskHandler() {
+				@Override
+				public void taskSuccessful(String result) {
+					Log.d("POST", result);
+					Intent intent = new Intent(LoginActivity.this,
+							CommunitiesActivity.class);
+					startActivity(intent);
+				}
+
+				@Override
+				public void taskFailed(String reason) {
+					Log.e("POST", "Error within POST request: " + reason);
+				}
+			};
+
+			// create json object for truefit
+			// possible bugs
+			JSONObject truefitLoginData = new JSONObject();
+			JSONObject truefitUserData = new JSONObject();
+			try {
+				truefitUserData.put("uid", "109014750652754814692");
+				truefitUserData.put("expires_in", 6340);
+				truefitUserData.put("provider", "google");
+				truefitLoginData.put("user_data", truefitUserData);
+			} catch (JSONException e) {
+				Log.e(TAG, "Error parsing JSON");
+			}
+			String payload = truefitLoginData.toString();
+			new HttpPostTask(loginReflectWebHandler, payload)
+					.execute("http://rewyndr.truefitdemo.com/api/authentication/login");
+
+		}
+	}
+
 	// Method for signing in with google in both first attempt and retry
 	private void googleSignIn() {
-		if (mGoogleConnectionResult!=null && mGoogleConnectionResult.hasResolution()) {
+		if (mGoogleConnectionResult != null
+				&& mGoogleConnectionResult.hasResolution()) {
 			try {
 				mGoogleIntentInProgress = true;
 				mGoogleConnectionResult.startResolutionForResult(this,
@@ -180,9 +221,9 @@ public class LoginActivity extends BaseActivity implements ConnectionCallbacks,
 							@Override
 							public void onCompleted(GraphUser user,
 									Response response) {
-								
+
 								setSignInStatus(SIGNED_IN_FACEBOOK);
-								
+
 								JSONObject userData = user.getInnerJSONObject();
 
 								// start interact with truefit backend

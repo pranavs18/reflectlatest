@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/card_community"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/card" >
+    android:background="@drawable/card"
+    tools:context=".activity.CommunityActivity$CardListViewAdapter" >
 
     <RelativeLayout
         android:id="@+id/community_card_header"
@@ -12,32 +14,6 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:orientation="vertical" >
-
-        <TextView
-            android:id="@+id/text_community_card_community_name"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_alignParentLeft="true"
-            android:layout_centerVertical="true"
-            android:layout_marginLeft="8dp"
-            android:gravity="center_vertical|left"
-            android:text="@string/moment_name"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:textColor="@android:color/black"
-            android:textSize="18sp" />
-
-        <TextView
-            android:id="@+id/text_community_card_date"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_centerVertical="true"
-            android:layout_marginRight="7dp"
-            android:layout_toLeftOf="@+id/button_community_card_total_photo"
-            android:gravity="center"
-            android:text="@string/moment_date"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:textColor="@android:color/black"
-            android:textSize="13sp" />
 
         <Button
             android:id="@+id/button_community_card_total_photo"
@@ -52,6 +28,34 @@
             android:text="@string/number_of_photos"
             android:textColor="@color/yellow"
             android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/text_community_card_date"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="7dp"
+            android:layout_toLeftOf="@+id/button_community_card_total_photo"
+            android:gravity="center"
+            android:text="@string/moment_date"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textColor="@android:color/black"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/text_community_card_community_name"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentLeft="true"
+            android:layout_toLeftOf="@id/text_community_card_date"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="8dp"
+            android:gravity="center_vertical|left"
+            android:singleLine="true"
+            android:text="@string/moment_name"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textColor="@android:color/black"
+            android:textSize="18sp" />
     </RelativeLayout>
 
     <LinearLayout

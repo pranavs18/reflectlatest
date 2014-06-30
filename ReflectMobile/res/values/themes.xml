@@ -4,6 +4,7 @@
     <style name="CustomActionBarTheme" parent="@android:style/Theme.Holo">
         <item name="android:actionBarStyle">@style/ActionBar</item>
         <item name="android:actionOverflowButtonStyle">@style/OverFlow</item>
+        <item name="android:actionMenuTextColor">@color/yellow</item>
     </style>
 
     <style name="ActionBar" parent="@android:style/Widget.Holo.ActionBar">

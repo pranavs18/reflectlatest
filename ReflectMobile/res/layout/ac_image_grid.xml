@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    
+    
+    <GridView
+        android:id="@+id/gridview"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:columnWidth="100dip"
+        android:gravity="center"
+        android:horizontalSpacing="4dip"
+        android:numColumns="auto_fit"
+        android:stretchMode="columnWidth"
+        android:layout_above="@+id/button1"
+        android:verticalSpacing="2dip" />
+
+    <Button
+        android:id="@+id/button2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:minWidth="160dp"
+        android:onClick="btnChoosePhotosCancel"
+        android:background="?android:attr/selectableItemBackground"
+        android:drawableLeft="@drawable/cross_active"
+        android:drawablePadding="8dp"
+        android:gravity="center_vertical"
+        android:paddingBottom="8dp"
+        android:paddingLeft="30dp"
+        android:paddingTop="8dp"
+        android:text="@string/cancel"
+        android:textColor="@color/green"
+        android:textSize="14sp"
+        android:textStyle="bold"
+       
+         />
+
+    <Button
+        android:id="@+id/button1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:background="?android:attr/selectableItemBackground"
+        android:drawableLeft="@drawable/tick_disabled"
+        android:drawablePadding="8dp"
+        android:gravity="center_vertical"
+        android:minWidth="160dp"
+        android:onClick="btnChoosePhotosClick"
+        android:paddingBottom="8dp"
+        android:paddingLeft="30dp"
+        android:paddingTop="8dp"
+        android:text="@string/done"
+        android:textColor="@color/green"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+</RelativeLayout>

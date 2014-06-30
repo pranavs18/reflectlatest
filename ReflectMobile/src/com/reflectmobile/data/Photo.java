@@ -7,12 +7,7 @@ import org.json.JSONObject;
 
 import com.reflectmobile.widget.ImageProcessor;
 
-import android.R.integer;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.RectF;
 import android.util.Log;
 
 public class Photo {

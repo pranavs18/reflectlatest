@@ -1,8 +1,10 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@color/gray"
-    android:orientation="vertical" >
+    android:orientation="vertical"
+    tools:context=".activity.PhotoActivity" >
 
     <LinearLayout
         android:id="@+id/photo_description"
@@ -79,6 +81,7 @@
             android:src="@drawable/tag" />
 
         <ImageButton
+            android:id="@+id/add_sound"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -88,6 +91,7 @@
             android:src="@drawable/sound" />
 
         <ImageButton
+            android:id="@+id/add_detail"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -97,6 +101,7 @@
             android:src="@drawable/detail" />
 
         <ImageButton
+            android:id="@+id/add_story"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -113,7 +118,7 @@
         android:layout_above="@id/tab_view"
         android:layout_below="@id/photo_description" >
 
-        <LinearLayout
+      <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical" >
@@ -127,6 +132,8 @@
                 android:paddingBottom="1dp"
                 android:paddingTop="1dp" >
             </android.support.v4.view.ViewPager>
+
+           
 
             <TextView
                 android:id="@+id/memories_caption"
