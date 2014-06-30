@@ -41,9 +41,11 @@ public class MultiPhotoSelectActivity extends BaseActivity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		hasNavigationDrawer = false;
-		setContentView(R.layout.ac_image_grid);
+		setContentView(R.layout.ac_image_grid);  // this layout contains the grid view 
 		super.onCreate(savedInstanceState);
 		
+		// set configuration for the image loader instance
+		// we can have default configuration but this config will invoke faster loading of the images
 		ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(getApplicationContext())
 		.threadPoolSize(3)
 		.threadPriority(Thread.NORM_PRIORITY - 2)
@@ -52,12 +54,10 @@ public class MultiPhotoSelectActivity extends BaseActivity {
 		.discCacheFileNameGenerator(new Md5FileNameGenerator())
 		.enableLogging() 
 		.build();
-	
+	    
 	    ImageLoader.getInstance().init(config);
 
-		//Bundle bundle = getIntent().getExtras();
-		//imageUrls = bundle.getStringArray(Extra.IMAGES);
-
+	    // Access the Media Store to retrieve the images 
 		final String[] columns = { MediaStore.Images.Media.DATA, MediaStore.Images.Media._ID };
 		final String orderBy = MediaStore.Images.Media.DATE_TAKEN;
 		@SuppressWarnings("deprecation")
@@ -71,7 +71,7 @@ public class MultiPhotoSelectActivity extends BaseActivity {
 			imagecursor.moveToPosition(i);
 			int dataColumnIndex = imagecursor.getColumnIndex(MediaStore.Images.Media.DATA);
 			imageUrls.add(imagecursor.getString(dataColumnIndex));
-			Log.d(MultiPhotoSelectActivity.class.getSimpleName(),"=====> Array path => "+imageUrls.get(i));
+			Log.d(MultiPhotoSelectActivity.class.getSimpleName(),"=====> Array path => "+imageUrls.get(i)); // Log the url of the images being displayed in the photo gallery
 		}
 		
 		
@@ -94,7 +94,8 @@ public class MultiPhotoSelectActivity extends BaseActivity {
 		imageLoader.stop();
 		super.onStop();
 	}
-
+    
+	// track the selected images (tapped images) 
 	public void btnChoosePhotosClick(View v){
 		
 	    selectedItems = imageAdapter.getCheckedItems();
@@ -111,14 +112,21 @@ public class MultiPhotoSelectActivity extends BaseActivity {
 			CheckBox mCheckBox = (CheckBox) findViewById(R.id.checkBox1);
 			mCheckBox.setChecked(false);
 		 }
-    }*/
+    }
+    	for(int i=0;i<selectedItems.size();i++){
+    	final CheckBox checkBox = (CheckBox) findViewById(R.id.checkBox1);
+        if (checkBox.isChecked()) {
+            checkBox.setChecked(false);
+        }
+    	}*/
 		imageAdapter.notifyDataSetChanged();
 		Log.d(MultiPhotoSelectActivity.class.getSimpleName(), "Cancelled Selected Photos");
 		
 	}
 	
 	
-
+     // This class defines the view for the photo gallery and populates the data structure for holding the 
+     // selected images 
 	public class ImageAdapter extends BaseAdapter {
 		
 		ArrayList<String> mList;
@@ -193,7 +201,6 @@ public class MultiPhotoSelectActivity extends BaseActivity {
 
 			@Override
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-				// TODO Auto-generated method stub
 				mSparseBooleanArray.put((Integer) buttonView.getTag(), isChecked);
 			}
 		};
