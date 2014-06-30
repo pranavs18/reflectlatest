@@ -82,7 +82,7 @@
             android:label="@string/title_activity_moment"
             android:parentActivityName="com.reflectmobile.activity.BaseActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/CustomActionBarTheme" >
+            android:theme="@style/ContextualActionBarTheme" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.reflectmobile.activity.BaseActivity" />
@@ -94,7 +94,7 @@
             android:label="@string/title_photo_gallery"
             android:parentActivityName="com.reflectmobile.activity.BaseActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/CustomActionBarTheme" >
+            android:theme="@style/ContextualActionBarTheme" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.reflectmobile.activity.BaseActivity" />
@@ -106,7 +106,19 @@
             android:label="@string/add_new_story"
             android:parentActivityName="com.reflectmobile.activity.BaseActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/CustomActionBarTheme" >
+            android:theme="@style/ContextualActionBarTheme" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.reflectmobile.activity.BaseActivity" />
+        </activity>
+        <activity
+            android:name=".activity.AddDetailActivity"
+            android:configChanges="orientation"
+            android:icon="@drawable/action_bar_icon_logo"
+            android:label="@string/add_new_detail"
+            android:parentActivityName="com.reflectmobile.activity.BaseActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/ContextualActionBarTheme" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.reflectmobile.activity.BaseActivity" />

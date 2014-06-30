@@ -21,7 +21,6 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-
 import com.reflectmobile.R;
 import com.reflectmobile.data.Memory;
 import com.reflectmobile.data.Moment;
@@ -30,11 +29,9 @@ import com.reflectmobile.utility.NetworkManager.HttpGetTask;
 import com.reflectmobile.utility.NetworkManager.HttpImageTaskHandler;
 import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
 
-
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
-
 
 public class PhotoActivity extends BaseActivity {
 
@@ -42,12 +39,16 @@ public class PhotoActivity extends BaseActivity {
 	private Moment moment;
 	private Memory[] mMemories;
 	private LayoutInflater mInflater;
-	
-	/* photo gallery variables */
-	private static final int SELECT_PICTURE = 1;
 
+	static final int CODE_ADD_STORY = 101;
+	static final int CODE_ADD_DETAIL = 102;
+	static final int CODE_SELECT_PICTURE = 103;
+
+	/* photo gallery variables */
 	private String selectedImagePath;
 	private ImageView img;
+
+	private int photoId = 0;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +68,10 @@ public class PhotoActivity extends BaseActivity {
 		ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) title
 				.getLayoutParams();
 		mlp.setMargins(5, 0, 0, 0);
+
+		getActionBar().setDisplayHomeAsUpEnabled(true);
+		ImageView view = (ImageView) findViewById(android.R.id.home);
+		view.setPadding(10, 0, 0, 0);
 
 		final int momentId = getIntent().getIntExtra("moment_id", 0);
 		final int photoId = getIntent().getIntExtra("photo_id", 0);
@@ -97,7 +102,7 @@ public class PhotoActivity extends BaseActivity {
 				viewPager.setOnPageChangeListener(new OnPageChangeListener() {
 					@Override
 					public void onPageSelected(final int position) {
-						loadMemories(position);
+						onPhotoSelected(position);
 					}
 
 					@Override
@@ -111,7 +116,7 @@ public class PhotoActivity extends BaseActivity {
 				viewPager.setCurrentItem(index);
 				if (index == 0) {
 					// Special case for the first item (page is not changed)
-					loadMemories(0);
+					onPhotoSelected(0);
 				}
 
 			}
@@ -148,8 +153,12 @@ public class PhotoActivity extends BaseActivity {
 			 * startActivityForResult
 			 * (Intent.createChooser(intent,"Select Picture"), SELECT_PICTURE);
 			 */
-			Intent intent = new Intent(PhotoActivity.this, MultiPhotoSelectActivity.class);
+			Intent intent = new Intent(PhotoActivity.this,
+					MultiPhotoSelectActivity.class);
 			startActivity(intent);
+			return true;
+		case android.R.id.home:
+			onBackPressed();
 			return true;
 		default:
 			return super.onOptionsItemSelected(item);
@@ -158,7 +167,7 @@ public class PhotoActivity extends BaseActivity {
 
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (resultCode == RESULT_OK) {
-			if (requestCode == SELECT_PICTURE) {
+			if (requestCode == CODE_SELECT_PICTURE) {
 				Uri selectedImageUri = data.getData();
 				selectedImagePath = getPath(selectedImageUri);
 				System.out.println("Image Path : " + selectedImagePath);
@@ -166,7 +175,9 @@ public class PhotoActivity extends BaseActivity {
 			}
 		}
 		finish();
-		startActivity(this.getIntent());
+		Intent intent = this.getIntent();
+		intent.putExtra("photo_id", photoId);
+		startActivity(intent);
 	}
 
 	public String getPath(Uri uri) {
@@ -179,7 +190,9 @@ public class PhotoActivity extends BaseActivity {
 		return ((Cursor) cursor).getString(column_index);
 	}
 
-	public void loadMemories(final int position) {
+	public void onPhotoSelected(final int position) {
+		photoId = moment.getPhoto(position).getId();
+
 		final ViewGroup memoryContainer = (ViewGroup) findViewById(R.id.memories_container);
 		memoryContainer.removeAllViews();
 		final TextView memoryCaption = (TextView) findViewById(R.id.memories_caption);
@@ -187,15 +200,28 @@ public class PhotoActivity extends BaseActivity {
 
 		ImageButton addStoryButton = (ImageButton) findViewById(R.id.add_story);
 		addStoryButton.setOnClickListener(new OnClickListener() {
-			
+
 			@Override
 			public void onClick(View arg0) {
-				Intent intent = new Intent(PhotoActivity.this, AddStoryActivity.class);
+				Intent intent = new Intent(PhotoActivity.this,
+						AddStoryActivity.class);
 				intent.putExtra("photo_id", moment.getPhoto(position).getId());
-				startActivity(intent);
+				startActivityForResult(intent, CODE_ADD_STORY);
 			}
 		});
-		
+
+		ImageButton addDetailButton = (ImageButton) findViewById(R.id.add_detail);
+		addDetailButton.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View arg0) {
+				Intent intent = new Intent(PhotoActivity.this,
+						AddDetailActivity.class);
+				intent.putExtra("photo_id", moment.getPhoto(position).getId());
+				startActivityForResult(intent, CODE_ADD_DETAIL);
+			}
+		});
+
 		final HttpTaskHandler getMemoriesHandler = new HttpTaskHandler() {
 			@Override
 			public void taskSuccessful(String result) {

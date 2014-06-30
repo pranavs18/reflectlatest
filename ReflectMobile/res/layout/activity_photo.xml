@@ -74,7 +74,7 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@android:color/transparent"
+            android:background="?android:selectableItemBackground"
             android:contentDescription="@string/add_tag"
             android:padding="8dp"
             android:src="@drawable/tag" />
@@ -84,7 +84,7 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@android:color/transparent"
+            android:background="?android:selectableItemBackground"
             android:contentDescription="@string/add_sound"
             android:padding="8dp"
             android:src="@drawable/sound" />
@@ -94,7 +94,7 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@android:color/transparent"
+            android:background="?android:selectableItemBackground"
             android:contentDescription="@string/add_detail"
             android:padding="8dp"
             android:src="@drawable/detail" />
@@ -104,7 +104,7 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@android:color/transparent"
+            android:background="?android:selectableItemBackground"
             android:contentDescription="@string/add_story"
             android:padding="8dp"
             android:src="@drawable/story" />

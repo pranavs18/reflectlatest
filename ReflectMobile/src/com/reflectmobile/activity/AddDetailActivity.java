@@ -14,13 +14,15 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
 
-public class AddStoryActivity extends BaseActivity {
+public class AddDetailActivity extends BaseActivity {
 
-	private String TAG = "AddStoryActivity";
+	private String TAG = "AddDetailActivity";
 
 	private int photoId;
 	private boolean addButtonPressed = false;
@@ -28,7 +30,7 @@ public class AddStoryActivity extends BaseActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		hasNavigationDrawer = false;
-		setContentView(R.layout.add_story);
+		setContentView(R.layout.add_detail);
 		super.onCreate(savedInstanceState);
 
 		// Modify action bar title
@@ -50,13 +52,20 @@ public class AddStoryActivity extends BaseActivity {
 
 		addButtonPressed = false;
 		photoId = getIntent().getIntExtra("photo_id", 0);
+
+		Spinner spinner = (Spinner) findViewById(R.id.spinner_emotions);
+		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
+				this, R.array.detail_items,
+				R.layout.spinner);
+		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		spinner.setAdapter(adapter);
 	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu items for use in the action bar
 		MenuInflater inflater = getMenuInflater();
-		inflater.inflate(R.menu.add_story_menu, menu);
+		inflater.inflate(R.menu.add_detail_menu, menu);
 		return super.onCreateOptionsMenu(menu);
 	}
 
@@ -64,10 +73,10 @@ public class AddStoryActivity extends BaseActivity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		// Handle action buttons
 		switch (item.getItemId()) {
-		case R.id.action_add_story:
+		case R.id.action_add_detail:
 			if (!addButtonPressed){
 				addButtonPressed = true;
-				addStory();
+				addDetail();
 			}
 			return true;
 		case android.R.id.home:
@@ -78,7 +87,7 @@ public class AddStoryActivity extends BaseActivity {
 		}
 	}
 
-	public void addStory() {
+	public void addDetail() {
 		Log.d(TAG, "PhotoId " + photoId);
 		HttpTaskHandler httpPostTaskHandler = new HttpTaskHandler() {
 			@Override
@@ -93,12 +102,20 @@ public class AddStoryActivity extends BaseActivity {
 			}
 		};
 		JSONObject storyData = new JSONObject();
-		EditText storyEditText = (EditText) findViewById(R.id.story_text);
-		String storyText = storyEditText.getText().toString();
+		EditText taggedEditText = (EditText) findViewById(R.id.tagged);
+		String taggedText = taggedEditText.getText().toString();
+
+		Spinner spinner = (Spinner) findViewById(R.id.spinner_emotions);
+		String spinnerText = spinner.getSelectedItem().toString();
+
+		EditText detailEditText = (EditText) findViewById(R.id.detail_text);
+		String detailText = detailEditText.getText().toString();
+
+		String memoryText = taggedText + " " + spinnerText + " " + detailText;
 		try {
 			storyData.put("photo_id", photoId);
-			storyData.put("memory_type", "story");
-			storyData.put("memory_content", storyText);
+			storyData.put("memory_type", "detail");
+			storyData.put("memory_content", memoryText);
 		} catch (JSONException e) {
 			Log.e(TAG, "Error forming JSON");
 		}
