@@ -62,7 +62,7 @@ public class ImageProcessor {
 		Paint paint = new Paint();
 		paint.setColor(Color.WHITE);
 		paint.setStyle(Paint.Style.STROKE);
-		paint.setStrokeWidth(10);
+		paint.setStrokeWidth(5);
 
 		// Loop through the tag list and check whether the (x, y) is in any tag
 		boolean isInTag = false;

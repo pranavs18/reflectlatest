@@ -1,6 +1,5 @@
 package com.reflectmobile.activity;
 
-
 import org.json.JSONArray;
 import org.json.JSONException;
 
@@ -55,6 +54,11 @@ public class PhotoActivity extends BaseActivity {
 	/* photo gallery variables */
 	private static final int SELECT_PICTURE = 1;
 
+	static final int CODE_ADD_STORY = 101;
+	static final int CODE_ADD_DETAIL = 102;
+	static final int CODE_SELECT_PICTURE = 103;
+
+	/* photo gallery variables */
 	private String selectedImagePath;
 	private ImageView img;
 
@@ -65,7 +69,7 @@ public class PhotoActivity extends BaseActivity {
 	private static int photoImageViewHeightPX = 0;
 	private static int photoImageViewWidthPX = 0;
 	// Set when the image changes
-	private int currentPhotoIndex = 1;
+	private int currentPhotoIndex = 2;
 	private ImageView currentImageView = null;
 	private float photoOffsetX = 0;
 	private float photoOffsetY = 0;
@@ -76,6 +80,8 @@ public class PhotoActivity extends BaseActivity {
 	// image
 	// If it is in edit tag mode, it should be set to the tag location
 	private RectF currentEdittedTagLocation = new RectF(0, 0, 0, 0);
+
+	private int photoId = 0;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -95,6 +101,10 @@ public class PhotoActivity extends BaseActivity {
 		ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) title
 				.getLayoutParams();
 		mlp.setMargins(5, 0, 0, 0);
+
+		getActionBar().setDisplayHomeAsUpEnabled(true);
+		ImageView view = (ImageView) findViewById(android.R.id.home);
+		view.setPadding(10, 0, 0, 0);
 
 		final int momentId = getIntent().getIntExtra("moment_id", 0);
 		final int photoId = getIntent().getIntExtra("photo_id", 0);
@@ -125,8 +135,8 @@ public class PhotoActivity extends BaseActivity {
 				viewPager.setOnPageChangeListener(new OnPageChangeListener() {
 					@Override
 					public void onPageSelected(final int position) {
-						loadMemories(position);
 						// TODO
+						onPhotoSelected(position);
 					}
 
 					@Override
@@ -140,7 +150,7 @@ public class PhotoActivity extends BaseActivity {
 				viewPager.setCurrentItem(index);
 				if (index == 0) {
 					// Special case for the first item (page is not changed)
-					loadMemories(0);
+					onPhotoSelected(0);
 				}
 
 			}
@@ -156,7 +166,7 @@ public class PhotoActivity extends BaseActivity {
 						+ momentId);
 
 		// TODO
-		handleTagButton();
+		handleTagButtonView();
 		// Transfer image view size from dp to px
 		photoImageViewHeightPX = dpToPx(photoImageViewHeightDP);
 		photoImageViewWidthPX = dpToPx(photoImageViewWidthDP);
@@ -186,6 +196,9 @@ public class PhotoActivity extends BaseActivity {
 					MultiPhotoSelectActivity.class);
 			startActivity(intent);
 			return true;
+		case android.R.id.home:
+			onBackPressed();
+			return true;
 		default:
 			return super.onOptionsItemSelected(item);
 		}
@@ -193,7 +206,7 @@ public class PhotoActivity extends BaseActivity {
 
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (resultCode == RESULT_OK) {
-			if (requestCode == SELECT_PICTURE) {
+			if (requestCode == CODE_SELECT_PICTURE) {
 				Uri selectedImageUri = data.getData();
 				selectedImagePath = getPath(selectedImageUri);
 				System.out.println("Image Path : " + selectedImagePath);
@@ -201,7 +214,9 @@ public class PhotoActivity extends BaseActivity {
 			}
 		}
 		finish();
-		startActivity(this.getIntent());
+		Intent intent = this.getIntent();
+		intent.putExtra("photo_id", photoId);
+		startActivity(intent);
 	}
 
 	public String getPath(Uri uri) {
@@ -214,7 +229,9 @@ public class PhotoActivity extends BaseActivity {
 		return ((Cursor) cursor).getString(column_index);
 	}
 
-	public void loadMemories(final int position) {
+	public void onPhotoSelected(final int position) {
+		photoId = moment.getPhoto(position).getId();
+
 		final ViewGroup memoryContainer = (ViewGroup) findViewById(R.id.memories_container);
 		memoryContainer.removeAllViews();
 		final TextView memoryCaption = (TextView) findViewById(R.id.memories_caption);
@@ -228,7 +245,19 @@ public class PhotoActivity extends BaseActivity {
 				Intent intent = new Intent(PhotoActivity.this,
 						AddStoryActivity.class);
 				intent.putExtra("photo_id", moment.getPhoto(position).getId());
-				startActivity(intent);
+				startActivityForResult(intent, CODE_ADD_STORY);
+			}
+		});
+
+		ImageButton addDetailButton = (ImageButton) findViewById(R.id.add_detail);
+		addDetailButton.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View arg0) {
+				Intent intent = new Intent(PhotoActivity.this,
+						AddDetailActivity.class);
+				intent.putExtra("photo_id", moment.getPhoto(position).getId());
+				startActivityForResult(intent, CODE_ADD_DETAIL);
 			}
 		});
 
@@ -296,7 +325,6 @@ public class PhotoActivity extends BaseActivity {
 		public Object instantiateItem(final ViewGroup container,
 				final int position) {
 			Log.d(TAG, position + "");
-			// TODO
 			ImageView imageView = new ImageView(PhotoActivity.this);
 			// TODO
 			if (position == currentPhotoIndex) {
@@ -382,9 +410,7 @@ public class PhotoActivity extends BaseActivity {
 	}
 
 	// Add ontouch listener for the tag button
-	public void handleTagButton() {
-		// Calculate photo offset of this image view
-
+	public void handleTagButtonEdition() {
 		// Add ontouch listener
 		ImageButton tagButton = (ImageButton) findViewById(R.id.button_photo_tag);
 		tagButton.setOnClickListener(new OnClickListener() {
@@ -396,6 +422,7 @@ public class PhotoActivity extends BaseActivity {
 				setPhotoOffset();
 				// Currently hardcode dafault tag location
 				currentEdittedTagLocation.set(100, 100, 200, 200);
+				final Photo currentPhoto = moment.getPhoto(currentPhotoIndex);
 
 				// Add on touch listener for the current image view on screen
 				currentImageView.setOnTouchListener(new OnTouchListener() {
@@ -410,18 +437,13 @@ public class PhotoActivity extends BaseActivity {
 						float bitmapX = event.getX() + photoOffsetX;
 						float bitmapY = event.getY() + photoOffsetY;
 						// Location to original photo
-						if (isExpandHorizontal) {
-							bitmapX = bitmapX / photoScaleFactor;
-						} else {
-							bitmapY = bitmapY / photoScaleFactor;
-						}
+						bitmapX = bitmapX / photoScaleFactor;
+						bitmapY = bitmapY / photoScaleFactor;
 
 						switch (event.getAction()) {
 						case MotionEvent.ACTION_MOVE:
 							Log.d(TAG, "MovingNode:" + movingNode);
 							// During move, keep updating the edit square
-							Photo currentPhoto = moment
-									.getPhoto(currentPhotoIndex);
 							// Change tag location based on touch location
 							changeTagLocation(prevBitmapX, prevBitmapY,
 									bitmapX, bitmapY, movingNode);
@@ -442,6 +464,54 @@ public class PhotoActivity extends BaseActivity {
 							// Clear last touch location
 							prevBitmapX = -1;
 							prevBitmapY = -1;
+							break;
+						default:
+							break;
+						}
+						return true;
+					}
+				});
+
+			}
+		});
+	}
+
+	public void handleTagButtonView() {
+		// Add ontouch listener
+		ImageButton tagButton = (ImageButton) findViewById(R.id.button_photo_tag);
+		tagButton.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				// TODO
+				// Currently hardcode
+				setPhotoOffset();
+				// Set the current image view as the tagged photo
+				final Photo currentPhoto = moment.getPhoto(currentPhotoIndex);
+				currentImageView.setImageBitmap(currentPhoto
+						.getTaggedLargeBitmap());
+				// Add on touch listener for the current image view on screen
+				currentImageView.setOnTouchListener(new OnTouchListener() {
+					public boolean onTouch(View v, MotionEvent event) {
+						// Transfer the coordinate from the image view to the
+						// photo bitmap
+						// Location on the enlarged photo
+						float bitmapX = event.getX() + photoOffsetX;
+						float bitmapY = event.getY() + photoOffsetY;
+						// Location to original photo
+						bitmapX = bitmapX / photoScaleFactor;
+						bitmapY = bitmapY / photoScaleFactor;
+						Log.d(TAG, "Bitmap" + bitmapX + " " + bitmapY);
+						switch (event.getAction()) {
+						case MotionEvent.ACTION_DOWN:
+							// Generate the highlighted tag bitmap
+							Bitmap newBitmap = ImageProcessor.generateHighlightedTaggedBitmap(
+									currentPhoto.getLargeBitmap(),
+									currentPhoto.getTaggedLargeBitmap(),
+									currentPhoto.getDarkenTaggedLargeBitmap(),
+									currentPhoto.getTagList(), bitmapX, bitmapY);
+							// Set to the current image view
+							currentImageView.setImageBitmap(newBitmap);
 							break;
 						default:
 							break;

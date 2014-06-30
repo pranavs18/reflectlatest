@@ -4,7 +4,19 @@
     <style name="CustomActionBarTheme" parent="@android:style/Theme.Holo">
         <item name="android:actionBarStyle">@style/ActionBar</item>
         <item name="android:actionOverflowButtonStyle">@style/OverFlow</item>
+    </style>
+
+    <style name="ContextualActionBarTheme" parent="@android:style/Theme.Holo">
+        <item name="android:actionBarStyle">@style/ActionBar</item>
+        <item name="android:actionOverflowButtonStyle">@style/OverFlow</item>
         <item name="android:actionMenuTextColor">@color/yellow</item>
+        <item name="android:actionMenuTextAppearance">@style/ContextualActionBarTheme.MenuTextStyle</item>
+        <item name="android:homeAsUpIndicator">@drawable/back</item>
+    </style>
+
+    <style name="ContextualActionBarTheme.MenuTextStyle" parent="@android:style/TextAppearance.Holo.Widget.ActionBar.Menu">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">normal</item>
     </style>
 
     <style name="ActionBar" parent="@android:style/Widget.Holo.ActionBar">

@@ -106,7 +106,7 @@
             android:background="@color/green"
             android:drawableLeft="@drawable/action_bar_icon_logo"
             android:onClick="onClickLogInReflect"
-            android:paddingLeft="25dp"
+            android:paddingLeft="15dp"
             android:text="@string/log_in_with_reflect"
             android:textSize="17sp" />
     </RelativeLayout>
