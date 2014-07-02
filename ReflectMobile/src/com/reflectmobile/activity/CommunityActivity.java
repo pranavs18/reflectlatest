@@ -39,6 +39,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Toast;
 import android.widget.ImageView.ScaleType;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -62,6 +63,7 @@ public class CommunityActivity extends BaseActivity {
 	// Static identifier for receiving camera apps call back
 	private static final int REQUEST_TAKE_PHOTO = 1;
 	public static final int MEDIA_TYPE_IMAGE = 1;
+	private static  String inviteLink = "";
 	String photoPath;
 	
 	@Override
@@ -109,6 +111,27 @@ public class CommunityActivity extends BaseActivity {
 		new HttpGetTask(getCommunityHandler)
 				.execute("http://rewyndr.truefitdemo.com/api/communities/"
 						+ communityId);
+		
+		final HttpTaskHandler getInviteHandler = new HttpTaskHandler() {
+			@Override
+			public void taskSuccessful(String result) {
+               Log.d(TAG, result);	
+               inviteLink = inviteLink + result;
+              
+			}
+
+			@Override
+			public void taskFailed(String reason) {
+				Log.e(TAG, "Error within GET request: " + reason);
+				
+			}
+		};
+        
+		new HttpGetTask(getInviteHandler)
+				.execute("http://rewyndr.truefitdemo.com/api/invites/link/"
+						+ communityId);
+        Log.d(TAG, "http://rewyndr.truefitdemo.com/api/invites/link/"
+				+ communityId );
 
 	}
 
@@ -126,65 +149,72 @@ public class CommunityActivity extends BaseActivity {
 		switch (item.getItemId()) {
 		// If the filter item is selected
 		case R.id.action_filter_moments:
-			// Initialze dialog window and set content
-			View dialogView = getLayoutInflater().inflate(
-					R.layout.dialog_community_filter, null);
-			ListView filterListView = (ListView) dialogView
-					.findViewById(R.id.listView_community_dialog_filter);
-
-			// Dummy name in the community
-			ArrayList<String> nameList = new ArrayList<String>();
-			nameList.add("123");
-			nameList.add("234");
-			nameList.add("234");
-			nameList.add("234");
-			nameList.add("234");
-			nameList.add("234");
-
-			// Generate and bind adapter
-			FilterListViewAdapter adapter = new FilterListViewAdapter(
-					CommunityActivity.this, nameList);
-
-			filterListView.setAdapter(adapter);
-
-			// Generate the custom center title view
-			TextView title = new TextView(this);
-			title.setText(R.string.title_dialog_community_filter);
-			title.setPadding(20, 20, 20, 20);
-			title.setGravity(Gravity.CENTER);
-			title.setTextSize(25);
-
-			// Generate the dialog
-			new AlertDialog.Builder(CommunityActivity.this)
-					.setView(dialogView)
-					.setPositiveButton("Apply",
-							new DialogInterface.OnClickListener() {
-
-								@Override
-								public void onClick(DialogInterface dialog,
-										int which) {
-								}
-							})
-					.setNegativeButton("Cancel",
-							new DialogInterface.OnClickListener() {
-
-								@Override
-								public void onClick(DialogInterface dialog,
-										int which) {
-								}
-							}).setCustomTitle(title).setCancelable(false)
-					.show();
-			return true;
+			invite();
+			return false;
 		case R.id.action_add_moment:
 			createMoment();
-			return true;
+			return false;
 		case R.id.action_take_photo:
 			// create Intent to take a picture and return control to the rewyndr application
 			takePhoto();
-			return true;
+			return false;
+		case R.id.action_invite:
+			inviteToCommunity();
+			return false;
 		default:
 			return super.onOptionsItemSelected(item);
 		}
+	}
+
+	private void invite() {
+		// Initialze dialog window and set content
+		View dialogView = getLayoutInflater().inflate(
+				R.layout.dialog_community_filter, null);
+		ListView filterListView = (ListView) dialogView
+				.findViewById(R.id.listView_community_dialog_filter);
+
+		// Dummy name in the community
+		ArrayList<String> nameList = new ArrayList<String>();
+		nameList.add("123");
+		nameList.add("234");
+		nameList.add("234");
+		nameList.add("234");
+		nameList.add("234");
+		nameList.add("234");
+
+		// Generate and bind adapter
+		FilterListViewAdapter adapter = new FilterListViewAdapter(
+				CommunityActivity.this, nameList);
+
+		filterListView.setAdapter(adapter);
+
+		// Generate the custom center title view
+		TextView title = new TextView(this);
+		title.setText(R.string.title_dialog_community_filter);
+		title.setPadding(20, 20, 20, 20);
+		title.setGravity(Gravity.CENTER);
+		title.setTextSize(25);
+
+		// Generate the dialog
+		new AlertDialog.Builder(CommunityActivity.this)
+				.setView(dialogView)
+				.setPositiveButton("Apply",
+						new DialogInterface.OnClickListener() {
+
+							@Override
+							public void onClick(DialogInterface dialog,
+									int which) {
+							}
+						})
+				.setNegativeButton("Cancel",
+						new DialogInterface.OnClickListener() {
+
+							@Override
+							public void onClick(DialogInterface dialog,
+									int which) {
+							}
+						}).setCustomTitle(title).setCancelable(false)
+				.show();
 	}
 
 	public static class AddMomentDialog extends DialogFragment {
@@ -296,6 +326,32 @@ public class CommunityActivity extends BaseActivity {
 		AddMomentDialog addMomentDialog = new AddMomentDialog();
 		addMomentDialog.show(fm, "fragment_add_moment");
 	}
+	
+    public void inviteToCommunity(){
+        
+       
+		// Retreive data from the web
+	
+       
+        Intent i = new Intent(Intent.ACTION_SEND);
+    	i.setType("message/rfc822");
+    	i.putExtra(Intent.EXTRA_EMAIL  , new String[]{""});
+    	i.putExtra(Intent.EXTRA_SUBJECT, "Rewyndr Community Invite Link");
+    	Log.d(TAG, "sending the generated invite link " + inviteLink);
+    	getIntent().addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+        
+        i.putExtra(Intent.EXTRA_TEXT , inviteLink);
+    	
+    	try {
+    	    startActivity(Intent.createChooser(i, "Send mail..."));
+    		} 
+    	catch (android.content.ActivityNotFoundException ex) {
+    	    Toast.makeText(CommunityActivity.this, "There are no email clients installed.", Toast.LENGTH_SHORT).show();
+    		}
+    	Toast.makeText(CommunityActivity.this, "Just one more step.... ", Toast.LENGTH_SHORT).show();
+    	Log.d(sendInvite.class.getSimpleName(), "Sending Invitation.... ");
+    
+    }
 
 	// Specific adapter for Community Activity
 	private class CardListViewAdapter extends BaseAdapter {

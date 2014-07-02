@@ -2,20 +2,24 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
 
     <item
-        android:id="@+id/action_add_moment"
-        android:icon="@drawable/action_bar_icon_plus"
-        android:showAsAction="always"
-        android:title="@string/action_add_moment"/>
-    <item
-        android:id="@+id/action_filter_moments"
-        android:icon="@drawable/filter"
-        android:showAsAction="always"
-        android:title="@string/action_filter_moments"/>
-    <item
         android:id="@+id/action_take_photo"
         android:icon="@drawable/camera"
         android:showAsAction="always"
         android:title="@string/action_take_photo"/>
-    
+    <item
+        android:id="@+id/action_add_moment"
+        android:icon="@drawable/action_bar_icon_plus"
+        android:showAsAction="never"
+        android:title="@string/action_add_moment"/>
+    <item
+        android:id="@+id/action_filter_moments"
+        android:icon="@drawable/filter"
+        android:showAsAction="never"
+        android:title="@string/action_filter_moments"/>
+    <item
+        android:id="@+id/action_invite"
+        android:icon="@drawable/camera"
+        android:showAsAction="never"
+        android:title="@string/action_invite_to_community"/>
 
 </menu>
