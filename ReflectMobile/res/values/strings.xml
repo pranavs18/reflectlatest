@@ -85,5 +85,7 @@
     <string name="add_new_story">Add New Story</string>
     <string name="log_in_with_reflect">Log In with Reflect</string>
     <string name="add_new_detail">Add New Detail</string>
+    <string name="take_photo">Take photo</string>
+    <string name="checkbox">Checkbox</string>
 
 </resources>
