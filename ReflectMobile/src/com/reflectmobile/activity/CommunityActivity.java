@@ -63,7 +63,7 @@ public class CommunityActivity extends BaseActivity {
 	// Static identifier for receiving camera apps call back
 	private static final int REQUEST_TAKE_PHOTO = 1;
 	public static final int MEDIA_TYPE_IMAGE = 1;
-	private static  String inviteLink = "";
+	private String inviteLink = "";
 	String photoPath;
 	
 	@Override
@@ -111,13 +111,13 @@ public class CommunityActivity extends BaseActivity {
 		new HttpGetTask(getCommunityHandler)
 				.execute("http://rewyndr.truefitdemo.com/api/communities/"
 						+ communityId);
-		
-		final HttpTaskHandler getInviteHandler = new HttpTaskHandler() {
+		// Retreive data from the web
+    	final HttpTaskHandler getInviteHandler = new HttpTaskHandler() {
 			@Override
 			public void taskSuccessful(String result) {
                Log.d(TAG, result);	
                inviteLink = inviteLink + result;
-              
+               
 			}
 
 			@Override
@@ -125,6 +125,8 @@ public class CommunityActivity extends BaseActivity {
 				Log.e(TAG, "Error within GET request: " + reason);
 				
 			}
+			
+			
 		};
         
 		new HttpGetTask(getInviteHandler)
@@ -132,6 +134,8 @@ public class CommunityActivity extends BaseActivity {
 						+ communityId);
         Log.d(TAG, "http://rewyndr.truefitdemo.com/api/invites/link/"
 				+ communityId );
+      
+		
 
 	}
 
@@ -328,11 +332,9 @@ public class CommunityActivity extends BaseActivity {
 	}
 	
     public void inviteToCommunity(){
-        
+    	 
        
-		// Retreive data from the web
-	
-       
+		
         Intent i = new Intent(Intent.ACTION_SEND);
     	i.setType("message/rfc822");
     	i.putExtra(Intent.EXTRA_EMAIL  , new String[]{""});
@@ -350,6 +352,7 @@ public class CommunityActivity extends BaseActivity {
     		}
     	Toast.makeText(CommunityActivity.this, "Just one more step.... ", Toast.LENGTH_SHORT).show();
     	Log.d(sendInvite.class.getSimpleName(), "Sending Invitation.... ");
+    	//inviteLink = "";
     
     }
 
