@@ -87,6 +87,6 @@
     <string name="add_new_detail">Add New Detail</string>
     <string name="take_photo">Take photo</string>
     <string name="checkbox">Checkbox</string>
-    <string name="action_invite_to_community">Invite to community</string>
+    <string name="action_invite_to_community">Invite</string>
 
 </resources>
