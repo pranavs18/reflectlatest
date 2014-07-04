@@ -17,13 +17,15 @@
     <uses-feature
         android:name="android.hardware.camera"
         android:required="true" />
+
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
     <application
         android:allowBackup="true"
+        android:hardwareAccelerated="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme"
-        android:hardwareAccelerated="true">
+        android:theme="@style/AppTheme" >
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
@@ -49,7 +51,7 @@
             android:name=".activity.CommunitiesActivity"
             android:configChanges="orientation"
             android:icon="@drawable/action_bar_icon_logo"
-            android:label="@string/title_activity_network"
+            android:label=""
             android:parentActivityName="com.reflectmobile.activity.BaseActivity"
             android:screenOrientation="portrait"
             android:theme="@style/CustomActionBarTheme" >
@@ -61,7 +63,7 @@
             android:name=".activity.CommunityActivity"
             android:configChanges="orientation"
             android:icon="@drawable/action_bar_icon_logo"
-            android:label="@string/title_activity_community"
+            android:label=""
             android:parentActivityName="com.reflectmobile.activity.BaseActivity"
             android:screenOrientation="portrait"
             android:theme="@style/CustomActionBarTheme" >
@@ -73,7 +75,7 @@
             android:name=".activity.MomentActivity"
             android:configChanges="orientation"
             android:icon="@drawable/action_bar_icon_logo"
-            android:label="@string/title_activity_moment"
+            android:label=""
             android:parentActivityName="com.reflectmobile.activity.BaseActivity"
             android:screenOrientation="portrait"
             android:theme="@style/CustomActionBarTheme" >
@@ -85,7 +87,6 @@
             android:name=".activity.PhotoActivity"
             android:configChanges="orientation"
             android:icon="@drawable/action_bar_icon_logo"
-            android:label="@string/title_activity_moment"
             android:parentActivityName="com.reflectmobile.activity.BaseActivity"
             android:screenOrientation="portrait"
             android:theme="@style/ContextualActionBarTheme" >
@@ -94,10 +95,22 @@
                 android:value="com.reflectmobile.activity.BaseActivity" />
         </activity>
         <activity
-            android:name=".activity.MultiPhotoSelectActivity"
+            android:name=".activity.GalleryActivity"
             android:configChanges="orientation"
             android:icon="@drawable/action_bar_icon_logo"
             android:label="@string/title_photo_gallery"
+            android:parentActivityName="com.reflectmobile.activity.BaseActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/ContextualActionBarTheme" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.reflectmobile.activity.BaseActivity" />
+        </activity>
+        <activity
+            android:name=".activity.AddCommunityActivity"
+            android:configChanges="orientation"
+            android:icon="@drawable/action_bar_icon_logo"
+            android:label="@string/add_new_community"
             android:parentActivityName="com.reflectmobile.activity.BaseActivity"
             android:screenOrientation="portrait"
             android:theme="@style/ContextualActionBarTheme" >
@@ -122,6 +135,30 @@
             android:configChanges="orientation"
             android:icon="@drawable/action_bar_icon_logo"
             android:label="@string/add_new_detail"
+            android:parentActivityName="com.reflectmobile.activity.BaseActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/ContextualActionBarTheme" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.reflectmobile.activity.BaseActivity" />
+        </activity>
+        <activity
+            android:name=".activity.AddMomentActivity"
+            android:configChanges="orientation"
+            android:icon="@drawable/action_bar_icon_logo"
+            android:label="@string/add_new_moment"
+            android:parentActivityName="com.reflectmobile.activity.BaseActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/ContextualActionBarTheme" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.reflectmobile.activity.BaseActivity" />
+        </activity>
+        <activity
+            android:name=".activity.AddPhotosActivity"
+            android:configChanges="orientation"
+            android:icon="@drawable/action_bar_icon_logo"
+            android:label="@string/add_photos"
             android:parentActivityName="com.reflectmobile.activity.BaseActivity"
             android:screenOrientation="portrait"
             android:theme="@style/ContextualActionBarTheme" >

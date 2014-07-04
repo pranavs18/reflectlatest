@@ -1,13 +1,19 @@
 package com.reflectmobile.activity;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.util.SparseBooleanArray;
@@ -35,17 +41,19 @@ import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.SimpleImageLoadingListener;
 import com.reflectmobile.R;
 
-public class MultiPhotoSelectActivity extends BaseActivity {
+public class AddPhotosActivity extends BaseActivity {
 
+	private static final String TAG = "SelectedPhotoActivity";
+	
 	private ArrayList<String> imageUrls;
 	private DisplayImageOptions options;
 	private ImageAdapter imageAdapter;
 	private static ArrayList<String> selectedItems;
-
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		hasNavigationDrawer = false;
-		setContentView(R.layout.ac_image_grid);
+		setContentView(R.layout.add_photos);
 		super.onCreate(savedInstanceState);
 
 		// Modify action bar title
@@ -98,13 +106,13 @@ public class MultiPhotoSelectActivity extends BaseActivity {
 			int dataColumnIndex = imagecursor
 					.getColumnIndex(MediaStore.Images.Media.DATA);
 			imageUrls.add(imagecursor.getString(dataColumnIndex));
-			Log.d(MultiPhotoSelectActivity.class.getSimpleName(),
+			Log.d(AddPhotosActivity.class.getSimpleName(),
 					"=====> Array path => " + imageUrls.get(i));
 			// Log the url of the images being displayed in the photo gallery
 		}
 
-		options = new DisplayImageOptions.Builder()
-				.cacheInMemory().cacheOnDisc().build();
+		options = new DisplayImageOptions.Builder().cacheInMemory()
+				.cacheOnDisc().build();
 
 		imageAdapter = new ImageAdapter(this, imageUrls);
 
@@ -133,8 +141,8 @@ public class MultiPhotoSelectActivity extends BaseActivity {
 			 * startActivityForResult
 			 * (Intent.createChooser(intent,"Select Picture"), SELECT_PICTURE);
 			 */
-			Intent intent = new Intent(MultiPhotoSelectActivity.this,
-					MultiPhotoSelectActivity.class);
+			Intent intent = new Intent(AddPhotosActivity.this,
+					AddPhotosActivity.class);
 			startActivity(intent);
 			return true;
 		case android.R.id.home:
@@ -155,12 +163,14 @@ public class MultiPhotoSelectActivity extends BaseActivity {
 	public void btnChoosePhotosClick(View v) {
 
 		selectedItems = imageAdapter.getCheckedItems();
-		Toast.makeText(MultiPhotoSelectActivity.this,
+		Toast.makeText(AddPhotosActivity.this,
 				"Total photos selected: " + selectedItems.size(),
 				Toast.LENGTH_SHORT).show();
-		Log.d(MultiPhotoSelectActivity.class.getSimpleName(),
-				"Selected Items: " + selectedItems.toString());
+		Log.d(AddPhotosActivity.class.getSimpleName(), "Selected Items: "
+				+ selectedItems.toString());
 	}
+	
+	
 
 	public void btnChoosePhotosCancel(View v) {
 
@@ -174,10 +184,12 @@ public class MultiPhotoSelectActivity extends BaseActivity {
 		 * checkBox.setChecked(false); } }
 		 */
 		imageAdapter.notifyDataSetChanged();
-		Log.d(MultiPhotoSelectActivity.class.getSimpleName(),
+		Log.d(AddPhotosActivity.class.getSimpleName(),
 				"Cancelled Selected Photos");
 
 	}
+
+
 
 	// This class defines the view for the photo gallery and populates the data
 	// structure for holding the
@@ -194,26 +206,24 @@ public class MultiPhotoSelectActivity extends BaseActivity {
 			mContext = context;
 			mInflater = LayoutInflater.from(mContext);
 			mSparseBooleanArray = new SparseBooleanArray();
-			mList = new ArrayList<String>();
-			this.mList = imageList;
-
+			mList = imageList;
 		}
 
 		public ArrayList<String> getCheckedItems() {
-			ArrayList<String> mTempArry = new ArrayList<String>();
+			ArrayList<String> mTempArray = new ArrayList<String>();
 
 			for (int i = 0; i < mList.size(); i++) {
 				if (mSparseBooleanArray.get(i)) {
-					mTempArry.add(mList.get(i));
+					mTempArray.add(mList.get(i));
 				}
 			}
 
-			return mTempArry;
+			return mTempArray;
 		}
 
 		@Override
 		public int getCount() {
-			return imageUrls.size();
+			return mList.size() + 1;
 		}
 
 		@Override
@@ -230,40 +240,47 @@ public class MultiPhotoSelectActivity extends BaseActivity {
 		public View getView(int position, View convertView, ViewGroup parent) {
 
 			if (convertView == null) {
-				convertView = mInflater.inflate(R.layout.row_multiphoto_item,
+				convertView = mInflater.inflate(R.layout.gallery_item,
 						null);
 			}
 
-			boolean isChecked = mSparseBooleanArray.get(position);
+			final ImageView imageView = (ImageView) convertView
+					.findViewById(R.id.imageView1);
 			final ImageView borderView = (ImageView) convertView
 					.findViewById(R.id.border);
 			final ImageView checkbox = (ImageView) convertView
 					.findViewById(R.id.checkBox);
 
-			if (isChecked) {
-				borderView.setVisibility(View.VISIBLE);
-				checkbox.setVisibility(View.VISIBLE);
-			} else {
+			// Special case for displaying camera on the position 0
+			if (position == 0) {
+				imageView.setImageDrawable(getResources().getDrawable(
+						R.drawable.camera));
 				borderView.setVisibility(View.GONE);
 				checkbox.setVisibility(View.GONE);
+			} else {
+				boolean isChecked = mSparseBooleanArray.get(position);
+				if (isChecked) {
+					borderView.setVisibility(View.VISIBLE);
+					checkbox.setVisibility(View.VISIBLE);
+				} else {
+					borderView.setVisibility(View.GONE);
+					checkbox.setVisibility(View.GONE);
+				}
+
+				imageView.setScaleType(ScaleType.CENTER_CROP);
+
+				imageLoader.displayImage("file://" + mList.get(position - 1),
+						imageView, options, new SimpleImageLoadingListener() {
+							@Override
+							public void onLoadingComplete(Bitmap loadedImage) {
+								Animation anim = AnimationUtils.loadAnimation(
+										AddPhotosActivity.this,
+										R.anim.fade_in);
+								imageView.setAnimation(anim);
+								anim.start();
+							}
+						});
 			}
-
-			final ImageView imageView = (ImageView) convertView
-					.findViewById(R.id.imageView1);
-			imageView.setScaleType(ScaleType.CENTER_CROP);
-
-			imageLoader.displayImage("file://" + imageUrls.get(position),
-					imageView, options, new SimpleImageLoadingListener() {
-						@Override
-						public void onLoadingComplete(Bitmap loadedImage) {
-							Animation anim = AnimationUtils.loadAnimation(
-									MultiPhotoSelectActivity.this,
-									R.anim.fade_in);
-							imageView.setAnimation(anim);
-							anim.start();
-						}
-					});
-
 			convertView.setTag(position);
 			convertView.setOnClickListener(mOnClickListener);
 
@@ -275,21 +292,27 @@ public class MultiPhotoSelectActivity extends BaseActivity {
 			@Override
 			public void onClick(View v) {
 				int position = (Integer) v.getTag();
-				boolean isChecked = mSparseBooleanArray.get(position);
-				isChecked = !isChecked;
-				mSparseBooleanArray.put(position, isChecked);
-
-				final ImageView borderView = (ImageView) v
-						.findViewById(R.id.border);
-				final ImageView checkbox = (ImageView) v
-						.findViewById(R.id.checkBox);
-
-				if (isChecked) {
-					borderView.setVisibility(View.VISIBLE);
-					checkbox.setVisibility(View.VISIBLE);
+				// Special case for first photo:
+				Log.d(TAG, position+"");
+				if (position == 0) {
+					Log.d(TAG, "Camera clicked");
 				} else {
-					borderView.setVisibility(View.GONE);
-					checkbox.setVisibility(View.GONE);
+					boolean isChecked = mSparseBooleanArray.get(position);
+					isChecked = !isChecked;
+					mSparseBooleanArray.put(position, isChecked);
+
+					final ImageView borderView = (ImageView) v
+							.findViewById(R.id.border);
+					final ImageView checkbox = (ImageView) v
+							.findViewById(R.id.checkBox);
+
+					if (isChecked) {
+						borderView.setVisibility(View.VISIBLE);
+						checkbox.setVisibility(View.VISIBLE);
+					} else {
+						borderView.setVisibility(View.GONE);
+						checkbox.setVisibility(View.GONE);
+					}
 				}
 
 			}

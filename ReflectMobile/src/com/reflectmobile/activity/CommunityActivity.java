@@ -1,29 +1,15 @@
 package com.reflectmobile.activity;
 
-import java.io.File;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import android.app.DialogFragment;
-import android.app.FragmentManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.MediaStore;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -33,11 +19,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.ListView;
@@ -49,7 +33,6 @@ import com.reflectmobile.data.Moment;
 import com.reflectmobile.utility.NetworkManager.HttpGetImageTask;
 import com.reflectmobile.utility.NetworkManager.HttpGetTask;
 import com.reflectmobile.utility.NetworkManager.HttpImageTaskHandler;
-import com.reflectmobile.utility.NetworkManager.HttpPostTask;
 import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
 
 public class CommunityActivity extends BaseActivity {
@@ -58,12 +41,11 @@ public class CommunityActivity extends BaseActivity {
 	private Community community;
 	private static int communityId;
 
-	//TODO
 	// Static identifier for receiving camera apps call back
-	private static final int REQUEST_TAKE_PHOTO = 1;
+	private static final int CODE_ADD_MOMENT = 101;
+	private static final int CODE_ADD_PHOTO = 102;
 	public static final int MEDIA_TYPE_IMAGE = 1;
-	String photoPath;
-	
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		// It is important to set content view before calling super.onCreate
@@ -125,176 +107,92 @@ public class CommunityActivity extends BaseActivity {
 		// Handle action buttons
 		switch (item.getItemId()) {
 		// If the filter item is selected
+		case R.id.action_add_photo:
+			addPhoto();
+			return true;
 		case R.id.action_filter_moments:
-			// Initialze dialog window and set content
-			View dialogView = getLayoutInflater().inflate(
-					R.layout.dialog_community_filter, null);
-			ListView filterListView = (ListView) dialogView
-					.findViewById(R.id.listView_community_dialog_filter);
-
-			// Dummy name in the community
-			ArrayList<String> nameList = new ArrayList<String>();
-			nameList.add("123");
-			nameList.add("234");
-			nameList.add("234");
-			nameList.add("234");
-			nameList.add("234");
-			nameList.add("234");
-
-			// Generate and bind adapter
-			FilterListViewAdapter adapter = new FilterListViewAdapter(
-					CommunityActivity.this, nameList);
-
-			filterListView.setAdapter(adapter);
-
-			// Generate the custom center title view
-			TextView title = new TextView(this);
-			title.setText(R.string.title_dialog_community_filter);
-			title.setPadding(20, 20, 20, 20);
-			title.setGravity(Gravity.CENTER);
-			title.setTextSize(25);
-
-			// Generate the dialog
-			new AlertDialog.Builder(CommunityActivity.this)
-					.setView(dialogView)
-					.setPositiveButton("Apply",
-							new DialogInterface.OnClickListener() {
-
-								@Override
-								public void onClick(DialogInterface dialog,
-										int which) {
-								}
-							})
-					.setNegativeButton("Cancel",
-							new DialogInterface.OnClickListener() {
-
-								@Override
-								public void onClick(DialogInterface dialog,
-										int which) {
-								}
-							}).setCustomTitle(title).setCancelable(false)
-					.show();
+			filterView();
 			return true;
 		case R.id.action_add_moment:
 			createMoment();
-			return true;
-		case R.id.action_take_photo:
-			// create Intent to take a picture and return control to the rewyndr application
-			takePhoto();
 			return true;
 		default:
 			return super.onOptionsItemSelected(item);
 		}
 	}
 
-	public static class AddMomentDialog extends DialogFragment {
+	@Override
+	public void onBackPressed() {
+		Intent intent = new Intent(CommunityActivity.this,
+				CommunitiesActivity.class);
+		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+				| Intent.FLAG_ACTIVITY_CLEAR_TASK);
+		startActivity(intent);
+		super.onBackPressed();
+	}
 
-		private boolean nameSet = false;
-
-		private String name;
-
-		private Button saveButton;
-
-		public AddMomentDialog() {
-
-		}
-
-		@Override
-		public View onCreateView(LayoutInflater inflater, ViewGroup container,
-				Bundle savedInstanceState) {
-			getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
-
-			final View view = inflater.inflate(R.layout.add_moment, container);
-			Button cancelButton = (Button) view.findViewById(R.id.cancel);
-			saveButton = (Button) view.findViewById(R.id.save);
-			saveButton.setOnClickListener(new OnClickListener() {
-
-				@Override
-				public void onClick(View v) {
-					saveButton.setEnabled(false);
-					HttpTaskHandler httpPostTaskHandler = new HttpTaskHandler() {
-						@Override
-						public void taskSuccessful(String result) {
-							Log.d("POST", result);
-							dismiss();
-							getActivity().finish();
-							startActivity(getActivity().getIntent());
-						}
-
-						@Override
-						public void taskFailed(String reason) {
-							Log.e("POST", "Error within POST request: "
-									+ reason);
-						}
-					};
-					JSONObject momentData = new JSONObject();
-					try {
-						momentData.put("community_id", communityId);
-						momentData.put("name", name);
-					} catch (JSONException e) {
-						Log.e(TAG, "Error forming JSON");
-					}
-					String payload = momentData.toString();
-					new HttpPostTask(httpPostTaskHandler, payload)
-							.execute("http://rewyndr.truefitdemo.com/api/communities/"
-									+ communityId + "/moments");
-				}
-			});
-			EditText momentName = (EditText) view
-					.findViewById(R.id.moment_name);
-
-			momentName.addTextChangedListener(new TextWatcher() {
-				@Override
-				public void onTextChanged(CharSequence s, int start,
-						int before, int count) {
-					nameSet = count > 0;
-					modifySaveButton();
-					if (nameSet) {
-						name = s.toString();
-					}
-				}
-
-				@Override
-				public void beforeTextChanged(CharSequence s, int start,
-						int count, int after) {
-				}
-
-				@Override
-				public void afterTextChanged(Editable s) {
-				}
-			});
-
-			cancelButton.setOnClickListener(new OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					dismiss();
-				}
-			});
-
-			return view;
-		}
-
-		private void modifySaveButton() {
-			if (nameSet) {
-				saveButton.setTextColor(getResources().getColor(R.color.green));
-				saveButton.setCompoundDrawablesWithIntrinsicBounds(
-						R.drawable.tick_active, 0, 0, 0);
-				saveButton.setEnabled(true);
-			} else {
-				saveButton.setTextColor(getResources().getColor(
-						R.color.dark_gray));
-				saveButton.setCompoundDrawablesWithIntrinsicBounds(
-						R.drawable.tick_disabled, 0, 0, 0);
-				saveButton.setEnabled(false);
-			}
-		}
-
+	private void addPhoto() {
+		Intent intent = new Intent(CommunityActivity.this,
+				GalleryActivity.class);
+		startActivityForResult(intent, CODE_ADD_PHOTO);
 	}
 
 	public void createMoment() {
-		FragmentManager fm = getFragmentManager();
-		AddMomentDialog addMomentDialog = new AddMomentDialog();
-		addMomentDialog.show(fm, "fragment_add_moment");
+		Intent intent = new Intent(CommunityActivity.this,
+				AddMomentActivity.class);
+		intent.putExtra("community_id", communityId);
+		startActivityForResult(intent, CODE_ADD_MOMENT);
+	}
+
+	@SuppressLint("InflateParams")
+	private void filterView() {
+		// Initialze dialog window and set content
+		View dialogView = getLayoutInflater().inflate(
+				R.layout.dialog_community_filter, null);
+		ListView filterListView = (ListView) dialogView
+				.findViewById(R.id.listView_community_dialog_filter);
+
+		// Dummy name in the community
+		ArrayList<String> nameList = new ArrayList<String>();
+		nameList.add("123");
+		nameList.add("234");
+		nameList.add("234");
+		nameList.add("234");
+		nameList.add("234");
+		nameList.add("234");
+
+		// Generate and bind adapter
+		FilterListViewAdapter adapter = new FilterListViewAdapter(
+				CommunityActivity.this, nameList);
+
+		filterListView.setAdapter(adapter);
+
+		// Generate the custom center title view
+		TextView title = new TextView(this);
+		title.setText(R.string.title_dialog_community_filter);
+		title.setPadding(20, 20, 20, 20);
+		title.setGravity(Gravity.CENTER);
+		title.setTextSize(25);
+
+		// Generate the dialog
+		new AlertDialog.Builder(CommunityActivity.this)
+				.setView(dialogView)
+				.setPositiveButton("Apply",
+						new DialogInterface.OnClickListener() {
+
+							@Override
+							public void onClick(DialogInterface dialog,
+									int which) {
+							}
+						})
+				.setNegativeButton("Cancel",
+						new DialogInterface.OnClickListener() {
+
+							@Override
+							public void onClick(DialogInterface dialog,
+									int which) {
+							}
+						}).setCustomTitle(title).setCancelable(false).show();
 	}
 
 	// Specific adapter for Community Activity
@@ -365,7 +263,8 @@ public class CommunityActivity extends BaseActivity {
 			// If there is no view to recycle - create a new one
 			Moment moment = community.getMoment(position);
 			if (convertView == null) {
-				convertView = mInflater.inflate(R.layout.card_community, null);
+				convertView = mInflater.inflate(R.layout.card_community,
+						parentView, false);
 				final CardViewHolder holder = new CardViewHolder();
 				holder.name = (TextView) convertView
 						.findViewById(R.id.text_community_card_community_name);
@@ -388,6 +287,8 @@ public class CommunityActivity extends BaseActivity {
 						int position = (Integer) v.getTag();
 						Intent intent = new Intent(mContext,
 								MomentActivity.class);
+						intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+								| Intent.FLAG_ACTIVITY_CLEAR_TASK);
 						intent.putExtra("moment_id",
 								community.getMoment(position).getId());
 						mContext.startActivity(intent);
@@ -426,6 +327,7 @@ public class CommunityActivity extends BaseActivity {
 									int position = (Integer) v.getTag();
 									Intent intent = new Intent(mContext,
 											MomentActivity.class);
+									intent.putExtra("community_id", communityId);
 									intent.putExtra("moment_id", community
 											.getMoment(position).getId());
 									mContext.startActivity(intent);
@@ -480,12 +382,14 @@ public class CommunityActivity extends BaseActivity {
 		public View getView(int position, View view, ViewGroup parentView) {
 			if (view == null) {
 				view = mInflater.inflate(
-						R.layout.item_community_filter_dialog_listview, null);
+						R.layout.item_community_filter_dialog_listview,
+						parentView, false);
 				final FilterItemHolder holder = new FilterItemHolder();
 				holder.name = (TextView) view
 						.findViewById(R.id.textView_community_filter_listview_item_name);
 				holder.checkBox = (CheckBox) view
 						.findViewById(R.id.checkbox_community_filter_listview_item);
+				holder.checkBox.setChecked(false);
 				view.setTag(holder);
 			}
 
@@ -494,57 +398,15 @@ public class CommunityActivity extends BaseActivity {
 			return view;
 		}
 	}
-	
-	//TODO
-	// Create a image file on external storage and return the file
-	private File createImageFile() throws IOException {
-	    // Create an image file name
-	    String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-	    String imageFileName = "JPEG_" + timeStamp + "_";
-	    File storageDir = Environment.getExternalStoragePublicDirectory(
-	            Environment.DIRECTORY_PICTURES);
-	    File image = File.createTempFile(
-	        imageFileName,  /* prefix */
-	        ".jpg",         /* suffix */
-	        storageDir      /* directory */
-	    );
 
-	    // Save a file: path for use with ACTION_VIEW intents
-	    photoPath = "file:" + image.getAbsolutePath();
-	    return image;
-	}
-	
-	private void takePhoto() {
-	    Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-	    // Ensure that there's a camera activity to handle the intent
-	    if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-	        // Create the File where the photo should go
-	        File photoFile = null;
-	        try {
-	            photoFile = createImageFile();
-	        } catch (IOException ex) {
-	            // Error occurred while creating the File
-	        }
-	        // Continue only if the File was successfully created
-	        if (photoFile != null) {
-	            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT,
-	                    Uri.fromFile(photoFile));
-	            startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
-	        }
-	    }
-	}
-	
 	// Photo app callback function (define how to handle the photo)
 	// Currently only add the photo to the gallery
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-	    if (requestCode == REQUEST_TAKE_PHOTO && resultCode == RESULT_OK) {
-	        // Save to gallery
-	        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-	        File f = new File(photoPath);
-	        Uri contentUri = Uri.fromFile(f);
-	        mediaScanIntent.setData(contentUri);
-	        this.sendBroadcast(mediaScanIntent);
-	    }
+		if (requestCode == CODE_ADD_MOMENT && resultCode == RESULT_OK) {
+			Intent intent = getIntent();
+			finish();
+			startActivity(intent);
+		}
 	}
 
 }

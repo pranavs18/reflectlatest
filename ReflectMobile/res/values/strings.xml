@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <color name="blue">#3b5999</color>
+    <color name="red">#dd4b39</color>
     <color name="green">#2f7a6f</color>
     <color name="white">#ffffff</color>
     <color name="yellow">#eee599</color>
@@ -87,5 +89,8 @@
     <string name="add_new_detail">Add New Detail</string>
     <string name="take_photo">Take photo</string>
     <string name="checkbox">Checkbox</string>
+    <string name="add_new_community">Add New Community</string>
+    <string name="add_new_moment">Add New Moment</string>
+    <string name="add_photos">Add Photos</string>
 
 </resources>

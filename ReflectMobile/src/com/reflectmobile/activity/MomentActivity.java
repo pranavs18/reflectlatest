@@ -31,6 +31,8 @@ public class MomentActivity extends BaseActivity {
 
 	private Moment moment;
 
+	private static final int CODE_ADD_PHOTO = 101;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		// It is important to set content view before calling super.onCreate
@@ -75,6 +77,16 @@ public class MomentActivity extends BaseActivity {
 						+ momentId);
 	}
 
+	@Override
+	public void onBackPressed() {
+		Intent intent = new Intent(MomentActivity.this, CommunityActivity.class);
+		intent.putExtra("community_id",
+				getIntent().getIntExtra("community_id", 0));
+		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+				| Intent.FLAG_ACTIVITY_CLEAR_TASK);
+		startActivity(intent);
+		super.onBackPressed();
+	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -86,14 +98,20 @@ public class MomentActivity extends BaseActivity {
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		return super.onOptionsItemSelected(item);
 		// Handle action buttons
-		// switch (item.getItemId()) {
-		// case :
-		//
-		// default:
-		// return super.onOptionsItemSelected(item);
-		// }
+		switch (item.getItemId()) {
+		case R.id.action_add_photo:
+			addPhoto();
+			return true;
+		default:
+			return super.onOptionsItemSelected(item);
+		}
+	}
+
+	private void addPhoto() {
+		Intent intent = new Intent(MomentActivity.this,
+				GalleryActivity.class);
+		startActivityForResult(intent, CODE_ADD_PHOTO);
 	}
 
 	private class ImageAdapter extends BaseAdapter {
@@ -166,15 +184,21 @@ public class MomentActivity extends BaseActivity {
 					public void onClick(View v) {
 						// TODO temp change to tag view to test
 						int position = ((ImageViewHolder) v.getTag()).position;
-						Intent intent = new Intent(mContext, PhotoActivity.class);
-						intent.putExtra("photo_id", moment.getPhoto(position).getId());
+						Intent intent = new Intent(mContext,
+								PhotoActivity.class);
+						intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+								| Intent.FLAG_ACTIVITY_CLEAR_TASK);
+						intent.putExtra("community_id", getIntent()
+								.getIntExtra("community_id", 0));
+						intent.putExtra("photo_id", moment.getPhoto(position)
+								.getId());
 						intent.putExtra("moment_id", moment.getId());
 						mContext.startActivity(intent);
 					}
 				});
 				convertView.setTag(holder);
 			}
-			
+
 			final ImageViewHolder holder = (ImageViewHolder) convertView
 					.getTag();
 			holder.image.setImageDrawable(mDrawables[position]);

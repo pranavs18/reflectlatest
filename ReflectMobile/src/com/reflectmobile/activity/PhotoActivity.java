@@ -52,8 +52,6 @@ public class PhotoActivity extends BaseActivity {
 	private LayoutInflater mInflater;
 
 	/* photo gallery variables */
-	private static final int SELECT_PICTURE = 1;
-
 	static final int CODE_ADD_STORY = 101;
 	static final int CODE_ADD_DETAIL = 102;
 	static final int CODE_SELECT_PICTURE = 103;
@@ -135,7 +133,6 @@ public class PhotoActivity extends BaseActivity {
 				viewPager.setOnPageChangeListener(new OnPageChangeListener() {
 					@Override
 					public void onPageSelected(final int position) {
-						// TODO
 						onPhotoSelected(position);
 					}
 
@@ -171,6 +168,20 @@ public class PhotoActivity extends BaseActivity {
 		photoImageViewHeightPX = dpToPx(photoImageViewHeightDP);
 		photoImageViewWidthPX = dpToPx(photoImageViewWidthDP);
 	}
+	
+	@Override
+	public void onBackPressed() {
+		Intent intent = new Intent(PhotoActivity.this,
+				MomentActivity.class);
+		intent.putExtra("moment_id",
+				getIntent().getIntExtra("moment_id", 0));
+		intent.putExtra("community_id",
+				getIntent().getIntExtra("community_id", 0));
+		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+				| Intent.FLAG_ACTIVITY_CLEAR_TASK);
+		startActivity(intent);
+		super.onBackPressed();
+	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -193,7 +204,7 @@ public class PhotoActivity extends BaseActivity {
 			 * (Intent.createChooser(intent,"Select Picture"), SELECT_PICTURE);
 			 */
 			Intent intent = new Intent(PhotoActivity.this,
-					MultiPhotoSelectActivity.class);
+					GalleryActivity.class);
 			startActivity(intent);
 			return true;
 		case android.R.id.home:

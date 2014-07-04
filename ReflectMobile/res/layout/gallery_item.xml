@@ -7,7 +7,7 @@
     <ImageView
         android:id="@+id/imageView1"
         android:layout_width="124dp"
-        android:layout_height="124dp"
+        android:layout_height="126dp"
         android:contentDescription="@string/title_photo_gallery" />
 
     <ImageView
@@ -23,7 +23,7 @@
     <ImageView
         android:id="@+id/border"
         android:layout_width="124dp"
-        android:layout_height="124dp"
+        android:layout_height="126dp"
         android:src="@drawable/checkbox_bg"
         android:contentDescription="@string/background"
         android:visibility="gone" />
