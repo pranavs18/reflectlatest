@@ -92,5 +92,6 @@
     <string name="add_new_community">Add New Community</string>
     <string name="add_new_moment">Add New Moment</string>
     <string name="add_photos">Add Photos</string>
+    <string name="action_invite_to_community">Invite</string>
 
 </resources>
