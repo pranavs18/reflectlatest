@@ -8,6 +8,7 @@ import org.json.JSONObject;
 import com.reflectmobile.widget.ImageProcessor;
 
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.util.Log;
 
 public class Photo {
@@ -18,6 +19,13 @@ public class Photo {
 	private String imageMediumThumbURL;
 	private String imageLargeURL;
 	private ArrayList<Tag> tagList;
+	
+	private Drawable mediumDrawable;
+	
+	public void setMediumDrawable(Drawable mediumDrawable) {
+		this.mediumDrawable = mediumDrawable;
+	}
+
 	private Bitmap largeBitmap;
 	private Bitmap darkenLargeBitmap;
 	private Bitmap darkenTaggedLargeBitmap;
@@ -97,6 +105,10 @@ public class Photo {
 
 	public Bitmap getLargeBitmap() {
 		return largeBitmap;
+	}
+	
+	public Drawable getMediumDrawable(){
+		return mediumDrawable;
 	}
 
 	public void setLargeBitmap(Bitmap bitmap) {

@@ -4,11 +4,19 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.reflectmobile.R;
+import com.reflectmobile.utility.NetworkManager;
 import com.reflectmobile.utility.NetworkManager.HttpPostTask;
+import com.reflectmobile.utility.NetworkManager.HttpPutTask;
 import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
 
+import de.neofonie.mobile.app.android.widget.crouton.Crouton;
+import de.neofonie.mobile.app.android.widget.crouton.Style;
+
+import android.app.ActionBar.LayoutParams;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -25,7 +33,13 @@ public class AddDetailActivity extends BaseActivity {
 	private String TAG = "AddDetailActivity";
 
 	private int photoId;
-	private boolean addButtonPressed = false;
+	private boolean nameSet = false;
+	private boolean detailSet = false;
+
+	private String name;
+	private String detail;
+	
+	private boolean canCreate = false;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -50,7 +64,6 @@ public class AddDetailActivity extends BaseActivity {
 		ImageView view = (ImageView) findViewById(android.R.id.home);
 		view.setPadding(10, 0, 0, 0);
 
-		addButtonPressed = false;
 		photoId = getIntent().getIntExtra("photo_id", 0);
 
 		Spinner spinner = (Spinner) findViewById(R.id.spinner_emotions);
@@ -59,6 +72,74 @@ public class AddDetailActivity extends BaseActivity {
 				R.layout.spinner);
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		spinner.setAdapter(adapter);
+		
+		if (getIntent().hasExtra("spinner_value")){
+			String spinnerValue = getIntent().getStringExtra("spinner_value");
+			for (int count=0; count < spinner.getCount(); count++){
+				if (spinner.getItemAtPosition(count).equals(spinnerValue)){
+					spinner.setSelection(count);
+				}
+			}
+		}
+		
+		EditText nameText = (EditText) findViewById(R.id.tagged);
+		if (getIntent().hasExtra("name")){
+			name = getIntent().getStringExtra("name");
+			nameText.setText(name);
+			nameSet = true;
+		}
+		
+		EditText detailText = (EditText) findViewById(R.id.detail_text);
+		if (getIntent().hasExtra("detail")){
+			detail = getIntent().getStringExtra("detail");
+			detailText.setText(detail);
+			detailSet = true;
+		}
+		modifySaveButton();
+		
+		nameText.addTextChangedListener(new TextWatcher() {
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before,
+					int count) {
+				nameSet = s.length() > 0;
+				modifySaveButton();
+				if (nameSet) {
+					name = s.toString();
+				}
+			}
+
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count,
+					int after) {
+			}
+
+			@Override
+			public void afterTextChanged(Editable s) {
+			}
+		});
+
+		detailText.addTextChangedListener(new TextWatcher() {
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before,
+					int count) {
+				detailSet = s.length() > 0;
+				modifySaveButton();
+				if (detailSet) {
+					detail = s.toString();
+				}
+			}
+
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count,
+					int after) {
+			}
+
+			@Override
+			public void afterTextChanged(Editable s) {
+			}
+		});
+
+		
 	}
 
 	@Override
@@ -74,9 +155,16 @@ public class AddDetailActivity extends BaseActivity {
 		// Handle action buttons
 		switch (item.getItemId()) {
 		case R.id.action_add_detail:
-			if (!addButtonPressed){
-				addButtonPressed = true;
+			if (canCreate){
+				canCreate = false;
 				addDetail();
+			} else {
+				int red = android.R.color.holo_red_light;
+				Style CustomAlert = new Style.Builder().setDuration(2000)
+						.setHeight(LayoutParams.WRAP_CONTENT).setTextSize(16)
+						.setBackgroundColor(red).setPaddingInPixels(26).build();
+				Crouton.makeText(this, "Please, specify all fields",
+						CustomAlert).show();
 			}
 			return true;
 		case android.R.id.home:
@@ -102,16 +190,12 @@ public class AddDetailActivity extends BaseActivity {
 			}
 		};
 		JSONObject storyData = new JSONObject();
-		EditText taggedEditText = (EditText) findViewById(R.id.tagged);
-		String taggedText = taggedEditText.getText().toString();
 
 		Spinner spinner = (Spinner) findViewById(R.id.spinner_emotions);
 		String spinnerText = spinner.getSelectedItem().toString();
 
-		EditText detailEditText = (EditText) findViewById(R.id.detail_text);
-		String detailText = detailEditText.getText().toString();
 
-		String memoryText = taggedText + " " + spinnerText + " " + detailText;
+		String memoryText = name + " " + spinnerText + " " + detail;
 		try {
 			storyData.put("photo_id", photoId);
 			storyData.put("memory_type", "detail");
@@ -120,7 +204,25 @@ public class AddDetailActivity extends BaseActivity {
 			Log.e(TAG, "Error forming JSON");
 		}
 		String payload = storyData.toString();
-		new HttpPostTask(httpPostTaskHandler, payload)
-				.execute("http://rewyndr.truefitdemo.com/api/memories");
+		
+		if (getIntent().hasExtra("memory_id")){
+			int memoryId = getIntent().getIntExtra("memory_id", 0);
+			new HttpPutTask(httpPostTaskHandler, payload)
+				.execute(NetworkManager.hostName+"/api/memories/" + memoryId);
+		}
+		else {
+			new HttpPostTask(httpPostTaskHandler, payload)
+				.execute(NetworkManager.hostName+"/api/memories");
+		}
 	}
+	
+	private void modifySaveButton() {
+		if (detailSet && nameSet) {
+			canCreate = true;
+		} else {
+			canCreate = false;
+		}
+	}
+
+
 }

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <color name="blue">#3b5999</color>
     <color name="red">#dd4b39</color>
@@ -14,6 +14,7 @@
     <color name="side_menu_text">#313131</color>
     <color name="gray">#e6e7e2</color>
     <color name="dark_gray">#808080</color>
+    <color name="semi_transparent_white">#20FFFFFF</color>
     
     <string name="app_name">ReflectMobile</string>
     <string name="title_activity_login">LoginActivity</string>
@@ -74,7 +75,7 @@
     <string name="memory_menu">Memory menu</string>
     <string name="name">Name</string>
     <string name="description">Description</string>
-    <string name="cancel">CANCEL</string>
+    <string name="cancel" tools:ignore="ButtonCase">CANCEL</string>
     <string name="save">SAVE</string>
     <string name="new_community">New Community</string>
     <string name="new_moment">New Moment</string>
@@ -93,5 +94,17 @@
     <string name="add_new_moment">Add New Moment</string>
     <string name="add_photos">Add Photos</string>
     <string name="action_invite_to_community">Invite</string>
+    <string name="action_add_tag">Add Tag</string>
+    <string name="action_delete_tag">Delete Tag</string>
+    <string name="action_edit_tag">Edit Tag</string>
+    <string name="how">How?</string>
+    <string name="action_delete_memory">Delete Memory</string>
+    <string name="action_edit_memory">Edit Memory</string>
+    <string name="action_speech_to_text">Speech To Text</string>
+    <string name="title">Title</string>
+    <string name="add_new_sound">Recording</string>
+    <string name="record_audio">Record Audio</string>
+    <string name="zero_time">00:00:00</string>
+    <string name="press_to_start">Press to start</string>
 
 </resources>

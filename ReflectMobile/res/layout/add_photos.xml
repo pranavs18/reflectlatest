@@ -2,151 +2,70 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/gray"
+    android:background="@color/white"
     android:orientation="vertical"
     tools:context=".activity.PhotoActivity" >
 
     <LinearLayout
-        android:id="@+id/photo_description"
+        android:id="@+id/top_panel"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@android:color/white"
-        android:orientation="horizontal"
-        android:padding="8dp" >
+        android:layout_height="205dp"
+        android:background="@drawable/bg"
+        android:orientation="vertical" >
 
         <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical" >
-
-            <TextView
-                android:id="@+id/when"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/when_was_this"
-                android:textColor="@color/green"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/who"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/whos_here"
-                android:textColor="@color/green"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="8dp"
-            android:orientation="vertical" >
-
-            <TextView
-                android:id="@+id/date"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/when_was_this"
-                android:textColor="@color/black"
-                android:textSize="14sp" />
-
-            <TextView
-                android:id="@+id/people"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/whos_here"
-                android:textColor="@color/black"
-                android:textSize="14sp" />
-        </LinearLayout>
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/tab_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:background="@color/green"
-        android:orientation="horizontal" >
-
-        <ImageButton
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="?android:selectableItemBackground"
-            android:contentDescription="@string/add_tag"
-            android:padding="8dp"
-            android:src="@drawable/tag" />
-
-        <ImageButton
-            android:id="@+id/add_sound"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="?android:selectableItemBackground"
-            android:contentDescription="@string/add_sound"
-            android:padding="8dp"
-            android:src="@drawable/sound" />
-
-        <ImageButton
-            android:id="@+id/add_detail"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="?android:selectableItemBackground"
-            android:contentDescription="@string/add_detail"
-            android:padding="8dp"
-            android:src="@drawable/detail" />
-
-        <ImageButton
-            android:id="@+id/add_story"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="?android:selectableItemBackground"
-            android:contentDescription="@string/add_story"
-            android:padding="8dp"
-            android:src="@drawable/story" />
-    </LinearLayout>
-
-    <ScrollView
-        android:id="@+id/scroll_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_above="@id/tab_view"
-        android:layout_below="@id/photo_description" >
-
-      <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical" >
+            android:layout_marginLeft="48dp"
+            android:layout_marginRight="48dp"
+            android:layout_marginTop="48dp"
+            android:background="@color/white" >
 
-            <android.support.v4.view.ViewPager
-                xmlns:android="http://schemas.android.com/apk/res/android"
-                android:id="@+id/view_pager"
-                android:layout_width="match_parent"
-                android:layout_height="260dp"
-                android:background="@drawable/border_community_card_photo"
-                android:paddingBottom="1dp"
-                android:paddingTop="1dp" >
-            </android.support.v4.view.ViewPager>
-
-           
-
-            <TextView
-                android:id="@+id/memories_caption"
-                android:layout_width="match_parent"
-                android:layout_height="27dp"
-                android:gravity="center"
-                android:textColor="@color/green" />
-
-            <LinearLayout
-                android:id="@+id/memories_container"
+            <Spinner
+                android:id="@+id/community"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical" />
+                android:paddingBottom="11dp"
+                android:paddingTop="11dp"
+                android:spinnerMode="dropdown" >
+
+                <requestFocus />
+            </Spinner>
         </LinearLayout>
-    </ScrollView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="48dp"
+            android:layout_marginLeft="48dp"
+            android:layout_marginRight="48dp"
+            android:layout_marginTop="24dp"
+            android:background="@color/white" >
+
+            <Spinner
+                android:id="@+id/moment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingBottom="11dp"
+                android:paddingTop="11dp"
+                android:spinnerMode="dropdown" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <GridView
+        android:id="@+id/selected_images"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/top_panel"
+        android:layout_marginBottom="3dp"
+        android:layout_marginLeft="58dp"
+        android:layout_marginRight="58dp"
+        android:layout_marginTop="3dp"
+        android:horizontalSpacing="16dp"
+        android:numColumns="2"
+        android:orientation="vertical"
+        android:paddingTop="13dp"
+        android:stretchMode="columnWidth"
+        android:verticalSpacing="16dp" />
 
 </RelativeLayout>

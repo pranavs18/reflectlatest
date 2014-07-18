@@ -4,17 +4,24 @@
     android:layout_marginBottom="8dp"
     android:layout_marginLeft="8dp"
     android:layout_marginRight="8dp"
-    android:background="@drawable/card"
-    android:padding="8dp" >
+    android:background="@drawable/card" >
 
-    <ImageView
-        android:id="@+id/memory_icon"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/memory_icon_container"
+        android:layout_width="40dp"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
-        android:background="@android:color/transparent"
-        android:contentDescription="@string/memory_icon" />
+        android:gravity="center_horizontal"
+        android:padding="8dp" >
+
+        <ImageView
+            android:id="@+id/memory_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:contentDescription="@string/memory_icon" />
+    </LinearLayout>
 
     <ImageButton
         android:id="@+id/memory_card_dot"
@@ -22,16 +29,20 @@
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
-        android:background="@android:color/transparent"
+        android:layout_margin="0dp"
+        android:background="?android:attr/selectableItemBackground"
         android:contentDescription="@string/memory_menu"
+        android:padding="11dp"
         android:src="@drawable/dots" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_toRightOf="@id/memory_icon"
+        android:layout_toLeftOf="@id/memory_card_dot"
+        android:layout_toRightOf="@id/memory_icon_container"
         android:orientation="vertical"
-        android:paddingLeft="8dp" >
+        android:paddingBottom="8dp"
+        android:paddingTop="8dp" >
 
         <TextView
             android:id="@+id/memory_text"

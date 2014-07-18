@@ -28,7 +28,9 @@ import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
 public class MomentActivity extends BaseActivity {
 
 	private String TAG = "MomentActivity";
-
+	
+	private int communityId;
+	private int momentId;
 	private Moment moment;
 
 	private static final int CODE_ADD_PHOTO = 101;
@@ -53,8 +55,9 @@ public class MomentActivity extends BaseActivity {
 				.getLayoutParams();
 		mlp.setMargins(5, 0, 0, 0);
 
-		int momentId = getIntent().getIntExtra("moment_id", 0);
-
+		momentId = getIntent().getIntExtra("moment_id", 0);
+		communityId = getIntent().getIntExtra("community_id", 0);
+		
 		// Retreive data from the web
 		final HttpTaskHandler getMomentHandler = new HttpTaskHandler() {
 			@Override
@@ -80,8 +83,7 @@ public class MomentActivity extends BaseActivity {
 	@Override
 	public void onBackPressed() {
 		Intent intent = new Intent(MomentActivity.this, CommunityActivity.class);
-		intent.putExtra("community_id",
-				getIntent().getIntExtra("community_id", 0));
+		intent.putExtra("community_id", communityId);
 		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
 				| Intent.FLAG_ACTIVITY_CLEAR_TASK);
 		startActivity(intent);
@@ -111,6 +113,8 @@ public class MomentActivity extends BaseActivity {
 	private void addPhoto() {
 		Intent intent = new Intent(MomentActivity.this,
 				GalleryActivity.class);
+		intent.putExtra("community_id", communityId);
+		intent.putExtra("moment_id", momentId);
 		startActivityForResult(intent, CODE_ADD_PHOTO);
 	}
 

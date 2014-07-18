@@ -13,6 +13,7 @@
     <uses-permission android:name="android.permission.USE_CREDENTIALS" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <uses-feature
         android:name="android.hardware.camera"
@@ -87,6 +88,7 @@
             android:name=".activity.PhotoActivity"
             android:configChanges="orientation"
             android:icon="@drawable/action_bar_icon_logo"
+            android:label=""
             android:parentActivityName="com.reflectmobile.activity.BaseActivity"
             android:screenOrientation="portrait"
             android:theme="@style/ContextualActionBarTheme" >
@@ -166,7 +168,19 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.reflectmobile.activity.BaseActivity" />
         </activity>
-
+        <activity
+            android:name=".activity.AddSoundActivity"
+            android:configChanges="orientation"
+            android:icon="@drawable/action_bar_icon_logo"
+            android:label="@string/add_new_sound"
+            android:parentActivityName="com.reflectmobile.activity.BaseActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/ContextualActionBarTheme" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.reflectmobile.activity.BaseActivity" />
+        </activity>
+        
         <meta-data
             android:name="com.facebook.sdk.ApplicationId"
             android:value="@string/app_id" />

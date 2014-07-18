@@ -4,12 +4,12 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
+import android.app.ActionBar.LayoutParams;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -36,8 +36,6 @@ import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.TextView;
-import android.widget.Toast;
-
 import com.nostra13.universalimageloader.cache.disc.naming.Md5FileNameGenerator;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -45,14 +43,16 @@ import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.SimpleImageLoadingListener;
 import com.reflectmobile.R;
 
+import de.neofonie.mobile.app.android.widget.crouton.Crouton;
+import de.neofonie.mobile.app.android.widget.crouton.Style;
+
 public class GalleryActivity extends BaseActivity {
 
-	private static final String TAG = "GalleryActivity";
+	// private static final String TAG = "GalleryActivity";
 
 	private ArrayList<String> imageUrls;
 	private DisplayImageOptions options;
 	private ImageAdapter imageAdapter;
-	private static ArrayList<String> selectedItems;
 	String photoPath;
 
 	private static final int CODE_TAKE_PHOTO = 101;
@@ -122,11 +122,11 @@ public class GalleryActivity extends BaseActivity {
 				.cacheOnDisc().build();
 
 		ArrayList<String> array = new ArrayList<String>();
-		if (getIntent().hasExtra("chosenImages")){
+		if (getIntent().hasExtra("chosenImages")) {
 			array = getIntent().getStringArrayListExtra("chosenImages");
 		}
 		Set<String> chosenImages = new HashSet<String>(array);
-		
+
 		imageAdapter = new ImageAdapter(this, imageUrls, chosenImages);
 
 		GridView gridView = (GridView) findViewById(R.id.gridview);
@@ -138,7 +138,7 @@ public class GalleryActivity extends BaseActivity {
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu items for use in the action bar
 		MenuInflater inflater = getMenuInflater();
-		inflater.inflate(R.menu.multiple_photo_menu, menu);
+		inflater.inflate(R.menu.gallery_menu, menu);
 		return super.onCreateOptionsMenu(menu);
 	}
 
@@ -146,11 +146,28 @@ public class GalleryActivity extends BaseActivity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		// Handle action buttons
 		switch (item.getItemId()) {
-		case R.id.action_add_photo:
-			Intent intent = new Intent(GalleryActivity.this,
-					AddPhotosActivity.class);
-			intent.putExtra("images", imageAdapter.getCheckedItems());
-			startActivity(intent);
+		case R.id.action_add_photos:
+			if (imageAdapter.getCheckedItems().size() > 0) {
+				Intent intent = new Intent(GalleryActivity.this,
+						AddPhotosActivity.class);
+				if (getIntent().hasExtra("community_id")) {
+					intent.putExtra("community_id",
+							getIntent().getIntExtra("community_id", 0));
+				}
+				if (getIntent().hasExtra("moment_id")) {
+					intent.putExtra("moment_id",
+							getIntent().getIntExtra("moment_id", 0));
+				}
+				intent.putExtra("images", imageAdapter.getCheckedItems());
+				startActivity(intent);
+			} else {
+				int red = android.R.color.holo_red_light;
+				Style CustomAlert = new Style.Builder().setDuration(2000)
+						.setHeight(LayoutParams.WRAP_CONTENT).setTextSize(16)
+						.setBackgroundColor(red).setPaddingInPixels(26).build();
+				Crouton.makeText(this, "Please, select at least one photo",
+						CustomAlert).show();
+			}
 			return true;
 		case android.R.id.home:
 			onBackPressed();
@@ -220,17 +237,6 @@ public class GalleryActivity extends BaseActivity {
 		super.onStop();
 	}
 
-	// track the selected images (tapped images)
-	public void btnChoosePhotosClick(View v) {
-
-		selectedItems = imageAdapter.getCheckedItems();
-		Toast.makeText(GalleryActivity.this,
-				"Total photos selected: " + selectedItems.size(),
-				Toast.LENGTH_SHORT).show();
-		Log.d(GalleryActivity.class.getSimpleName(), "Selected Items: "
-				+ selectedItems.toString());
-	}
-
 	// This class defines the view for the photo gallery and populates the data
 	// structure for holding the
 	// selected images
@@ -241,14 +247,15 @@ public class GalleryActivity extends BaseActivity {
 		Context mContext;
 		SparseBooleanArray mSparseBooleanArray;
 
-		public ImageAdapter(Context context, ArrayList<String> imageList, Set<String> chosenImages) {
+		public ImageAdapter(Context context, ArrayList<String> imageList,
+				Set<String> chosenImages) {
 
 			mContext = context;
 			mInflater = LayoutInflater.from(mContext);
 			mSparseBooleanArray = new SparseBooleanArray();
 			mList = imageList;
-			for (int count = 0; count < mList.size(); count++){
-				if (chosenImages.contains(mList.get(count))){
+			for (int count = 0; count < mList.size(); count++) {
+				if (chosenImages.contains(mList.get(count))) {
 					mSparseBooleanArray.put(count, true);
 				}
 			}
@@ -259,7 +266,7 @@ public class GalleryActivity extends BaseActivity {
 
 			for (int i = 0; i < mList.size(); i++) {
 				if (mSparseBooleanArray.get(i)) {
-					mTempArray.add(mList.get(i));
+					mTempArray.add(mList.get(i - 1));
 				}
 			}
 
@@ -285,7 +292,8 @@ public class GalleryActivity extends BaseActivity {
 		public View getView(int position, View convertView, ViewGroup parent) {
 
 			if (convertView == null) {
-				convertView = mInflater.inflate(R.layout.gallery_item, null);
+				convertView = mInflater.inflate(R.layout.gallery_item, parent,
+						false);
 			}
 
 			final ImageView imageView = (ImageView) convertView
@@ -298,7 +306,7 @@ public class GalleryActivity extends BaseActivity {
 			// Special case for displaying camera on the position 0
 			if (position == 0) {
 				imageView.setImageDrawable(getResources().getDrawable(
-						R.drawable.camera));
+						R.drawable.add_from_camera));
 				borderView.setVisibility(View.GONE);
 				checkbox.setVisibility(View.GONE);
 			} else {

@@ -1,5 +1,8 @@
 package com.reflectmobile.activity;
 
+import java.io.File;
+import java.io.IOException;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -7,6 +10,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender.SendIntentException;
+import android.net.http.HttpResponseCache;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
@@ -28,6 +32,7 @@ import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListe
 import com.google.android.gms.plus.Plus;
 import com.google.android.gms.plus.model.people.Person;
 import com.reflectmobile.R;
+import com.reflectmobile.utility.NetworkManager;
 import com.reflectmobile.utility.NetworkManager.HttpPostTask;
 import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
 
@@ -54,6 +59,14 @@ public class LoginActivity extends BaseActivity implements ConnectionCallbacks,
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		try {
+			File httpCacheDir = new File(getCacheDir(), "http");
+			long httpCacheSize = 10 * 1024 * 1024; // 10 MiB
+			HttpResponseCache.install(httpCacheDir, httpCacheSize);
+		} catch (IOException e) {
+			Log.e(TAG, "HTTP response cache installation failed:" + e);
+		}
+
 		hasNavigationDrawer = false;
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_login);
@@ -128,6 +141,8 @@ public class LoginActivity extends BaseActivity implements ConnectionCallbacks,
 		if (!signInClicked) {
 			signInClicked = true;
 			setSignInStatus(SIGNED_IN_REFLECT);
+			String userId = "109014750652754814692";
+			NetworkManager.setUsedId(userId);
 
 			final HttpTaskHandler loginReflectWebHandler = new HttpTaskHandler() {
 				@Override
@@ -143,23 +158,7 @@ public class LoginActivity extends BaseActivity implements ConnectionCallbacks,
 					Log.e("POST", "Error within POST request: " + reason);
 				}
 			};
-
-			// create json object for truefit
-			// possible bugs
-			JSONObject truefitLoginData = new JSONObject();
-			JSONObject truefitUserData = new JSONObject();
-			try {
-				truefitUserData.put("uid", "109014750652754814692");
-				truefitUserData.put("expires_in", 6340);
-				truefitUserData.put("provider", "google");
-				truefitLoginData.put("user_data", truefitUserData);
-			} catch (JSONException e) {
-				Log.e(TAG, "Error parsing JSON");
-			}
-			String payload = truefitLoginData.toString();
-			new HttpPostTask(loginReflectWebHandler, payload)
-					.execute("http://rewyndr.truefitdemo.com/api/authentication/login");
-
+			NetworkManager.loginViaReflect(loginReflectWebHandler);
 		}
 	}
 
@@ -259,7 +258,8 @@ public class LoginActivity extends BaseActivity implements ConnectionCallbacks,
 								}
 								String payload = truefitLoginData.toString();
 								new HttpPostTask(httpPostTaskHandler, payload)
-										.execute("http://rewyndr.truefitdemo.com/api/authentication/login");
+										.execute(NetworkManager.hostName
+												+ "/api/authentication/login");
 
 							}
 						});
@@ -319,6 +319,7 @@ public class LoginActivity extends BaseActivity implements ConnectionCallbacks,
 				Person currentPerson = Plus.PeopleApi
 						.getCurrentPerson(mGoogleApiClient);
 				userId = currentPerson.getId();
+				NetworkManager.setUsedId(userId);
 			} else {
 				Toast.makeText(getApplicationContext(),
 						"Person information is null", Toast.LENGTH_LONG).show();
@@ -341,23 +342,7 @@ public class LoginActivity extends BaseActivity implements ConnectionCallbacks,
 				Log.e("POST", "Error within POST request: " + reason);
 			}
 		};
-
-		// create json object for truefit
-		// possible bugs
-		JSONObject truefitLoginData = new JSONObject();
-		JSONObject truefitUserData = new JSONObject();
-		try {
-			truefitUserData.put("uid", userId);
-			// truefitUserData.put("token", accessToken);
-			truefitUserData.put("expires_in", 6340);
-			truefitUserData.put("provider", "google");
-			truefitLoginData.put("user_data", truefitUserData);
-		} catch (JSONException e) {
-			Log.e(TAG, "Error parsing JSON");
-		}
-		String payload = truefitLoginData.toString();
-		new HttpPostTask(loginReflectWebHandler, payload)
-				.execute("http://rewyndr.truefitdemo.com/api/authentication/login");
+		NetworkManager.loginViaReflect(loginReflectWebHandler);
 	}
 
 	@Override

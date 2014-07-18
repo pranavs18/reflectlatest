@@ -1,22 +1,17 @@
 package com.reflectmobile.activity;
 
-import java.io.File;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.app.ActionBar.LayoutParams;
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.MediaStore;
 import android.util.Log;
-import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -26,13 +21,15 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
-import android.widget.CheckBox;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
+import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.nostra13.universalimageloader.cache.disc.naming.Md5FileNameGenerator;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
@@ -40,16 +37,33 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.SimpleImageLoadingListener;
 import com.reflectmobile.R;
+import com.reflectmobile.data.Community;
+import com.reflectmobile.utility.NetworkManager;
+import com.reflectmobile.utility.NetworkManager.HttpGetTask;
+import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
+import com.reflectmobile.utility.NetworkManager.HttpPostImageTask;
+
+import de.neofonie.mobile.app.android.widget.crouton.Crouton;
+import de.neofonie.mobile.app.android.widget.crouton.Style;
 
 public class AddPhotosActivity extends BaseActivity {
 
-	private static final String TAG = "SelectedPhotoActivity";
-	
+	private static final String TAG = "AddPhotosActivity";
+
+	private final static int CODE_ADD_COMMUNITY = 101;
+	private static final int CODE_ADD_MOMENT = 102;
+	private LayoutInflater inflater;
+
 	private ArrayList<String> imageUrls;
-	private DisplayImageOptions options;
 	private ImageAdapter imageAdapter;
-	private static ArrayList<String> selectedItems;
-	
+	private DisplayImageOptions options;
+	private Community[] mCommunities;
+	private Community mCommunity;
+	private boolean communityChosen = false;
+	private boolean momentChosen = false;
+	private int communityId;
+	private int momentId;
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		hasNavigationDrawer = false;
@@ -73,8 +87,6 @@ public class AddPhotosActivity extends BaseActivity {
 		ImageView view = (ImageView) findViewById(android.R.id.home);
 		view.setPadding(10, 0, 0, 0);
 
-		getActionBar().setIcon(R.drawable.picture);
-
 		// set configuration for the image loader instance
 		// we can have default configuration but this config will invoke faster
 		// loading of the images
@@ -90,42 +102,155 @@ public class AddPhotosActivity extends BaseActivity {
 
 		ImageLoader.getInstance().init(config);
 
-		// Access the Media Store to retrieve the images
-		final String[] columns = { MediaStore.Images.Media.DATA,
-				MediaStore.Images.Media._ID };
-		final String orderBy = MediaStore.Images.Media.DATE_TAKEN;
-		@SuppressWarnings("deprecation")
-		Cursor imagecursor = managedQuery(
-				MediaStore.Images.Media.EXTERNAL_CONTENT_URI, columns, null,
-				null, orderBy + " DESC");
-
-		this.imageUrls = new ArrayList<String>();
-
-		for (int i = 0; i < imagecursor.getCount(); i++) {
-			imagecursor.moveToPosition(i);
-			int dataColumnIndex = imagecursor
-					.getColumnIndex(MediaStore.Images.Media.DATA);
-			imageUrls.add(imagecursor.getString(dataColumnIndex));
-			Log.d(AddPhotosActivity.class.getSimpleName(),
-					"=====> Array path => " + imageUrls.get(i));
-			// Log the url of the images being displayed in the photo gallery
-		}
-
-		options = new DisplayImageOptions.Builder().cacheInMemory()
-				.cacheOnDisc().build();
+		this.imageUrls = getIntent().getStringArrayListExtra("images");
 
 		imageAdapter = new ImageAdapter(this, imageUrls);
 
-		GridView gridView = (GridView) findViewById(R.id.gridview);
+		GridView gridView = (GridView) findViewById(R.id.selected_images);
 		gridView.setAdapter(imageAdapter);
 
+		inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+		final Spinner spinnerCommunity = (Spinner) findViewById(R.id.community);
+		String[] initialChoicesCommunity = { "Choose a Community" };
+
+		final SpinnerAdapter spinnerCommunityInitialAdapter = new SpinnerAdapter(
+				this, R.layout.spinner, initialChoicesCommunity);
+		spinnerCommunity.setAdapter(spinnerCommunityInitialAdapter);
+
+		final Spinner spinnerMoment = (Spinner) findViewById(R.id.moment);
+		String[] initialChoicesMoment = { "Choose a Moment" };
+		final SpinnerAdapter spinnerMomentInitialAdapter = new SpinnerAdapter(
+				this, R.layout.spinner, initialChoicesMoment);
+		spinnerMoment.setAdapter(spinnerMomentInitialAdapter);
+
+		final HttpTaskHandler getMomentsHandler = new HttpTaskHandler() {
+
+			@Override
+			public void taskSuccessful(String result) {
+				// Parse JSON to the list of networks
+				Log.d(TAG, result);
+				mCommunity = Community.getCommunityInfo(result);
+				String[] choices = new String[mCommunity.getNumOfMoments() + 2];
+				choices[0] = "Choose a Moment";
+				
+				boolean moment_defined = getIntent().hasExtra("moment_id");
+				int moment_id = getIntent().getIntExtra("moment_id", 0);
+				int selection = 0;
+				
+				for (int count = 0; count < mCommunity.getNumOfMoments(); count++) {
+					choices[count + 1] = mCommunity.getMoment(count).getName();
+					if (moment_defined && mCommunity.getMoment(count).getId() == moment_id){
+						selection = count + 1;
+					}
+				}
+				choices[mCommunity.getNumOfMoments() + 1] = "New Moment";
+
+				final SpinnerAdapter spinnerMomentInitialAdapter = new SpinnerAdapter(
+						AddPhotosActivity.this, R.layout.spinner, choices);
+				spinnerMoment.setAdapter(spinnerMomentInitialAdapter);
+				spinnerMoment.setSelection(selection);
+				
+				spinnerMoment
+						.setOnItemSelectedListener(new OnItemSelectedListener() {
+
+							public void onItemSelected(AdapterView<?> parent,
+									View view, int pos, long id) {
+								if (pos == mCommunity.getNumOfMoments() + 1) {
+									addMoment();
+								} else {
+									momentChosen = pos > 0;
+									if (momentChosen) {
+										momentId = mCommunity.getMoment(pos - 1)
+												.getId();
+									}
+								}
+							}
+
+							public void onNothingSelected(AdapterView<?> parent) {
+
+							}
+						});
+
+			}
+
+			@Override
+			public void taskFailed(String reason) {
+				Log.e(TAG, "Error within GET request: " + reason);
+			}
+		};
+
+		final HttpTaskHandler getCommunitiesHandler = new HttpTaskHandler() {
+
+			@Override
+			public void taskSuccessful(String result) {
+				// Parse JSON to the list of networks
+				mCommunities = Community.getCommunitiesInfo(result);
+				String[] choices = new String[mCommunities.length + 2];
+				choices[0] = "Choose a Community";
+				
+				boolean community_defined = getIntent().hasExtra("community_id");
+				int community_id = getIntent().getIntExtra("community_id", 0);
+				int selection = 0;
+				
+				for (int count = 0; count < mCommunities.length; count++) {
+					choices[count + 1] = mCommunities[count].getName();
+					if (community_defined && mCommunities[count].getId() == community_id){
+						selection = count + 1;
+					}
+				}
+				choices[mCommunities.length + 1] = "New Community";
+
+				final SpinnerAdapter spinnerCommunityInitialAdapter = new SpinnerAdapter(
+						AddPhotosActivity.this, R.layout.spinner, choices);
+				spinnerCommunity.setAdapter(spinnerCommunityInitialAdapter);
+				spinnerCommunity.setSelection(selection);
+				
+				spinnerCommunity
+						.setOnItemSelectedListener(new OnItemSelectedListener() {
+
+							public void onItemSelected(AdapterView<?> parent,
+									View view, int pos, long id) {
+								if (pos == mCommunities.length + 1) {
+									addCommunity();
+								} else {
+									communityChosen = pos > 0;
+									if (communityChosen) {
+										if (communityId != mCommunities[pos - 1]
+												.getId()) {
+											communityId = mCommunities[pos - 1]
+													.getId();
+											momentChosen = false;
+											spinnerMoment.setSelection(0);
+											new HttpGetTask(getMomentsHandler)
+													.execute(NetworkManager.hostName
+															+ "/api/communities/"
+															+ communityId);
+										}
+									}
+								}
+							}
+
+							public void onNothingSelected(AdapterView<?> parent) {
+
+							}
+						});
+
+			}
+
+			@Override
+			public void taskFailed(String reason) {
+				Log.e(TAG, "Error within GET request: " + reason);
+			}
+		};
+		new HttpGetTask(getCommunitiesHandler).execute(NetworkManager.hostName
+				+ "/api/communities");
 	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu items for use in the action bar
 		MenuInflater inflater = getMenuInflater();
-		inflater.inflate(R.menu.multiple_photo_menu, menu);
+		inflater.inflate(R.menu.add_photos_menu, menu);
 		return super.onCreateOptionsMenu(menu);
 	}
 
@@ -133,17 +258,8 @@ public class AddPhotosActivity extends BaseActivity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		// Handle action buttons
 		switch (item.getItemId()) {
-		case R.id.action_add_photo:
-			/*
-			 * Intent intent = new Intent(); intent.setType("image/*");
-			 * intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-			 * intent.setAction(Intent.ACTION_GET_CONTENT);
-			 * startActivityForResult
-			 * (Intent.createChooser(intent,"Select Picture"), SELECT_PICTURE);
-			 */
-			Intent intent = new Intent(AddPhotosActivity.this,
-					AddPhotosActivity.class);
-			startActivity(intent);
+		case R.id.action_add_photos:
+			uploadPhotos();
 			return true;
 		case android.R.id.home:
 			onBackPressed();
@@ -153,43 +269,67 @@ public class AddPhotosActivity extends BaseActivity {
 		}
 	}
 
-	@Override
-	protected void onStop() {
-		imageLoader.stop();
-		super.onStop();
+	private void uploadPhotos() {
+		if (momentChosen && communityChosen) {
+			ArrayList<String> imageUrlsList = imageAdapter.getImageFilenames();
+			String[] imageUrls = imageUrlsList.toArray(new String[imageUrlsList
+					.size()]);
+			final HttpTaskHandler getMomentsHandler = new HttpTaskHandler() {
+				@Override
+				public void taskSuccessful(String result) {
+					try {
+						JSONObject photoData = new JSONObject(result);
+						int photoId = photoData.getInt("id");
+						Intent intent = new Intent(AddPhotosActivity.this,
+								PhotoActivity.class);
+						intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+								| Intent.FLAG_ACTIVITY_CLEAR_TASK);
+						intent.putExtra("moment_id", momentId);
+						intent.putExtra("community_id", communityId);
+						intent.putExtra("photo_id", photoId);
+						startActivity(intent);
+					} catch (JSONException e) {
+						Log.e(TAG, "Error parsing JSON");
+					}
+				}
+
+				@Override
+				public void taskFailed(String reason) {
+					Log.e(TAG, "Error within POST IMAGE request: " + reason);
+				}
+			};
+
+			new HttpPostImageTask(getMomentsHandler, NetworkManager.hostName
+					+ "/api/moments/" + momentId + "/photos/",
+					AddPhotosActivity.this).execute(imageUrls);
+		} else {
+			int red = android.R.color.holo_red_light;
+			Style CustomAlert = new Style.Builder().setDuration(2000)
+					.setHeight(LayoutParams.WRAP_CONTENT).setTextSize(16)
+					.setBackgroundColor(red).setPaddingInPixels(26).build();
+			Crouton.makeText(this, "Please, choose community and moment",
+					CustomAlert).show();
+		}
 	}
 
-	// track the selected images (tapped images)
-	public void btnChoosePhotosClick(View v) {
-
-		selectedItems = imageAdapter.getCheckedItems();
-		Toast.makeText(AddPhotosActivity.this,
-				"Total photos selected: " + selectedItems.size(),
-				Toast.LENGTH_SHORT).show();
-		Log.d(AddPhotosActivity.class.getSimpleName(), "Selected Items: "
-				+ selectedItems.toString());
-	}
-	
-	
-
-	public void btnChoosePhotosCancel(View v) {
-
-		// TODO
-		/*
-		 * if(selectedItems.size() >0){ for(int i=0;i<selectedItems.size();i++){
-		 * selectedItems.remove(i); CheckBox mCheckBox = (CheckBox)
-		 * findViewById(R.id.checkBox1); mCheckBox.setChecked(false); } }
-		 * for(int i=0;i<selectedItems.size();i++){ final CheckBox checkBox =
-		 * (CheckBox) findViewById(R.id.checkBox1); if (checkBox.isChecked()) {
-		 * checkBox.setChecked(false); } }
-		 */
-		imageAdapter.notifyDataSetChanged();
-		Log.d(AddPhotosActivity.class.getSimpleName(),
-				"Cancelled Selected Photos");
-
+	private void addCommunity() {
+		Intent intent = new Intent(AddPhotosActivity.this,
+				AddCommunityActivity.class);
+		startActivityForResult(intent, CODE_ADD_COMMUNITY);
 	}
 
+	private void addMoment() {
+		Intent intent = new Intent(AddPhotosActivity.this,
+				AddMomentActivity.class);
+		intent.putExtra("community_id", communityId);
+		startActivityForResult(intent, CODE_ADD_MOMENT);
+	}
 
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		Intent intent = getIntent();
+		finish();
+		startActivity(intent);
+	}
 
 	// This class defines the view for the photo gallery and populates the data
 	// structure for holding the
@@ -199,31 +339,20 @@ public class AddPhotosActivity extends BaseActivity {
 		ArrayList<String> mList;
 		LayoutInflater mInflater;
 		Context mContext;
-		SparseBooleanArray mSparseBooleanArray;
 
 		public ImageAdapter(Context context, ArrayList<String> imageList) {
-
 			mContext = context;
 			mInflater = LayoutInflater.from(mContext);
-			mSparseBooleanArray = new SparseBooleanArray();
 			mList = imageList;
 		}
 
-		public ArrayList<String> getCheckedItems() {
-			ArrayList<String> mTempArray = new ArrayList<String>();
-
-			for (int i = 0; i < mList.size(); i++) {
-				if (mSparseBooleanArray.get(i)) {
-					mTempArray.add(mList.get(i));
-				}
-			}
-
-			return mTempArray;
+		public ArrayList<String> getImageFilenames() {
+			return this.mList;
 		}
 
 		@Override
 		public int getCount() {
-			return mList.size() + 1;
+			return mList.size();
 		}
 
 		@Override
@@ -240,49 +369,32 @@ public class AddPhotosActivity extends BaseActivity {
 		public View getView(int position, View convertView, ViewGroup parent) {
 
 			if (convertView == null) {
-				convertView = mInflater.inflate(R.layout.gallery_item,
-						null);
+				convertView = mInflater.inflate(R.layout.item_add_photos,
+						parent, false);
 			}
 
 			final ImageView imageView = (ImageView) convertView
 					.findViewById(R.id.imageView1);
-			final ImageView borderView = (ImageView) convertView
-					.findViewById(R.id.border);
 			final ImageView checkbox = (ImageView) convertView
 					.findViewById(R.id.checkBox);
 
-			// Special case for displaying camera on the position 0
-			if (position == 0) {
-				imageView.setImageDrawable(getResources().getDrawable(
-						R.drawable.camera));
-				borderView.setVisibility(View.GONE);
-				checkbox.setVisibility(View.GONE);
-			} else {
-				boolean isChecked = mSparseBooleanArray.get(position);
-				if (isChecked) {
-					borderView.setVisibility(View.VISIBLE);
-					checkbox.setVisibility(View.VISIBLE);
-				} else {
-					borderView.setVisibility(View.GONE);
-					checkbox.setVisibility(View.GONE);
-				}
+			imageView.setScaleType(ScaleType.CENTER_CROP);
+			imageLoader.displayImage("file://" + mList.get(position),
+					imageView, options, new SimpleImageLoadingListener() {
+						@Override
+						public void onLoadingComplete(Bitmap loadedImage) {
+							Animation anim = AnimationUtils.loadAnimation(
+									AddPhotosActivity.this, R.anim.fade_in);
+							imageView.setAnimation(anim);
+							anim.start();
+						}
+					});
 
-				imageView.setScaleType(ScaleType.CENTER_CROP);
+			options = new DisplayImageOptions.Builder().cacheInMemory()
+					.cacheOnDisc().build();
 
-				imageLoader.displayImage("file://" + mList.get(position - 1),
-						imageView, options, new SimpleImageLoadingListener() {
-							@Override
-							public void onLoadingComplete(Bitmap loadedImage) {
-								Animation anim = AnimationUtils.loadAnimation(
-										AddPhotosActivity.this,
-										R.anim.fade_in);
-								imageView.setAnimation(anim);
-								anim.start();
-							}
-						});
-			}
-			convertView.setTag(position);
-			convertView.setOnClickListener(mOnClickListener);
+			checkbox.setTag(position);
+			checkbox.setOnClickListener(mOnClickListener);
 
 			return convertView;
 		}
@@ -292,31 +404,45 @@ public class AddPhotosActivity extends BaseActivity {
 			@Override
 			public void onClick(View v) {
 				int position = (Integer) v.getTag();
-				// Special case for first photo:
-				Log.d(TAG, position+"");
-				if (position == 0) {
-					Log.d(TAG, "Camera clicked");
-				} else {
-					boolean isChecked = mSparseBooleanArray.get(position);
-					isChecked = !isChecked;
-					mSparseBooleanArray.put(position, isChecked);
-
-					final ImageView borderView = (ImageView) v
-							.findViewById(R.id.border);
-					final ImageView checkbox = (ImageView) v
-							.findViewById(R.id.checkBox);
-
-					if (isChecked) {
-						borderView.setVisibility(View.VISIBLE);
-						checkbox.setVisibility(View.VISIBLE);
-					} else {
-						borderView.setVisibility(View.GONE);
-						checkbox.setVisibility(View.GONE);
-					}
+				mList.remove(position);
+				notifyDataSetChanged();
+				if (mList.size() == 0) {
+					onBackPressed();
 				}
-
 			}
 		};
+	}
+
+	private class SpinnerAdapter extends ArrayAdapter<String> {
+
+		public SpinnerAdapter(Context context, int textViewResourceId,
+				String[] objects) {
+			super(context, textViewResourceId, objects);
+		}
+
+		@Override
+		public View getDropDownView(int position, View convertView,
+				ViewGroup parent) {
+			if (convertView == null) {
+				convertView = inflater.inflate(R.layout.spinner_dropdown,
+						parent, false);
+			}
+			((TextView) convertView).setText(getItem(position));
+
+			// Add plus to last item
+			if (position > 0 && position == getCount() - 1) {
+				((TextView) convertView)
+						.setCompoundDrawablesWithIntrinsicBounds(
+								R.drawable.plus_white, 0, 0, 0);
+				((TextView) convertView).setCompoundDrawablePadding(10);
+
+			} else {
+				((TextView) convertView)
+						.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
+			}
+			return convertView;
+		}
+
 	}
 
 }

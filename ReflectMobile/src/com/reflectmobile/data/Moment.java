@@ -89,8 +89,9 @@ public class Moment {
 
 			JSONArray photoJSONArray = new JSONArray(
 					momentJSONObject.getString("photos"));
-			for (int j = 0; j <= photoJSONArray.length() - 1; j++) {
-				Photo photo = Photo.getPhotoInfo(photoJSONArray.getString(j));
+			for (int count = 0; count < photoJSONArray.length(); count++) {
+				Photo photo = Photo.getPhotoInfo(photoJSONArray
+						.getString(photoJSONArray.length() - 1 - count));
 				moment.addPhoto(photo);
 			}
 			return moment;

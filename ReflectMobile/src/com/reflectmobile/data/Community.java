@@ -98,7 +98,8 @@ public class Community {
 			Community[] communities = new Community[mJSONArray.length()];
 			for (int count = 0; count < mJSONArray.length(); count++) {
 				communities[count] = new Community();
-				JSONObject communityData = mJSONArray.getJSONObject(count);
+				JSONObject communityData = mJSONArray.getJSONObject(mJSONArray
+						.length() - 1 - count);
 				String communityName = communityData.getString("name");
 				int communityId = communityData.getInt("id");
 
@@ -137,9 +138,10 @@ public class Community {
 			// get moments
 			JSONArray momentJSONArray = new JSONArray(
 					communityJSONObject.getString("moments"));
-			for (int i = 0; i < momentJSONArray.length(); i++) {
+			for (int count = 0; count < momentJSONArray.length(); count++) {
 				// create moment obj
-				JSONObject momentJSONObject = momentJSONArray.getJSONObject(i);
+				JSONObject momentJSONObject = momentJSONArray
+						.getJSONObject(momentJSONArray.length() - 1 - count);
 
 				int momentID = momentJSONObject.getInt("id");
 				String momentName = momentJSONObject.getString("name");
@@ -156,7 +158,8 @@ public class Community {
 				JSONArray photoJSONArray = new JSONArray(
 						momentJSONObject.getString("photos"));
 				for (int j = 0; j < photoJSONArray.length(); j++) {
-					Photo photo = Photo.getPhotoInfo(photoJSONArray.getString(j));
+					Photo photo = Photo.getPhotoInfo(photoJSONArray
+							.getString(j));
 					moment.addPhoto(photo);
 				}
 				// add moment to community

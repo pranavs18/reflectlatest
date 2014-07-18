@@ -10,7 +10,7 @@
         android:layout_height="match_parent"
         android:background="@color/white"
         android:gravity="left|top"
-        android:inputType="text"
+        android:inputType="textMultiLine"
         android:padding="10dp"
         android:textColor="@color/black"
         android:textCursorDrawable="@null" >

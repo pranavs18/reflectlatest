@@ -18,6 +18,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.reflectmobile.R;
+import com.reflectmobile.utility.NetworkManager;
 import com.reflectmobile.utility.NetworkManager.HttpPostTask;
 import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
 
@@ -136,7 +137,7 @@ public class AddMomentActivity extends BaseActivity {
 		}
 		String payload = momentData.toString();
 		new HttpPostTask(httpPostTaskHandler, payload)
-				.execute("http://rewyndr.truefitdemo.com/api/communities/"
+				.execute(NetworkManager.hostName+"/api/communities/"
 						+ communityId + "/moments");
 	}
 }

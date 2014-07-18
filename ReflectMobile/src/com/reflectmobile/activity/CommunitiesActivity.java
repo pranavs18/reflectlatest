@@ -20,6 +20,7 @@ import android.widget.TextView;
 
 import com.reflectmobile.R;
 import com.reflectmobile.data.Community;
+import com.reflectmobile.utility.NetworkManager;
 import com.reflectmobile.utility.NetworkManager.HttpGetImageTask;
 import com.reflectmobile.utility.NetworkManager.HttpGetTask;
 import com.reflectmobile.utility.NetworkManager.HttpImageTaskHandler;
@@ -74,7 +75,7 @@ public class CommunitiesActivity extends BaseActivity {
 		};
 
 		new HttpGetTask(getCommunitiesHandler)
-				.execute("http://rewyndr.truefitdemo.com/api/communities");
+				.execute(NetworkManager.hostName+"/api/communities");
 
 	}
 

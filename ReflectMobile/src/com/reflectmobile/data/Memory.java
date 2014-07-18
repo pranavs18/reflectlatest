@@ -42,7 +42,7 @@ public class Memory {
 			Memory[] memories = new Memory[memoryJSONArray.length()];
 			for (int count = 0; count < memoryJSONArray.length(); count++) {
 				JSONObject memoryJSONObject = memoryJSONArray
-						.getJSONObject(count);
+						.getJSONObject(memoryJSONArray.length() - 1 - count);
 				int id = memoryJSONObject.getInt("id");
 				String type = memoryJSONObject.getString("memory_type");
 				String content = memoryJSONObject.getString("memory_content");
@@ -104,5 +104,4 @@ public class Memory {
 	public void setInfo(String info) {
 		this.info = info;
 	}
-
 }

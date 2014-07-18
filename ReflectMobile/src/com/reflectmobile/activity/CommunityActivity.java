@@ -31,6 +31,7 @@ import android.widget.TextView;
 import com.reflectmobile.R;
 import com.reflectmobile.data.Community;
 import com.reflectmobile.data.Moment;
+import com.reflectmobile.utility.NetworkManager;
 import com.reflectmobile.utility.NetworkManager.HttpGetImageTask;
 import com.reflectmobile.utility.NetworkManager.HttpGetTask;
 import com.reflectmobile.utility.NetworkManager.HttpImageTaskHandler;
@@ -93,7 +94,7 @@ public class CommunityActivity extends BaseActivity {
 		};
 
 		new HttpGetTask(getCommunityHandler)
-				.execute("http://rewyndr.truefitdemo.com/api/communities/"
+				.execute(NetworkManager.hostName+"/api/communities/"
 						+ communityId);
 		// Retreive data from the web
     	final HttpTaskHandler getInviteHandler = new HttpTaskHandler() {
@@ -114,9 +115,9 @@ public class CommunityActivity extends BaseActivity {
 		};
         
 		new HttpGetTask(getInviteHandler)
-				.execute("http://rewyndr.truefitdemo.com/api/invites/link/"
+				.execute(NetworkManager.hostName+"/api/invites/link/"
 						+ communityId);
-        Log.d(TAG, "http://rewyndr.truefitdemo.com/api/invites/link/"
+        Log.d(TAG, NetworkManager.hostName+"/api/invites/link/"
 				+ communityId );
       
 		
@@ -163,60 +164,10 @@ public class CommunityActivity extends BaseActivity {
 		super.onBackPressed();
 	}
 
-	private void invite() {
-		// Initialze dialog window and set content
-		View dialogView = getLayoutInflater().inflate(
-				R.layout.dialog_community_filter, null);
-		ListView filterListView = (ListView) dialogView
-				.findViewById(R.id.listView_community_dialog_filter);
-
-		// Dummy name in the community
-		ArrayList<String> nameList = new ArrayList<String>();
-		nameList.add("123");
-		nameList.add("234");
-		nameList.add("234");
-		nameList.add("234");
-		nameList.add("234");
-		nameList.add("234");
-
-		// Generate and bind adapter
-		FilterListViewAdapter adapter = new FilterListViewAdapter(
-				CommunityActivity.this, nameList);
-
-		filterListView.setAdapter(adapter);
-
-		// Generate the custom center title view
-		TextView title = new TextView(this);
-		title.setText(R.string.title_dialog_community_filter);
-		title.setPadding(20, 20, 20, 20);
-		title.setGravity(Gravity.CENTER);
-		title.setTextSize(25);
-
-		// Generate the dialog
-		new AlertDialog.Builder(CommunityActivity.this)
-				.setView(dialogView)
-				.setPositiveButton("Apply",
-						new DialogInterface.OnClickListener() {
-
-							@Override
-							public void onClick(DialogInterface dialog,
-									int which) {
-							}
-						})
-				.setNegativeButton("Cancel",
-						new DialogInterface.OnClickListener() {
-
-							@Override
-							public void onClick(DialogInterface dialog,
-									int which) {
-							}
-						}).setCustomTitle(title).setCancelable(false)
-				.show();
-	}
-
 	private void addPhoto() {
 		Intent intent = new Intent(CommunityActivity.this,
 				GalleryActivity.class);
+		intent.putExtra("community_id", communityId);
 		startActivityForResult(intent, CODE_ADD_PHOTO);
 	}
 

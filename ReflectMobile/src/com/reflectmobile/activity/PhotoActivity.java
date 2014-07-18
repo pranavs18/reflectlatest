@@ -1,5 +1,9 @@
 package com.reflectmobile.activity;
 
+import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 
@@ -28,19 +32,30 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
+import android.widget.ToggleButton;
+
 import com.reflectmobile.R;
 import com.reflectmobile.data.Memory;
 import com.reflectmobile.data.Moment;
 import com.reflectmobile.data.Photo;
 import com.reflectmobile.data.Tag;
+import com.reflectmobile.utility.NetworkManager;
 import com.reflectmobile.utility.NetworkManager.HttpGetImageTask;
 import com.reflectmobile.utility.NetworkManager.HttpGetTask;
 import com.reflectmobile.utility.NetworkManager.HttpImageTaskHandler;
+import com.reflectmobile.utility.NetworkManager.HttpDeleteTask;
 import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
+import com.reflectmobile.view.CustomScrollView;
+import com.reflectmobile.view.CustomViewPager;
 import com.reflectmobile.widget.ImageProcessor;
 
 import android.database.Cursor;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.media.MediaPlayer.OnCompletionListener;
+import android.media.MediaPlayer.OnPreparedListener;
 import android.net.Uri;
 import android.provider.MediaStore;
 
@@ -51,14 +66,30 @@ public class PhotoActivity extends BaseActivity {
 	private Memory[] mMemories;
 	private LayoutInflater mInflater;
 
+	private int communityId;
+	private int momentId;
+
+	private Menu menu;
+
 	/* photo gallery variables */
 	static final int CODE_ADD_STORY = 101;
 	static final int CODE_ADD_DETAIL = 102;
-	static final int CODE_SELECT_PICTURE = 103;
+	static final int CODE_ADD_SOUND = 103;
+	static final int CODE_SELECT_PICTURE = 104;
 
 	/* photo gallery variables */
+	private CustomViewPager viewPager;
+	private CustomScrollView scrollView;
 	private String selectedImagePath;
 	private ImageView img;
+
+	// MediaPlayer for playing sounds
+	private MediaPlayer mediaPlayer;
+	private boolean isPlaying = false;
+	private boolean isPaused = false;
+	private int soundPlayingId = -1;
+	private ImageView soundIcon;
+	
 
 	// TODO
 	// Calculate when the activity start
@@ -67,17 +98,16 @@ public class PhotoActivity extends BaseActivity {
 	private static int photoImageViewHeightPX = 0;
 	private static int photoImageViewWidthPX = 0;
 	// Set when the image changes
-	private int currentPhotoIndex = 2;
+	private int currentPhotoIndex = 0;
 	private ImageView currentImageView = null;
 	private float photoOffsetX = 0;
 	private float photoOffsetY = 0;
 	private float photoScaleFactor = 1;
 	private boolean isExpandHorizontal = false;
 	// Set when user want to edit the tag
-	// If it is in add new tag mode, it should be set the the center of the
-	// image
+	// If it is in add tag mode, it should be set the the center of the image
 	// If it is in edit tag mode, it should be set to the tag location
-	private RectF currentEdittedTagLocation = new RectF(0, 0, 0, 0);
+	private RectF currentEdittedTagLocation = new RectF(100, 100, 200, 200);
 
 	private int photoId = 0;
 
@@ -104,12 +134,14 @@ public class PhotoActivity extends BaseActivity {
 		ImageView view = (ImageView) findViewById(android.R.id.home);
 		view.setPadding(10, 0, 0, 0);
 
-		final int momentId = getIntent().getIntExtra("moment_id", 0);
-		final int photoId = getIntent().getIntExtra("photo_id", 0);
+		communityId = getIntent().getIntExtra("community_id", 0);
+		momentId = getIntent().getIntExtra("moment_id", 0);
+		photoId = getIntent().getIntExtra("photo_id", 0);
 
 		mInflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
 		img = (ImageView) findViewById(R.id.imageView1);
+		scrollView = (CustomScrollView) findViewById(R.id.scroll_view);
 
 		// Retreive data from the web
 		final HttpTaskHandler getMomentHandler = new HttpTaskHandler() {
@@ -126,7 +158,7 @@ public class PhotoActivity extends BaseActivity {
 						break;
 					}
 				}
-				ViewPager viewPager = (ViewPager) findViewById(R.id.view_pager);
+				viewPager = (CustomViewPager) findViewById(R.id.view_pager);
 				ImagePagerAdapter adapter = new ImagePagerAdapter(
 						PhotoActivity.this);
 				viewPager.setAdapter(adapter);
@@ -158,25 +190,21 @@ public class PhotoActivity extends BaseActivity {
 			}
 		};
 
-		new HttpGetTask(getMomentHandler)
-				.execute("http://rewyndr.truefitdemo.com/api/moments/"
-						+ momentId);
+		new HttpGetTask(getMomentHandler).execute(NetworkManager.hostName
+				+ "/api/moments/" + momentId);
 
 		// TODO
-		handleTagButtonView();
+		// handleTagButtonView();
 		// Transfer image view size from dp to px
 		photoImageViewHeightPX = dpToPx(photoImageViewHeightDP);
 		photoImageViewWidthPX = dpToPx(photoImageViewWidthDP);
 	}
-	
+
 	@Override
 	public void onBackPressed() {
-		Intent intent = new Intent(PhotoActivity.this,
-				MomentActivity.class);
-		intent.putExtra("moment_id",
-				getIntent().getIntExtra("moment_id", 0));
-		intent.putExtra("community_id",
-				getIntent().getIntExtra("community_id", 0));
+		Intent intent = new Intent(PhotoActivity.this, MomentActivity.class);
+		intent.putExtra("moment_id", momentId);
+		intent.putExtra("community_id", communityId);
 		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
 				| Intent.FLAG_ACTIVITY_CLEAR_TASK);
 		startActivity(intent);
@@ -186,9 +214,38 @@ public class PhotoActivity extends BaseActivity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu items for use in the action bar
+		this.menu = menu;
 		MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.photo_menu, menu);
 		return super.onCreateOptionsMenu(menu);
+	}
+	
+	@Override
+	protected void onStop() {
+		stopPlaying();
+		super.onStop();
+	};
+
+	private void showTaggedMenu() {
+		MenuItem add_photo = menu.findItem(R.id.action_add_photo);
+		MenuItem add_tag = menu.findItem(R.id.action_add_tag);
+		MenuItem edit_tag = menu.findItem(R.id.action_edit_tag);
+		MenuItem delete_tag = menu.findItem(R.id.action_delete_tag);
+		add_photo.setVisible(false);
+		add_tag.setVisible(true);
+		edit_tag.setVisible(true);
+		delete_tag.setVisible(true);
+	}
+
+	private void showNonTaggedMenu() {
+		MenuItem add_photo = menu.findItem(R.id.action_add_photo);
+		MenuItem add_tag = menu.findItem(R.id.action_add_tag);
+		MenuItem edit_tag = menu.findItem(R.id.action_edit_tag);
+		MenuItem delete_tag = menu.findItem(R.id.action_delete_tag);
+		add_photo.setVisible(true);
+		add_tag.setVisible(false);
+		edit_tag.setVisible(false);
+		delete_tag.setVisible(false);
 	}
 
 	@Override
@@ -196,16 +253,15 @@ public class PhotoActivity extends BaseActivity {
 		// Handle action buttons
 		switch (item.getItemId()) {
 		case R.id.action_add_photo:
-			/*
-			 * Intent intent = new Intent(); intent.setType("image/*");
-			 * intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-			 * intent.setAction(Intent.ACTION_GET_CONTENT);
-			 * startActivityForResult
-			 * (Intent.createChooser(intent,"Select Picture"), SELECT_PICTURE);
-			 */
 			Intent intent = new Intent(PhotoActivity.this,
 					GalleryActivity.class);
+			intent.putExtra("community_id", communityId);
+			intent.putExtra("moment_id", momentId);
 			startActivity(intent);
+			return true;
+		case R.id.action_edit_tag:
+			scrollView.setScrollingEnabled(false);
+			currentImageView.setOnTouchListener(onEditPhotoTouchListener);
 			return true;
 		case android.R.id.home:
 			onBackPressed();
@@ -241,12 +297,45 @@ public class PhotoActivity extends BaseActivity {
 	}
 
 	public void onPhotoSelected(final int position) {
+		currentPhotoIndex = position;
 		photoId = moment.getPhoto(position).getId();
+
+		ViewPager viewPager = (ViewPager) findViewById(R.id.view_pager);
+		currentImageView = (ImageView) viewPager
+				.findViewWithTag(currentPhotoIndex);
 
 		final ViewGroup memoryContainer = (ViewGroup) findViewById(R.id.memories_container);
 		memoryContainer.removeAllViews();
 		final TextView memoryCaption = (TextView) findViewById(R.id.memories_caption);
 		memoryCaption.setText("0 MEMORIES");
+
+		ToggleButton tagButton = (ToggleButton) findViewById(R.id.button_photo_tag);
+		tagButton.setActivated(false);
+		tagButton.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				if (v.isActivated()) {
+					v.setActivated(false);
+					showNonTaggedPhoto();
+				} else {
+					v.setActivated(true);
+					showTaggedRegions();
+				}
+			}
+		});
+
+		ImageButton addSoundButton = (ImageButton) findViewById(R.id.add_sound);
+		addSoundButton.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View arg0) {
+				Intent intent = new Intent(PhotoActivity.this,
+						AddSoundActivity.class);
+				intent.putExtra("photo_id", moment.getPhoto(position).getId());
+				startActivityForResult(intent, CODE_ADD_SOUND);
+			}
+		});
 
 		ImageButton addStoryButton = (ImageButton) findViewById(R.id.add_story);
 		addStoryButton.setOnClickListener(new OnClickListener() {
@@ -291,11 +380,50 @@ public class PhotoActivity extends BaseActivity {
 							.findViewById(R.id.memory_text);
 					TextView memoryInfo = (TextView) card
 							.findViewById(R.id.memory_info);
-					Memory memory = mMemories[count];
+					final ImageButton dotMenu = (ImageButton) card
+							.findViewById(R.id.memory_card_dot);
+					final Memory memory = mMemories[count];
+
+					if (memory.getType().equals("sound")) {
+						card.setTag(memory);
+						card.setOnClickListener(onSoundPlayClicked);
+					}
 					memoryIcon.setImageResource(memory.getResourceId());
 					memoryText.setText(memory.getContent());
 					memoryInfo.setText(memory.getInfo());
 					memoryContainer.addView(card);
+					dotMenu.setOnClickListener(new OnClickListener() {
+
+						@Override
+						public void onClick(View arg0) {
+							// Creating the instance of PopupMenu
+							PopupMenu popup = new PopupMenu(PhotoActivity.this,
+									dotMenu);
+							// Inflating the Popup using xml file
+							popup.getMenuInflater().inflate(
+									R.menu.popup_memory, popup.getMenu());
+
+							// registering popup with OnMenuItemClickListener
+							popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+								public boolean onMenuItemClick(MenuItem item) {
+									switch (item.getItemId()) {
+									case R.id.action_edit_memory:
+										editMemory(memory,
+												moment.getPhoto(position)
+														.getId());
+										return true;
+									case R.id.action_delete_memory:
+										deleteMemory(memory.getId());
+										return true;
+									default:
+										return true;
+									}
+								}
+							});
+
+							popup.show();// showing popup menu
+						}
+					});
 				}
 			}
 
@@ -306,24 +434,292 @@ public class PhotoActivity extends BaseActivity {
 		};
 
 		new HttpGetTask(getMemoriesHandler)
-				.execute("http://rewyndr.truefitdemo.com/api/memories?photo_id="
+				.execute(NetworkManager.hostName + "/api/memories?photo_id="
 						+ moment.getPhoto(position).getId());
+
+		final HttpTaskHandler getTagsHandler = new HttpTaskHandler() {
+
+			@Override
+			public void taskSuccessful(String result) {
+				Log.d(TAG, result);
+				JSONArray tagJSONArray;
+				try {
+					tagJSONArray = new JSONArray(result);
+					for (int j = 0; j <= tagJSONArray.length() - 1; j++) {
+						Tag tag = Tag.getTagInfo(tagJSONArray.getString(j));
+						moment.getPhoto(position).addTag(tag);
+					}
+				} catch (JSONException e) {
+					Log.e(TAG, "Error parse the tag json");
+				}
+			}
+
+			@Override
+			public void taskFailed(String reason) {
+				Log.e(TAG, "Error downloading the tag");
+			}
+		};
+
+		new HttpGetTask(getTagsHandler).execute(NetworkManager.hostName
+				+ "/api/photos/" + moment.getPhoto(position).getId() + "/tags");
 
 	}
 
+	private void editMemory(Memory memory, int photoId) {
+		String type = memory.getType();
+		if (type.equals("detail")) {
+			Intent intent = new Intent(PhotoActivity.this,
+					AddDetailActivity.class);
+			intent.putExtra("memory_id", memory.getId());
+			intent.putExtra("photo_id", photoId);
+			Pattern pattern = Pattern.compile("(.*) (WAS [A-Z]*) (.*)");
+			Matcher matcher = pattern.matcher(memory.getContent());
+			if (matcher.find()) {
+				intent.putExtra("name", matcher.group(1));
+				intent.putExtra("spinner_value", matcher.group(2));
+				intent.putExtra("detail", matcher.group(3));
+			}
+			startActivityForResult(intent, CODE_ADD_DETAIL);
+		} else if (type.equals("story")) {
+			Intent intent = new Intent(PhotoActivity.this,
+					AddStoryActivity.class);
+			intent.putExtra("memory_id", memory.getId());
+			intent.putExtra("story", memory.getContent());
+			intent.putExtra("photo_id", photoId);
+			startActivityForResult(intent, CODE_ADD_STORY);
+		} else if (type.equals("sound")) {
+
+		}
+	}
+
+	private void deleteMemory(int id) {
+		HttpTaskHandler httpDeleteTaskHandler = new HttpTaskHandler() {
+
+			@Override
+			public void taskSuccessful(String result) {
+				Intent intent = getIntent();
+				finish();
+				startActivity(intent);
+			}
+
+			@Override
+			public void taskFailed(String reason) {
+				Log.e(TAG, "Error deleting memory");
+			}
+		};
+		new HttpDeleteTask(httpDeleteTaskHandler)
+				.execute(NetworkManager.hostName + "/api/memories/" + id);
+	}
+
+	private void showTaggedRegions() {
+
+		HttpImageTaskHandler httpImageTaskHandler = new HttpImageTaskHandler() {
+			@Override
+			public void taskSuccessful(Drawable drawable) {
+				final Photo currentPhoto = moment.getPhoto(currentPhotoIndex);
+				currentPhoto.setLargeBitmap(((BitmapDrawable) drawable)
+						.getBitmap());
+				// Draw tags for the photo
+				Bitmap taggedBitmap = ImageProcessor.generateTaggedBitmap(
+						currentPhoto.getLargeBitmap(),
+						currentPhoto.getTagList());
+				// Cache the tagged photo bitmap
+				currentPhoto.setTaggedLargeBitmap(taggedBitmap);
+
+				currentImageView.setImageBitmap(taggedBitmap);
+				setPhotoOffset();
+				currentImageView.setOnTouchListener(onPhotoTouchListener);
+			}
+
+			@Override
+			public void taskFailed(String reason) {
+				Log.e(TAG, "Error downloading the tags");
+			}
+		};
+
+		Bitmap taggedBitmap = moment.getPhoto(currentPhotoIndex)
+				.getTaggedLargeBitmap();
+		if (taggedBitmap == null) {
+			new HttpGetImageTask(httpImageTaskHandler).execute(moment.getPhoto(
+					currentPhotoIndex).getImageLargeURL());
+		} else {
+			currentImageView.setImageBitmap(taggedBitmap);
+			setPhotoOffset();
+			currentImageView.setOnTouchListener(onPhotoTouchListener);
+		}
+
+		showTaggedMenu();
+		viewPager.setPagingEnabled(false);
+	}
+
+	private void showNonTaggedPhoto() {
+		currentImageView.setImageDrawable(moment.getPhoto(currentPhotoIndex)
+				.getMediumDrawable());
+		currentImageView.setOnTouchListener(null);
+
+		showNonTaggedMenu();
+		viewPager.setPagingEnabled(true);
+	}
+
+	private void stopPlaying() {
+		isPlaying = false;
+		isPaused = false;
+		soundPlayingId = -1;
+		if (soundIcon!=null){
+			soundIcon.setImageResource(R.drawable.sound_small);
+		}
+		if (mediaPlayer!=null) {
+			mediaPlayer.release();
+		}
+		mediaPlayer = null;
+	}
+
+	private OnClickListener onSoundPlayClicked = new OnClickListener() {
+
+		@Override
+		public void onClick(View v) {
+			Memory memory = (Memory) v.getTag();
+			if (memory.getId() != soundPlayingId){
+				stopPlaying();
+				soundPlayingId = memory.getId();
+				soundIcon = (ImageView) v.findViewById(R.id.memory_icon);
+			}
+			
+			if (!isPlaying && !isPaused) {
+				isPlaying = true;
+				isPaused = false;
+				soundIcon.setImageResource(R.drawable.pause);
+				int sound_id = memory.getId();
+				String url = NetworkManager.SOUND_HOST_NAME + "/sounds/"
+						+ sound_id;
+				mediaPlayer = new MediaPlayer();
+				mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+				try {
+					mediaPlayer.setDataSource(url);
+				} catch (IllegalArgumentException e) {
+					Log.d(TAG, "Illegal Argument Exception");
+				} catch (SecurityException e) {
+					Log.d(TAG, "Security Exception");
+				} catch (IllegalStateException e) {
+					Log.d(TAG, "Illegal State Exception");
+				} catch (IOException e) {
+					Log.d(TAG, "IOException");
+				}
+				mediaPlayer.setOnPreparedListener(new OnPreparedListener() {
+					@Override
+					public void onPrepared(MediaPlayer player) {
+						player.start();
+					}
+				});
+				mediaPlayer.setOnCompletionListener(new OnCompletionListener() {
+					@Override
+					public void onCompletion(MediaPlayer arg0) {
+						stopPlaying();
+					}
+				});
+
+				mediaPlayer.prepareAsync();
+			} else if (isPlaying && !isPaused) {
+				isPaused = true;
+				isPlaying = false;
+				soundIcon.setImageResource(R.drawable.sound_small);
+				mediaPlayer.pause();
+			} else if (!isPlaying && isPaused) {
+				soundIcon.setImageResource(R.drawable.pause);
+				isPaused = false;
+				isPlaying = true;
+				mediaPlayer.start();
+			}
+		}
+	};
+
+	private OnTouchListener onPhotoTouchListener = new OnTouchListener() {
+		public boolean onTouch(View v, MotionEvent event) {
+			final Photo currentPhoto = moment.getPhoto(currentPhotoIndex);
+			// Transfer the coordinate from the image view to the
+			// photo bitmap
+			// Location on the enlarged photo
+			float bitmapX = event.getX() + photoOffsetX;
+			float bitmapY = event.getY() + photoOffsetY;
+			// Location to original photo
+			bitmapX = bitmapX / photoScaleFactor;
+			bitmapY = bitmapY / photoScaleFactor;
+			Log.d(TAG, "Bitmap" + bitmapX + " " + bitmapY);
+			switch (event.getAction()) {
+			case MotionEvent.ACTION_DOWN:
+				// Generate the highlighted tag bitmap
+				Bitmap newBitmap = ImageProcessor
+						.generateHighlightedTaggedBitmap(
+								currentPhoto.getLargeBitmap(),
+								currentPhoto.getTaggedLargeBitmap(),
+								currentPhoto.getDarkenTaggedLargeBitmap(),
+								currentPhoto.getTagList(), bitmapX, bitmapY);
+				// Set to the current image view
+				currentImageView.setImageBitmap(newBitmap);
+				break;
+			default:
+				break;
+			}
+			return true;
+		}
+	};
+
+	private OnTouchListener onEditPhotoTouchListener = new OnTouchListener() {
+		float prevBitmapX = 0;
+		float prevBitmapY = 0;
+		int movingNode = 8;
+
+		public boolean onTouch(View v, MotionEvent event) {
+			final Photo currentPhoto = moment.getPhoto(currentPhotoIndex);
+			// Transfer the coordinate from the image view to the
+			// photo bitmap
+			// Location on the enlarged photo
+			float bitmapX = event.getX() + photoOffsetX;
+			float bitmapY = event.getY() + photoOffsetY;
+			// Location to original photo
+			bitmapX = bitmapX / photoScaleFactor;
+			bitmapY = bitmapY / photoScaleFactor;
+
+			switch (event.getAction()) {
+			case MotionEvent.ACTION_MOVE:
+				Log.d(TAG, "MovingNode:" + movingNode);
+				// During move, keep updating the edit square
+				// Change tag location based on touch location
+				changeTagLocation(prevBitmapX, prevBitmapY, bitmapX, bitmapY,
+						movingNode);
+				// Draw new edit tag square
+				Bitmap newBitmap = ImageProcessor.drawEditSquare(
+						currentPhoto.getLargeBitmap(),
+						currentPhoto.getDarkenLargeBitmap(),
+						currentEdittedTagLocation, true);
+				currentImageView.setImageBitmap(newBitmap);
+				// Save touch location
+				prevBitmapX = bitmapX;
+				prevBitmapY = bitmapY;
+				break;
+			case MotionEvent.ACTION_DOWN:
+				movingNode = determineMovingMode(bitmapX, bitmapY);
+				break;
+			case MotionEvent.ACTION_UP:
+				// Clear last touch location
+				prevBitmapX = -1;
+				prevBitmapY = -1;
+				break;
+			default:
+				break;
+			}
+			return true;
+		}
+	};
+
 	public class ImagePagerAdapter extends PagerAdapter {
 
-		// private Context mContext;
-		private Drawable[] mDrawables;
-
 		public ImagePagerAdapter(Context context) {
-			// mContext = context;
-			mDrawables = new Drawable[moment.getNumOfPhotos()];
+
 		}
 
 		@Override
 		public int getCount() {
-			// return mImages.length;
 			return moment.getNumOfPhotos();
 		}
 
@@ -337,10 +733,6 @@ public class PhotoActivity extends BaseActivity {
 				final int position) {
 			Log.d(TAG, position + "");
 			ImageView imageView = new ImageView(PhotoActivity.this);
-			// TODO
-			if (position == currentPhotoIndex) {
-				currentImageView = imageView;
-			}
 
 			imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
 			imageView.setTag(position);
@@ -351,52 +743,12 @@ public class PhotoActivity extends BaseActivity {
 
 				@Override
 				public void taskSuccessful(Drawable drawable) {
-					mDrawables[drawableIndex] = drawable;
+					moment.getPhoto(drawableIndex).setMediumDrawable(drawable);
 					ImageView imageView = (ImageView) ((ViewPager) container)
 							.findViewWithTag(drawableIndex);
 					if (imageView != null) {
 						imageView.setImageDrawable(drawable);
 					}
-					// TODO
-					// Cache the large bitmap
-					moment.getPhoto(position).setLargeBitmap(
-							((BitmapDrawable) drawable).getBitmap());
-
-					// Continue download tag information
-					// Down the tag for this photo from rewyndr
-					new HttpGetTask(new HttpTaskHandler() {
-
-						@Override
-						public void taskSuccessful(String result) {
-							Log.d(TAG, result);
-							JSONArray tagJSONArray;
-							try {
-								tagJSONArray = new JSONArray(result);
-								for (int j = 0; j <= tagJSONArray.length() - 1; j++) {
-									Tag tag = Tag.getTagInfo(tagJSONArray
-											.getString(j));
-									moment.getPhoto(position).addTag(tag);
-								}
-								Photo currentPhoto = moment.getPhoto(position);
-								// Draw tags for the photo
-								Bitmap taggedBitmap = ImageProcessor
-										.generateTaggedBitmap(
-												currentPhoto.getLargeBitmap(),
-												currentPhoto.getTagList());
-								// Cache the tagged photo bitmap
-								currentPhoto.setTaggedLargeBitmap(taggedBitmap);
-							} catch (JSONException e) {
-								Log.e(TAG, "Error parse the tag json");
-							}
-						}
-
-						@Override
-						public void taskFailed(String reason) {
-							Log.e(TAG, "Error downloading the tag");
-						}
-					}).execute("http://rewyndr.truefitdemo.com/api/photos/"
-							+ moment.getPhoto(currentPhotoIndex).getId()
-							+ "/tags");
 				}
 
 				@Override
@@ -405,11 +757,13 @@ public class PhotoActivity extends BaseActivity {
 				}
 			};
 
-			if (mDrawables[position] == null) {
+			Drawable mediumDrawable = moment.getPhoto(position)
+					.getMediumDrawable();
+			if (mediumDrawable == null) {
 				new HttpGetImageTask(httpImageTaskHandler).execute(moment
-						.getPhoto(position).getImageLargeURL());
+						.getPhoto(position).getImageMediumURL());
 			} else {
-				imageView.setImageDrawable(mDrawables[position]);
+				imageView.setImageDrawable(mediumDrawable);
 			}
 			return imageView;
 		}
@@ -418,121 +772,6 @@ public class PhotoActivity extends BaseActivity {
 		public void destroyItem(ViewGroup container, int position, Object object) {
 			((ViewPager) container).removeView((ImageView) object);
 		}
-	}
-
-	// Add ontouch listener for the tag button
-	public void handleTagButtonEdition() {
-		// Add ontouch listener
-		ImageButton tagButton = (ImageButton) findViewById(R.id.button_photo_tag);
-		tagButton.setOnClickListener(new OnClickListener() {
-
-			@Override
-			public void onClick(View v) {
-				// TODO
-				// Currently hardcode
-				setPhotoOffset();
-				// Currently hardcode dafault tag location
-				currentEdittedTagLocation.set(100, 100, 200, 200);
-				final Photo currentPhoto = moment.getPhoto(currentPhotoIndex);
-
-				// Add on touch listener for the current image view on screen
-				currentImageView.setOnTouchListener(new OnTouchListener() {
-					float prevBitmapX = 0;
-					float prevBitmapY = 0;
-					int movingNode = 8;
-
-					public boolean onTouch(View v, MotionEvent event) {
-						// Transfer the coordinate from the image view to the
-						// photo bitmap
-						// Location on the enlarged photo
-						float bitmapX = event.getX() + photoOffsetX;
-						float bitmapY = event.getY() + photoOffsetY;
-						// Location to original photo
-						bitmapX = bitmapX / photoScaleFactor;
-						bitmapY = bitmapY / photoScaleFactor;
-
-						switch (event.getAction()) {
-						case MotionEvent.ACTION_MOVE:
-							Log.d(TAG, "MovingNode:" + movingNode);
-							// During move, keep updating the edit square
-							// Change tag location based on touch location
-							changeTagLocation(prevBitmapX, prevBitmapY,
-									bitmapX, bitmapY, movingNode);
-							// Draw new edit tag square
-							Bitmap newBitmap = ImageProcessor.drawEditSquare(
-									currentPhoto.getLargeBitmap(),
-									currentPhoto.getDarkenLargeBitmap(),
-									currentEdittedTagLocation, true);
-							currentImageView.setImageBitmap(newBitmap);
-							// Save touch location
-							prevBitmapX = bitmapX;
-							prevBitmapY = bitmapY;
-							break;
-						case MotionEvent.ACTION_DOWN:
-							movingNode = determineMovingMode(bitmapX, bitmapY);
-							break;
-						case MotionEvent.ACTION_UP:
-							// Clear last touch location
-							prevBitmapX = -1;
-							prevBitmapY = -1;
-							break;
-						default:
-							break;
-						}
-						return true;
-					}
-				});
-
-			}
-		});
-	}
-
-	public void handleTagButtonView() {
-		// Add ontouch listener
-		ImageButton tagButton = (ImageButton) findViewById(R.id.button_photo_tag);
-		tagButton.setOnClickListener(new OnClickListener() {
-
-			@Override
-			public void onClick(View v) {
-				// TODO
-				// Currently hardcode
-				setPhotoOffset();
-				// Set the current image view as the tagged photo
-				final Photo currentPhoto = moment.getPhoto(currentPhotoIndex);
-				currentImageView.setImageBitmap(currentPhoto
-						.getTaggedLargeBitmap());
-				// Add on touch listener for the current image view on screen
-				currentImageView.setOnTouchListener(new OnTouchListener() {
-					public boolean onTouch(View v, MotionEvent event) {
-						// Transfer the coordinate from the image view to the
-						// photo bitmap
-						// Location on the enlarged photo
-						float bitmapX = event.getX() + photoOffsetX;
-						float bitmapY = event.getY() + photoOffsetY;
-						// Location to original photo
-						bitmapX = bitmapX / photoScaleFactor;
-						bitmapY = bitmapY / photoScaleFactor;
-						Log.d(TAG, "Bitmap" + bitmapX + " " + bitmapY);
-						switch (event.getAction()) {
-						case MotionEvent.ACTION_DOWN:
-							// Generate the highlighted tag bitmap
-							Bitmap newBitmap = ImageProcessor.generateHighlightedTaggedBitmap(
-									currentPhoto.getLargeBitmap(),
-									currentPhoto.getTaggedLargeBitmap(),
-									currentPhoto.getDarkenTaggedLargeBitmap(),
-									currentPhoto.getTagList(), bitmapX, bitmapY);
-							// Set to the current image view
-							currentImageView.setImageBitmap(newBitmap);
-							break;
-						default:
-							break;
-						}
-						return true;
-					}
-				});
-
-			}
-		});
 	}
 
 	// Change dp to px

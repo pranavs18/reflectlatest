@@ -24,6 +24,7 @@ import android.widget.TextView;
 
 import com.reflectmobile.R;
 import com.reflectmobile.data.Network;
+import com.reflectmobile.utility.NetworkManager;
 import com.reflectmobile.utility.NetworkManager.HttpGetTask;
 import com.reflectmobile.utility.NetworkManager.HttpPostTask;
 import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
@@ -164,7 +165,7 @@ public class AddCommunityActivity extends BaseActivity {
 			}
 		};
 		new HttpGetTask(getNetworksHandler)
-				.execute("http://rewyndr.truefitdemo.com/api/networks");
+				.execute(NetworkManager.hostName+"/api/networks");
 
 	}
 
@@ -224,7 +225,7 @@ public class AddCommunityActivity extends BaseActivity {
 		}
 		String payload = communityData.toString();
 		new HttpPostTask(httpPostTaskHandler, payload)
-				.execute("http://rewyndr.truefitdemo.com/api/communities?network_id="
+				.execute(NetworkManager.hostName+"/api/communities?network_id="
 						+ networkId);
 
 	}
