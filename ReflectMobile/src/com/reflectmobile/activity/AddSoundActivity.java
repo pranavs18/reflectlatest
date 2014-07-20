@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -16,6 +18,7 @@ import android.media.MediaRecorder;
 import android.opengl.Visibility;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.SystemClock;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -25,6 +28,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.Chronometer;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -47,17 +51,16 @@ public class AddSoundActivity extends BaseActivity {
 	private int photoId;
 
 	private String soundName;
-	private String soundUrl;
 
 	private boolean soundNameSet;
 
 	private static String mFileName = null;
 	private Menu menu;
 	private LinearLayout mTitle = null;
-	private TextView mTimer = null;
 	private ImageButton mRecordButton = null;
 	private TextView mInstruction = null;
 	private MediaRecorder mRecorder = null;
+	private Chronometer mChronometer = null;
 	private boolean isRecording = false;
 
 	@Override
@@ -120,8 +123,9 @@ public class AddSoundActivity extends BaseActivity {
 		}
 
 		mTitle = (LinearLayout) findViewById(R.id.title);
-		mTimer = (TextView) findViewById(R.id.timer);
+		mChronometer = (Chronometer) findViewById(R.id.chronometer);
 		mInstruction = (TextView) findViewById(R.id.instruction);
+		
 		
 		mRecordButton = (ImageButton) findViewById(R.id.record);
 		mRecordButton.setOnClickListener(new OnClickListener() {
@@ -137,7 +141,7 @@ public class AddSoundActivity extends BaseActivity {
 				else{
 					mTitle.setVisibility(View.VISIBLE);
 					mRecordButton.setImageResource(R.drawable.recorder_record);
-					mInstruction.setText("Press to start");
+					mInstruction.setText("Done!");
 					MenuItem add_sound = menu.findItem(R.id.action_add_sound);
 					add_sound.setVisible(true);
 					stopRecording();
@@ -203,6 +207,21 @@ public class AddSoundActivity extends BaseActivity {
 		mRecorder.setOutputFile(mFileName);
 		mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
 
+		mChronometer.setBase(SystemClock.elapsedRealtime());
+		mChronometer.setText("00:00:00");
+		mChronometer.setOnChronometerTickListener(new Chronometer.OnChronometerTickListener() {
+	        @Override
+	        public void onChronometerTick(Chronometer chronometer) {
+	            CharSequence text = chronometer.getText();
+	            if (text.length()  == 5) {
+	                chronometer.setText("00:"+text);
+	            } else if (text.length() == 7) {
+	                chronometer.setText("0"+text);
+	            }
+	        }
+	    });
+        mChronometer.start();
+        
 		try {
 			mRecorder.prepare();
 		} catch (IOException e) {
@@ -216,21 +235,15 @@ public class AddSoundActivity extends BaseActivity {
 		mRecorder.stop();
 		mRecorder.release();
 		mRecorder = null;
+		
+		mChronometer.stop();
 	}
 
 	public void addSound() {
-		/*
 		final HttpTaskHandler postSoundHandler = new HttpTaskHandler() {
 			@Override
 			public void taskSuccessful(String result) {
-				try {
-					JSONObject soundData = new JSONObject(result);
-					int soundId = soundData.getInt("id");
-					Log.d("sound id", soundId+"");
-
-				} catch (JSONException e) {
-					Log.e(TAG, "Error parsing JSON");
-				}
+				finish();
 			}
 
 			@Override
@@ -239,29 +252,19 @@ public class AddSoundActivity extends BaseActivity {
 			}
 		};
 
-		final HttpTaskHandler postMemoryHandler = new HttpTaskHandler() {
-			
-			@Override
-			public void taskSuccessful(String result) {
-				// TODO Auto-generated method stub
-				
-			}
-			
-			@Override
-			public void taskFailed(String reason) {
-				Log.d(TAG, "Error posting memory");
-			}
-		};
-		
-		new HttpPostSoundTask(postSoundHandler, NetworkManager.SOUND_HOST_NAME
-				+ "/sounds/" + sound_id,
-				AddSoundActivity.this).execute(soundUrl);
-
 		HttpTaskHandler httpPostTaskHandler = new HttpTaskHandler() {
 			@Override
 			public void taskSuccessful(String result) {
-				Log.d("POST", result);
-				finish();
+				try {
+					JSONObject soundData = new JSONObject(result);
+					int soundId = soundData.getInt("id");
+					new HttpPostSoundTask(postSoundHandler, NetworkManager.SOUND_HOST_NAME
+							+ "/sounds/" + soundId,
+							AddSoundActivity.this).execute(mFileName);
+
+				} catch (JSONException e) {
+					Log.e(TAG, "Error parsing JSON");
+				}
 			}
 
 			@Override
@@ -269,13 +272,13 @@ public class AddSoundActivity extends BaseActivity {
 				Log.e("POST", "Error within POST request: " + reason);
 			}
 		};
+		
 		JSONObject storyData = new JSONObject();
 
 		try {
 			storyData.put("photo_id", photoId);
 			storyData.put("memory_type", "sound");
 			storyData.put("memory_content", soundName);
-			storyData.put("memory_location", soundUrl);
 		} catch (JSONException e) {
 			Log.e(TAG, "Error forming JSON");
 		}
@@ -289,6 +292,6 @@ public class AddSoundActivity extends BaseActivity {
 		} else {
 			new HttpPostTask(httpPostTaskHandler, payload)
 					.execute(NetworkManager.hostName + "/api/memories");
-		}*/
+		}
 	}
 }

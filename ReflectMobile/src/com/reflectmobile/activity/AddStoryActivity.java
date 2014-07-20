@@ -1,6 +1,7 @@
 package com.reflectmobile.activity;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -15,6 +16,7 @@ import de.neofonie.mobile.app.android.widget.crouton.Crouton;
 import de.neofonie.mobile.app.android.widget.crouton.Style;
 
 import android.app.ActionBar.LayoutParams;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -26,6 +28,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -113,7 +116,7 @@ public class AddStoryActivity extends BaseActivity {
 				Style CustomAlert = new Style.Builder().setDuration(2000)
 						.setHeight(LayoutParams.WRAP_CONTENT).setTextSize(16)
 						.setBackgroundColor(red).setPaddingInPixels(26).build();
-				Crouton.makeText(this, "Please, wtite your story first",
+				Crouton.makeText(this, "Please, write your story first",
 						CustomAlert).show();
 
 			}
@@ -146,10 +149,24 @@ public class AddStoryActivity extends BaseActivity {
 			ArrayList<String> matches = data
 					.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
 			String recognized = matches.get(0);
+			if (recognized.length() > 0) {
+				String firstLetter = recognized.substring(0, 1);
+				String capitalized = firstLetter.toUpperCase(Locale.US);
+				recognized = recognized.replaceFirst(firstLetter, capitalized);
+			}
+			
 			EditText storyText = (EditText) findViewById(R.id.story_text);
 			
-			storyText.getText().append(" ");
+			if (storyText.length() > 0){
+				storyText.getText().append(" ");
+			}
 			storyText.getText().append(recognized);
+			storyText.getText().append(".");
+			
+			storyText.requestFocus();
+			
+			InputMethodManager inputMethodManager=(InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+		    inputMethodManager.showSoftInput(storyText, 0);
 		}
 		super.onActivityResult(requestCode, resultCode, data);
 	}
