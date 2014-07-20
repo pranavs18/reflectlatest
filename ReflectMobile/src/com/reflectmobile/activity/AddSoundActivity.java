@@ -5,17 +5,13 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.ActionBar.LayoutParams;
-import android.content.Intent;
 import android.graphics.Typeface;
 import android.media.MediaRecorder;
-import android.opengl.Visibility;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.SystemClock;
@@ -73,7 +69,6 @@ public class AddSoundActivity extends BaseActivity {
 		int titleId = getResources().getIdentifier("action_bar_title", "id",
 				"android");
 		TextView title = (TextView) findViewById(titleId);
-		title.setTextColor(getResources().getColor(R.color.yellow));
 		title.setTypeface(Typeface.createFromAsset(getAssets(),
 				"fonts/RobotoCondensed-Regular.ttf"));
 

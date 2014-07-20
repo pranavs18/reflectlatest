@@ -616,12 +616,12 @@ public class NetworkManager {
 		@Override
 		protected Void doInBackground(final String... params) {
 			try {
-				data = executeRequest(params[0]);
+				data = executeRequest(params);
 				success = true;
 			} catch (IOException exception) {
 				try {
 					loginViaReflectSync();
-					data = executeRequest(params[0]);
+					data = executeRequest(params);
 					success = true;
 				} catch (IOException e) {
 					data = "IOException";

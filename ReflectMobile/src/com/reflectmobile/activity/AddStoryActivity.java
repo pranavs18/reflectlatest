@@ -52,7 +52,6 @@ public class AddStoryActivity extends BaseActivity {
 		int titleId = getResources().getIdentifier("action_bar_title", "id",
 				"android");
 		TextView title = (TextView) findViewById(titleId);
-		title.setTextColor(getResources().getColor(R.color.yellow));
 		title.setTypeface(Typeface.createFromAsset(getAssets(),
 				"fonts/RobotoCondensed-Regular.ttf"));
 

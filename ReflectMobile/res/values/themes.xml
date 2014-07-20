@@ -21,10 +21,15 @@
         <item name="android:textStyle">normal</item>
     </style>
 
-    <style name="ActionBar" parent="@android:style/Widget.Holo.ActionBar">
+    <style name="ActionBar" parent="@android:style/Widget.Holo.Light.ActionBar">
         <item name="android:background">@drawable/action_bar</item>
+        <item name="android:titleTextStyle">@style/ActionBar.TitleTextStyle</item>
     </style>
-
+    
+    <style name="ActionBar.TitleTextStyle" parent="@android:style/TextAppearance.Holo.Widget.ActionBar.Title">
+        <item name="android:textColor">@color/yellow</item>
+    </style>
+    
     <style name="OverFlow" parent="@android:style/Widget.Holo.ActionButton.Overflow">
         <item name="android:src">@drawable/menu</item>
     </style>

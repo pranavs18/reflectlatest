@@ -44,7 +44,6 @@ public class AddMomentActivity extends BaseActivity {
 		int titleId = getResources().getIdentifier("action_bar_title", "id",
 				"android");
 		TextView title = (TextView) findViewById(titleId);
-		title.setTextColor(getResources().getColor(R.color.yellow));
 		title.setTypeface(Typeface.createFromAsset(getAssets(),
 				"fonts/RobotoCondensed-Regular.ttf"));
 
@@ -120,6 +119,7 @@ public class AddMomentActivity extends BaseActivity {
 			@Override
 			public void taskSuccessful(String result) {
 				Log.d("POST", result);
+				setResult(RESULT_OK);
 				finish();
 			}
 

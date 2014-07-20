@@ -5,9 +5,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Locale;
-import java.util.Set;
 
 import android.app.ActionBar.LayoutParams;
 import android.content.Context;
@@ -36,6 +34,7 @@ import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.TextView;
+
 import com.nostra13.universalimageloader.cache.disc.naming.Md5FileNameGenerator;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -67,7 +66,6 @@ public class GalleryActivity extends BaseActivity {
 		int titleId = getResources().getIdentifier("action_bar_title", "id",
 				"android");
 		TextView title = (TextView) findViewById(titleId);
-		title.setTextColor(getResources().getColor(R.color.yellow));
 		title.setTypeface(Typeface.createFromAsset(getAssets(),
 				"fonts/RobotoCondensed-Regular.ttf"));
 
@@ -79,8 +77,6 @@ public class GalleryActivity extends BaseActivity {
 		getActionBar().setDisplayHomeAsUpEnabled(true);
 		ImageView view = (ImageView) findViewById(android.R.id.home);
 		view.setPadding(10, 0, 0, 0);
-
-		getActionBar().setIcon(R.drawable.picture);
 
 		// set configuration for the image loader instance
 		// we can have default configuration but this config will invoke faster
@@ -121,13 +117,7 @@ public class GalleryActivity extends BaseActivity {
 		options = new DisplayImageOptions.Builder().cacheInMemory()
 				.cacheOnDisc().build();
 
-		ArrayList<String> array = new ArrayList<String>();
-		if (getIntent().hasExtra("chosenImages")) {
-			array = getIntent().getStringArrayListExtra("chosenImages");
-		}
-		Set<String> chosenImages = new HashSet<String>(array);
-
-		imageAdapter = new ImageAdapter(this, imageUrls, chosenImages);
+		imageAdapter = new ImageAdapter(this, imageUrls);
 
 		GridView gridView = (GridView) findViewById(R.id.gridview);
 		gridView.setAdapter(imageAdapter);
@@ -181,6 +171,7 @@ public class GalleryActivity extends BaseActivity {
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (requestCode == CODE_TAKE_PHOTO && resultCode == RESULT_OK) {
 			// Save to gallery
+			imageAdapter.addNewPhoto(photoPath);
 			File f = new File(photoPath);
 			MediaScannerConnection.scanFile(GalleryActivity.this,
 					new String[] { f.toString() }, null,
@@ -188,9 +179,6 @@ public class GalleryActivity extends BaseActivity {
 						public void onScanCompleted(String path, Uri uri) {
 							Log.i("ExternalStorage", "Scanned " + path + ":");
 							Log.i("ExternalStorage", "-> uri=" + uri);
-							finish();
-							Intent intent = getIntent();
-							startActivity(intent);
 						}
 					});
 		}
@@ -211,7 +199,6 @@ public class GalleryActivity extends BaseActivity {
 
 	private void takePhoto() {
 		// Save current image selection
-		getIntent().putExtra("chosenImages", imageAdapter.getCheckedItems());
 		Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 		// Ensure that there's a camera activity to handle the intent
 		if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
@@ -247,18 +234,24 @@ public class GalleryActivity extends BaseActivity {
 		Context mContext;
 		SparseBooleanArray mSparseBooleanArray;
 
-		public ImageAdapter(Context context, ArrayList<String> imageList,
-				Set<String> chosenImages) {
-
+		public ImageAdapter(Context context, ArrayList<String> imageList) {
 			mContext = context;
 			mInflater = LayoutInflater.from(mContext);
 			mSparseBooleanArray = new SparseBooleanArray();
 			mList = imageList;
+		}
+
+		public void addNewPhoto(String photoPath) {
+			SparseBooleanArray shiftedSparseBooleanArray = new SparseBooleanArray();
+			mList.add(0, photoPath);
+			shiftedSparseBooleanArray.put(0, true);
 			for (int count = 0; count < mList.size(); count++) {
-				if (chosenImages.contains(mList.get(count))) {
-					mSparseBooleanArray.put(count, true);
+				if (mSparseBooleanArray.get(count)) {
+					shiftedSparseBooleanArray.put(count + 1, true);
 				}
 			}
+			mSparseBooleanArray = shiftedSparseBooleanArray;
+			notifyDataSetChanged();
 		}
 
 		public ArrayList<String> getCheckedItems() {
@@ -266,7 +259,7 @@ public class GalleryActivity extends BaseActivity {
 
 			for (int i = 0; i < mList.size(); i++) {
 				if (mSparseBooleanArray.get(i)) {
-					mTempArray.add(mList.get(i - 1));
+					mTempArray.add(mList.get(i));
 				}
 			}
 
@@ -310,7 +303,8 @@ public class GalleryActivity extends BaseActivity {
 				borderView.setVisibility(View.GONE);
 				checkbox.setVisibility(View.GONE);
 			} else {
-				boolean isChecked = mSparseBooleanArray.get(position);
+				int positionInArray = position - 1;
+				boolean isChecked = mSparseBooleanArray.get(positionInArray);
 				if (isChecked) {
 					borderView.setVisibility(View.VISIBLE);
 					checkbox.setVisibility(View.VISIBLE);
@@ -322,8 +316,9 @@ public class GalleryActivity extends BaseActivity {
 				imageView.setScaleType(ScaleType.CENTER_CROP);
 				imageView.setImageDrawable(null);
 
-				imageLoader.displayImage("file://" + mList.get(position - 1),
-						imageView, options, new SimpleImageLoadingListener() {
+				imageLoader.displayImage(
+						"file://" + mList.get(positionInArray), imageView,
+						options, new SimpleImageLoadingListener() {
 							@Override
 							public void onLoadingComplete(Bitmap loadedImage) {
 								Animation anim = AnimationUtils.loadAnimation(
@@ -348,9 +343,12 @@ public class GalleryActivity extends BaseActivity {
 				if (position == 0) {
 					takePhoto();
 				} else {
-					boolean isChecked = mSparseBooleanArray.get(position);
+					int positionInArray = position - 1;
+
+					boolean isChecked = mSparseBooleanArray
+							.get(positionInArray);
 					isChecked = !isChecked;
-					mSparseBooleanArray.put(position, isChecked);
+					mSparseBooleanArray.put(positionInArray, isChecked);
 
 					final ImageView borderView = (ImageView) v
 							.findViewById(R.id.border);

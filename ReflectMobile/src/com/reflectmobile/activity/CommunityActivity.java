@@ -62,7 +62,6 @@ public class CommunityActivity extends BaseActivity {
 		int titleId = getResources().getIdentifier("action_bar_title", "id",
 				"android");
 		TextView title = (TextView) findViewById(titleId);
-		title.setTextColor(getResources().getColor(R.color.yellow));
 		title.setTypeface(Typeface.createFromAsset(getAssets(),
 				"fonts/RobotoCondensed-Regular.ttf"));
 
@@ -345,6 +344,7 @@ public class CommunityActivity extends BaseActivity {
 								MomentActivity.class);
 						intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
 								| Intent.FLAG_ACTIVITY_CLEAR_TASK);
+						intent.putExtra("community_id", communityId);
 						intent.putExtra("moment_id",
 								community.getMoment(position).getId());
 						mContext.startActivity(intent);
