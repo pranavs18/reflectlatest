@@ -8,12 +8,16 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
+import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.Xfermode;
+import android.graphics.PorterDuff.Mode;
 
 public class ImageProcessor {
 	public final static int IMAGE_BORDER_WIDTH = 20;
-	
-	
+
 	// This function is used to draw tags on the bitmap.
 	// The input originalbitmap is the bitmap we get from the
 	// rewyndr(LargeImage)
@@ -66,28 +70,36 @@ public class ImageProcessor {
 
 		// Loop through the tag list and check whether the (x, y) is in any tag
 		boolean isInTag = false;
+		Tag tag = getSelectedTag(tagList, x, y);
+		if (tag != null){
+			// If (x, y) is in a tag, then copy the lighter sub image
+			copySubImage(originalBitmap, newBitmap, tag.getUpLeftX(),
+					tag.getUpLeftY(), tag.getBoxWidth(), tag.getBoxLength());
+			// Draw the boundary of the tag
+			RectF rect = new RectF(tag.getUpLeftX(), tag.getUpLeftY(),
+					tag.getUpLeftX() + tag.getBoxWidth(), tag.getUpLeftY()
+							+ tag.getBoxLength());
+			canvas.drawRoundRect(rect, 2, 2, paint);
+			isInTag = true;
+		}
+		
+		// Test
+		//canvas.drawPoint(x, y, paint);
+		return isInTag ? newBitmap : taggedBitmap;
+	}
+	
+	// This function is used to 
+	public static Tag getSelectedTag(ArrayList<Tag> tagList, float x, float y){
 		for (Tag tag : tagList) {
 			boolean isInXRange = x <= tag.getUpLeftX() + tag.getBoxWidth()
 					&& x >= tag.getUpLeftX();
 			boolean isInYRange = y <= tag.getUpLeftY() + tag.getBoxLength()
 					&& y >= tag.getUpLeftY();
 			if (isInXRange && isInYRange) {
-				// If (x, y) is in a tag, then copy the lighter sub image
-				copySubImage(originalBitmap, newBitmap, tag.getUpLeftX(),
-						tag.getUpLeftY(), tag.getBoxWidth(), tag.getBoxLength());
-				// Draw the boundary of the tag
-				RectF rect = new RectF(tag.getUpLeftX(), tag.getUpLeftY(),
-						tag.getUpLeftX() + tag.getBoxWidth(), tag.getUpLeftY()
-								+ tag.getBoxLength());
-				canvas.drawRoundRect(rect, 2, 2, paint);
-				isInTag = true;
-				break;
+				return tag;
 			}
 		}
-
-		// Test
-		canvas.drawPoint(x, y, paint);
-		return isInTag ? newBitmap : taggedBitmap;
+		return null;
 	}
 
 	// This function is used to draw the edit square on the image.
@@ -106,8 +118,10 @@ public class ImageProcessor {
 		// This check guarantee the little square is always visible to users
 		upLeftX = Math.max(IMAGE_BORDER_WIDTH, upLeftX);
 		upLeftY = Math.max(IMAGE_BORDER_WIDTH, upLeftY);
-		bottomRightX = Math.min(bottomRightX, originalBitmap.getWidth() - IMAGE_BORDER_WIDTH);
-		bottomRightY = Math.min(bottomRightY, originalBitmap.getHeight() - IMAGE_BORDER_WIDTH);
+		bottomRightX = Math.min(bottomRightX, originalBitmap.getWidth()
+				- IMAGE_BORDER_WIDTH);
+		bottomRightY = Math.min(bottomRightY, originalBitmap.getHeight()
+				- IMAGE_BORDER_WIDTH);
 
 		// Generate brush for draw big square
 		Paint paint = new Paint();
@@ -173,31 +187,20 @@ public class ImageProcessor {
 	// Basically, it just add a fixed value to each channel of the image.
 	public static Bitmap generateDarkenImage(Bitmap originalBitmap, int value) {
 		Bitmap bitmap = originalBitmap;
-		// Create buffer new bitmap
-		Bitmap newBitmap = Bitmap.createBitmap(bitmap.getWidth(),
-				bitmap.getHeight(), Bitmap.Config.RGB_565);
-		// Loop every pixel and add a value to each channel
-		for (int x = 0; x < bitmap.getWidth(); x++) {
-			for (int y = 0; y < bitmap.getHeight(); y++) {
-				int pixel = bitmap.getPixel(x, y);
-				int A = Color.alpha(pixel);
-				int R = Color.red(pixel);
-				int G = Color.green(pixel);
-				int B = Color.blue(pixel);
-				// Make sure every channel in new pixel is less than 255 and
-				// large than 0
-				if (value > 0) {
-					R = Math.min(255, R + value);
-					G = Math.min(255, G + value);
-					B = Math.min(255, B + value);
-				} else {
-					R = Math.max(0, R + value);
-					G = Math.max(0, G + value);
-					B = Math.max(0, B + value);
-				}
-				newBitmap.setPixel(x, y, Color.argb(A, R, G, B));
-			}
-		}
+		
+		Xfermode xDarken = new PorterDuffXfermode(PorterDuff.Mode.DARKEN);
+		int w = bitmap.getWidth();
+		int h = bitmap.getHeight();
+
+		Bitmap newBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
+		
+		Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
+		p.setARGB(value, 0, 0, 0);
+		p.setXfermode(xDarken);
+
+		Canvas canvas = new Canvas(newBitmap);
+		canvas.drawRect(0, 0, w, h, p);
+
 		return newBitmap;
 	}
 
@@ -210,12 +213,10 @@ public class ImageProcessor {
 		int startY = Math.max(0, upLeftY);
 		int endY = Math.min(sourceImage.getHeight() - 1, upLeftY + height);
 
-		for (int x = startX; x <= endX; x++) {
-			for (int y = startY; y <= endY; y++) {
-				int pixel = sourceImage.getPixel(x, y);
-				targetImage.setPixel(x, y, pixel);
-			}
-		}
+		Rect src = new Rect(startX, startY, endX, endY);
+		
+		Canvas canvas = new Canvas(targetImage);
+		canvas.drawBitmap(sourceImage, src, src, null);
 		return;
 	}
 }

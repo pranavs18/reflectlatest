@@ -19,12 +19,8 @@ public class Photo {
 	private String imageMediumThumbURL;
 	private String imageLargeURL;
 	private ArrayList<Tag> tagList;
-	
+
 	private Drawable mediumDrawable;
-	
-	public void setMediumDrawable(Drawable mediumDrawable) {
-		this.mediumDrawable = mediumDrawable;
-	}
 
 	private Bitmap largeBitmap;
 	private Bitmap darkenLargeBitmap;
@@ -34,6 +30,14 @@ public class Photo {
 	public Photo(int id) {
 		this.setId(id);
 		this.tagList = new ArrayList<Tag>();
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
 	}
 
 	public String getImageMediumURL() {
@@ -60,14 +64,6 @@ public class Photo {
 		this.imageLargeURL = imageLargeURL;
 	}
 
-	public int getId() {
-		return id;
-	}
-
-	public void setId(int id) {
-		this.id = id;
-	}
-	
 	public ArrayList<Tag> getTagList() {
 		return tagList;
 	}
@@ -76,10 +72,10 @@ public class Photo {
 		this.tagList = tagList;
 	}
 
-	public void addTag(Tag tag){
+	public void addTag(Tag tag) {
 		this.tagList.add(tag);
 	}
-	
+
 	public static Photo getPhotoInfo(String jsonString) {
 		try {
 			JSONObject photoJSONObject = new JSONObject(jsonString);
@@ -103,40 +99,51 @@ public class Photo {
 		return null;
 	}
 
+	public Drawable getMediumDrawable() {
+		return mediumDrawable;
+	}
+
+	public void setMediumDrawable(Drawable mediumDrawable) {
+		this.mediumDrawable = mediumDrawable;
+	}
+
 	public Bitmap getLargeBitmap() {
 		return largeBitmap;
-	}
-	
-	public Drawable getMediumDrawable(){
-		return mediumDrawable;
 	}
 
 	public void setLargeBitmap(Bitmap bitmap) {
 		this.largeBitmap = bitmap;
-		this.darkenLargeBitmap = ImageProcessor.generateDarkenImage(bitmap, -50);
-	}
-	public Bitmap getDarkenTaggedLargeBitmap() {
-		return darkenTaggedLargeBitmap;
-	}
-
-	public void setDarkenTaggedLargeBitmap(Bitmap darkenTaggedLargeBitmap) {
-		this.darkenTaggedLargeBitmap = darkenTaggedLargeBitmap;
-	}
-
-	public Bitmap getTaggedLargeBitmap() {
-		return taggedLargeBitmap;
-	}
-
-	public void setTaggedLargeBitmap(Bitmap taggedLargeBitmap) {
-		this.taggedLargeBitmap = taggedLargeBitmap;
-		this.darkenTaggedLargeBitmap = ImageProcessor.generateDarkenImage(taggedLargeBitmap, -50);
 	}
 
 	public Bitmap getDarkenLargeBitmap() {
+		if (darkenLargeBitmap == null) {
+			darkenLargeBitmap = ImageProcessor.generateDarkenImage(
+					getLargeBitmap(), 100);
+		}
 		return darkenLargeBitmap;
 	}
 
-	public void setDarkenLargeBitmap(Bitmap darkenLargeBitmap) {
-		this.darkenLargeBitmap = darkenLargeBitmap;
+	public Bitmap getDarkenTaggedLargeBitmap() {
+		if (darkenTaggedLargeBitmap == null) {
+			darkenTaggedLargeBitmap = ImageProcessor.generateDarkenImage(
+					getTaggedLargeBitmap(), 100);
+		}
+		return darkenTaggedLargeBitmap;
 	}
+
+	public void refreshTags() {
+		taggedLargeBitmap = ImageProcessor.generateTaggedBitmap(
+				getLargeBitmap(), getTagList());
+		darkenTaggedLargeBitmap = ImageProcessor.generateDarkenImage(
+				getTaggedLargeBitmap(), 100);
+	}
+
+	public Bitmap getTaggedLargeBitmap() {
+		if (taggedLargeBitmap == null) {
+			taggedLargeBitmap = ImageProcessor.generateTaggedBitmap(
+					getLargeBitmap(), getTagList());
+		}
+		return taggedLargeBitmap;
+	}
+
 }

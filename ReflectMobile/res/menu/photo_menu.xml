@@ -7,10 +7,9 @@
         android:showAsAction="always"
         android:title="@string/action_add_photo"/>
     <item
-        android:id="@+id/action_add_tag"
+        android:id="@+id/action_delete_photo"
         android:showAsAction="never"
-        android:title="@string/action_add_tag"
-        android:visible="false"/>
+        android:title="@string/action_delete_photo"/>
     <item
         android:id="@+id/action_edit_tag"
         android:showAsAction="never"
@@ -21,5 +20,15 @@
         android:showAsAction="never"
         android:title="@string/action_delete_tag"
         android:visible="false"/>
-
+    <item
+        android:id="@+id/action_done_add"
+        android:showAsAction="always"
+        android:title="@string/done"
+        android:visible="false"/>
+    <item
+        android:id="@+id/action_done_edit"
+        android:showAsAction="always"
+        android:title="@string/done"
+        android:visible="false"/>
+    
 </menu>

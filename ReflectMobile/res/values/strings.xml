@@ -106,5 +106,8 @@
     <string name="record_audio">Record Audio</string>
     <string name="zero_time">00:00:00</string>
     <string name="press_to_start">Press to start</string>
+    <string name="tag_name">Tag Name</string>
+    <string name="new_tag">New Tag</string>
+    <string name="action_delete_photo">Delete Photo</string>
 
 </resources>

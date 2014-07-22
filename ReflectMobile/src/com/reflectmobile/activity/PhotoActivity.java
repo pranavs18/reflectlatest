@@ -1,12 +1,16 @@
 package com.reflectmobile.activity;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
+import android.annotation.SuppressLint;
+import android.app.ActionBar.LayoutParams;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.RectF;
@@ -30,6 +34,8 @@ import android.view.ViewGroup;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
@@ -46,10 +52,15 @@ import com.reflectmobile.utility.NetworkManager.HttpGetImageTask;
 import com.reflectmobile.utility.NetworkManager.HttpGetTask;
 import com.reflectmobile.utility.NetworkManager.HttpImageTaskHandler;
 import com.reflectmobile.utility.NetworkManager.HttpDeleteTask;
+import com.reflectmobile.utility.NetworkManager.HttpPostTask;
+import com.reflectmobile.utility.NetworkManager.HttpPutTask;
 import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
 import com.reflectmobile.view.CustomScrollView;
 import com.reflectmobile.view.CustomViewPager;
 import com.reflectmobile.widget.ImageProcessor;
+
+import de.neofonie.mobile.app.android.widget.crouton.Crouton;
+import de.neofonie.mobile.app.android.widget.crouton.Style;
 
 import android.database.Cursor;
 import android.media.AudioManager;
@@ -69,7 +80,12 @@ public class PhotoActivity extends BaseActivity {
 	private int communityId;
 	private int momentId;
 
-	private Menu menu;
+	private MenuItem add_photo;
+	private MenuItem delete_photo;
+	private MenuItem edit_tag;
+	private MenuItem delete_tag;
+	private MenuItem done_add;
+	private MenuItem done_edit;
 
 	/* photo gallery variables */
 	static final int CODE_ADD_STORY = 101;
@@ -89,16 +105,18 @@ public class PhotoActivity extends BaseActivity {
 	private boolean isPaused = false;
 	private int soundPlayingId = -1;
 	private ImageView soundIcon;
-	
 
-	// TODO
 	// Calculate when the activity start
 	private static int photoImageViewHeightDP = 258;
 	private static int photoImageViewWidthDP = 360;
 	private static int photoImageViewHeightPX = 0;
 	private static int photoImageViewWidthPX = 0;
+
 	// Set when the image changes
 	private int currentPhotoIndex = 0;
+	private int photoId = 0;
+	private Photo currentPhoto;
+
 	private ImageView currentImageView = null;
 	private float photoOffsetX = 0;
 	private float photoOffsetY = 0;
@@ -107,9 +125,8 @@ public class PhotoActivity extends BaseActivity {
 	// Set when user want to edit the tag
 	// If it is in add tag mode, it should be set the the center of the image
 	// If it is in edit tag mode, it should be set to the tag location
-	private RectF currentEdittedTagLocation = new RectF(100, 100, 200, 200);
-
-	private int photoId = 0;
+	private RectF tagLocation = null;
+	private Tag currentTag = null;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -176,10 +193,7 @@ public class PhotoActivity extends BaseActivity {
 					}
 				});
 				viewPager.setCurrentItem(index);
-				if (index == 0) {
-					// Special case for the first item (page is not changed)
-					onPhotoSelected(0);
-				}
+				onPhotoSelected(index);
 
 			}
 
@@ -192,8 +206,6 @@ public class PhotoActivity extends BaseActivity {
 		new HttpGetTask(getMomentHandler).execute(NetworkManager.hostName
 				+ "/api/moments/" + momentId);
 
-		// TODO
-		// handleTagButtonView();
 		// Transfer image view size from dp to px
 		photoImageViewHeightPX = dpToPx(photoImageViewHeightDP);
 		photoImageViewWidthPX = dpToPx(photoImageViewWidthDP);
@@ -213,43 +225,28 @@ public class PhotoActivity extends BaseActivity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu items for use in the action bar
-		this.menu = menu;
 		MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.photo_menu, menu);
+		add_photo = menu.findItem(R.id.action_add_photo);
+		delete_photo = menu.findItem(R.id.action_delete_photo);
+		edit_tag = menu.findItem(R.id.action_edit_tag);
+		delete_tag = menu.findItem(R.id.action_delete_tag);
+		done_add = menu.findItem(R.id.action_done_add);
+		done_edit = menu.findItem(R.id.action_done_edit);
 		return super.onCreateOptionsMenu(menu);
 	}
-	
+
 	@Override
 	protected void onStop() {
 		stopPlaying();
 		super.onStop();
 	};
 
-	private void showTaggedMenu() {
-		MenuItem add_photo = menu.findItem(R.id.action_add_photo);
-		MenuItem add_tag = menu.findItem(R.id.action_add_tag);
-		MenuItem edit_tag = menu.findItem(R.id.action_edit_tag);
-		MenuItem delete_tag = menu.findItem(R.id.action_delete_tag);
-		add_photo.setVisible(false);
-		add_tag.setVisible(true);
-		edit_tag.setVisible(true);
-		delete_tag.setVisible(true);
-	}
-
-	private void showNonTaggedMenu() {
-		MenuItem add_photo = menu.findItem(R.id.action_add_photo);
-		MenuItem add_tag = menu.findItem(R.id.action_add_tag);
-		MenuItem edit_tag = menu.findItem(R.id.action_edit_tag);
-		MenuItem delete_tag = menu.findItem(R.id.action_delete_tag);
-		add_photo.setVisible(true);
-		add_tag.setVisible(false);
-		edit_tag.setVisible(false);
-		delete_tag.setVisible(false);
-	}
-
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		// Handle action buttons
+		EditText tagName = (EditText) findViewById(R.id.tag_name);
+
 		switch (item.getItemId()) {
 		case R.id.action_add_photo:
 			Intent intent = new Intent(PhotoActivity.this,
@@ -258,9 +255,39 @@ public class PhotoActivity extends BaseActivity {
 			intent.putExtra("moment_id", momentId);
 			startActivity(intent);
 			return true;
+		case R.id.action_done_add:
+			if (tagLocation != null && tagName.getText().length() > 0) {
+				persistTag(tagName.getText().toString(), false);
+				tagLocation = null;
+			} else {
+				int red = android.R.color.holo_red_light;
+				Style CustomAlert = new Style.Builder().setDuration(2000)
+						.setHeight(LayoutParams.WRAP_CONTENT).setTextSize(16)
+						.setBackgroundColor(red).setPaddingInPixels(26).build();
+				Crouton.makeText(this,
+						"Please, select tag and specify its name", CustomAlert)
+						.show();
+			}
+			return true;
 		case R.id.action_edit_tag:
-			scrollView.setScrollingEnabled(false);
-			currentImageView.setOnTouchListener(onEditPhotoTouchListener);
+			editTag();
+			return true;
+		case R.id.action_done_edit:
+			if (tagLocation != null && tagName.getText().length() > 0) {
+				persistTag(tagName.getText().toString(), true);
+				tagLocation = null;
+			} else {
+				int red = android.R.color.holo_red_light;
+				Style CustomAlert = new Style.Builder().setDuration(2000)
+						.setHeight(LayoutParams.WRAP_CONTENT).setTextSize(16)
+						.setBackgroundColor(red).setPaddingInPixels(26).build();
+				Crouton.makeText(this,
+						"Please, select tag and specify its name", CustomAlert)
+						.show();
+			}
+			return true;
+		case R.id.action_delete_tag:
+			deleteTag();
 			return true;
 		case android.R.id.home:
 			onBackPressed();
@@ -297,7 +324,8 @@ public class PhotoActivity extends BaseActivity {
 
 	public void onPhotoSelected(final int position) {
 		currentPhotoIndex = position;
-		photoId = moment.getPhoto(position).getId();
+		currentPhoto = moment.getPhoto(position);
+		photoId = currentPhoto.getId();
 
 		ViewPager viewPager = (ViewPager) findViewById(R.id.view_pager);
 		currentImageView = (ImageView) viewPager
@@ -316,10 +344,10 @@ public class PhotoActivity extends BaseActivity {
 			public void onClick(View v) {
 				if (v.isActivated()) {
 					v.setActivated(false);
-					showNonTaggedPhoto();
+					showPhoto();
 				} else {
 					v.setActivated(true);
-					showTaggedRegions();
+					showTags();
 				}
 			}
 		});
@@ -435,33 +463,6 @@ public class PhotoActivity extends BaseActivity {
 		new HttpGetTask(getMemoriesHandler)
 				.execute(NetworkManager.hostName + "/api/memories?photo_id="
 						+ moment.getPhoto(position).getId());
-
-		final HttpTaskHandler getTagsHandler = new HttpTaskHandler() {
-
-			@Override
-			public void taskSuccessful(String result) {
-				Log.d(TAG, result);
-				JSONArray tagJSONArray;
-				try {
-					tagJSONArray = new JSONArray(result);
-					for (int j = 0; j <= tagJSONArray.length() - 1; j++) {
-						Tag tag = Tag.getTagInfo(tagJSONArray.getString(j));
-						moment.getPhoto(position).addTag(tag);
-					}
-				} catch (JSONException e) {
-					Log.e(TAG, "Error parse the tag json");
-				}
-			}
-
-			@Override
-			public void taskFailed(String reason) {
-				Log.e(TAG, "Error downloading the tag");
-			}
-		};
-
-		new HttpGetTask(getTagsHandler).execute(NetworkManager.hostName
-				+ "/api/photos/" + moment.getPhoto(position).getId() + "/tags");
-
 	}
 
 	private void editMemory(Memory memory, int photoId) {
@@ -510,24 +511,122 @@ public class PhotoActivity extends BaseActivity {
 				.execute(NetworkManager.hostName + "/api/memories/" + id);
 	}
 
-	private void showTaggedRegions() {
+	private void showMenuShowTags() {
+		add_photo.setVisible(false);
+		delete_photo.setVisible(false);
+		edit_tag.setVisible(false);
+		delete_tag.setVisible(false);
+		done_add.setVisible(false);
+		done_edit.setVisible(false);
+	}
 
+	private void showMenuTagSelected() {
+		add_photo.setVisible(false);
+		delete_photo.setVisible(false);
+		edit_tag.setVisible(true);
+		delete_tag.setVisible(true);
+		done_add.setVisible(false);
+		done_edit.setVisible(false);
+	}
+
+	private void showMenuEditTag() {
+		add_photo.setVisible(false);
+		delete_photo.setVisible(false);
+		edit_tag.setVisible(false);
+		delete_tag.setVisible(false);
+		done_add.setVisible(false);
+		done_edit.setVisible(true);
+	}
+
+	private void showMenuAddTag() {
+		add_photo.setVisible(false);
+		delete_photo.setVisible(false);
+		edit_tag.setVisible(false);
+		delete_tag.setVisible(false);
+		done_add.setVisible(true);
+		done_edit.setVisible(false);
+	}
+
+	private void showMenuPhoto() {
+		add_photo.setVisible(true);
+		delete_photo.setVisible(true);
+		edit_tag.setVisible(false);
+		delete_tag.setVisible(false);
+		done_add.setVisible(false);
+		done_edit.setVisible(false);
+	}
+
+	private void showTags() {
+		// Show corresponding menu
+		showMenuShowTags();
+
+		// Disable paging
+		viewPager.setPagingEnabled(false);
+
+		// Enable scrolling
+		scrollView.setScrollingEnabled(true);
+
+		// Show tabs
+		findViewById(R.id.tab_view).setVisibility(View.VISIBLE);
+
+		// Hide EditText
+		findViewById(R.id.tag_name_container).setVisibility(View.GONE);
+
+		// Show add tag button
+		findViewById(R.id.photo_description).setVisibility(View.GONE);
+		Button add_tag = (Button) findViewById(R.id.add_tag);
+		add_tag.setVisibility(View.VISIBLE);
+		add_tag.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View arg0) {
+				addTag();
+			}
+		});
+
+		// Load list of tags
+		final HttpTaskHandler getTagsHandler = new HttpTaskHandler() {
+
+			@Override
+			public void taskSuccessful(String result) {
+				Log.d(TAG, result);
+				JSONArray tagJSONArray;
+				try {
+					currentPhoto.setTagList(new ArrayList<Tag>());
+					tagJSONArray = new JSONArray(result);
+					for (int j = 0; j <= tagJSONArray.length() - 1; j++) {
+						Tag tag = Tag.getTagInfo(tagJSONArray.getString(j));
+						currentPhoto.addTag(tag);
+					}
+					currentPhoto.refreshTags();
+
+					// Set the tagged bitmap
+					currentImageView.setImageBitmap(currentPhoto
+							.getTaggedLargeBitmap());
+					// Calculate the offset
+					setPhotoOffset();
+					// Set on touch listener for the photo
+					currentImageView.setOnTouchListener(onPhotoTouchListener);
+
+				} catch (JSONException e) {
+					Log.e(TAG, "Error parse the tag json");
+				}
+			}
+
+			@Override
+			public void taskFailed(String reason) {
+				Log.e(TAG, "Error downloading the tag");
+			}
+		};
+
+		// Load large image
 		HttpImageTaskHandler httpImageTaskHandler = new HttpImageTaskHandler() {
 			@Override
 			public void taskSuccessful(Drawable drawable) {
-				final Photo currentPhoto = moment.getPhoto(currentPhotoIndex);
 				currentPhoto.setLargeBitmap(((BitmapDrawable) drawable)
 						.getBitmap());
-				// Draw tags for the photo
-				Bitmap taggedBitmap = ImageProcessor.generateTaggedBitmap(
-						currentPhoto.getLargeBitmap(),
-						currentPhoto.getTagList());
-				// Cache the tagged photo bitmap
-				currentPhoto.setTaggedLargeBitmap(taggedBitmap);
-
-				currentImageView.setImageBitmap(taggedBitmap);
-				setPhotoOffset();
-				currentImageView.setOnTouchListener(onPhotoTouchListener);
+				new HttpGetTask(getTagsHandler).execute(NetworkManager.hostName
+						+ "/api/photos/" + photoId + "/tags");
 			}
 
 			@Override
@@ -536,38 +635,167 @@ public class PhotoActivity extends BaseActivity {
 			}
 		};
 
-		Bitmap taggedBitmap = moment.getPhoto(currentPhotoIndex)
-				.getTaggedLargeBitmap();
-		if (taggedBitmap == null) {
-			new HttpGetImageTask(httpImageTaskHandler).execute(moment.getPhoto(
-					currentPhotoIndex).getImageLargeURL());
+		Bitmap largeBitmap = currentPhoto.getLargeBitmap();
+		if (largeBitmap == null) {
+			new HttpGetImageTask(httpImageTaskHandler).execute(currentPhoto
+					.getImageLargeURL());
 		} else {
-			currentImageView.setImageBitmap(taggedBitmap);
-			setPhotoOffset();
-			currentImageView.setOnTouchListener(onPhotoTouchListener);
+			new HttpGetTask(getTagsHandler).execute(NetworkManager.hostName
+					+ "/api/photos/" + photoId + "/tags");
 		}
-
-		showTaggedMenu();
-		viewPager.setPagingEnabled(false);
 	}
 
-	private void showNonTaggedPhoto() {
-		currentImageView.setImageDrawable(moment.getPhoto(currentPhotoIndex)
-				.getMediumDrawable());
+	private void onTagSelected() {
+		// Set title to tag name
+		setTitle(currentTag.getName());
+
+		// Show corresponding menu
+		showMenuTagSelected();
+
+		// Hide add tag button
+		findViewById(R.id.add_tag).setVisibility(View.GONE);
+
+		// TODO: Load Memories related to tag
+	}
+
+	private void onTagUnselected() {
+		// Set title to normal
+		setTitle(moment.getName());
+
+		// Show corresponding menu
+		showMenuShowTags();
+
+		// Show add tag button
+		findViewById(R.id.add_tag).setVisibility(View.VISIBLE);
+
+		// TODO: Load Memories related to photo
+	}
+
+	private void addTag() {
+		// Show corresponding menu
+		showMenuAddTag();
+
+		// Disable scrolling
+		scrollView.setScrollingEnabled(false);
+
+		// Hide tabs
+		findViewById(R.id.tab_view).setVisibility(View.GONE);
+
+		// Hide add tag button
+		findViewById(R.id.add_tag).setVisibility(View.GONE);
+
+		// Show EditText instead
+		findViewById(R.id.tag_name_container).setVisibility(View.VISIBLE);
+		((EditText) findViewById(R.id.tag_name)).setText("");
+
+		// Indicate that there is no tag
+		tagLocation = null;
+
+		currentImageView.setImageBitmap(currentPhoto.getLargeBitmap());
+		currentImageView.setOnTouchListener(onAddTagTouchListener);
+	}
+
+	private void editTag() {
+		// Show corresponding menu
+		showMenuEditTag();
+
+		// Disable scrolling
+		scrollView.setScrollingEnabled(false);
+
+		// Hide tabs
+		findViewById(R.id.tab_view).setVisibility(View.GONE);
+
+		// Show EditText instead
+		findViewById(R.id.tag_name_container).setVisibility(View.VISIBLE);
+		((EditText) findViewById(R.id.tag_name)).setText(currentTag.getName());
+
+		// Indicate that there is no tag
+		tagLocation = new RectF(currentTag.getUpLeftX(),
+				currentTag.getUpLeftY(), currentTag.getUpLeftX()
+						+ currentTag.getBoxWidth(), currentTag.getUpLeftY()
+						+ currentTag.getBoxLength());
+
+		currentImageView.setOnTouchListener(onEditTagTouchListener);
+	}
+
+	private void showPhoto() {
+		currentImageView.setImageDrawable(currentPhoto.getMediumDrawable());
 		currentImageView.setOnTouchListener(null);
 
-		showNonTaggedMenu();
+		showMenuPhoto();
 		viewPager.setPagingEnabled(true);
+
+		findViewById(R.id.photo_description).setVisibility(View.VISIBLE);
+		findViewById(R.id.add_tag).setVisibility(View.GONE);
+	}
+
+	private void persistTag(String tagName, boolean edit) {
+		HttpTaskHandler httpPostTaskHandler = new HttpTaskHandler() {
+			@Override
+			public void taskSuccessful(String result) {
+				showTags();
+			}
+
+			@Override
+			public void taskFailed(String reason) {
+				Log.e("POST", "Error within POST request: " + reason);
+			}
+		};
+
+		JSONObject tagData = new JSONObject();
+		try {
+			tagData.put("x_coordinate", (int) tagLocation.left + "px");
+			tagData.put("y_coordinate", (int) tagLocation.top + "px");
+			tagData.put("box_width",
+					(int) (tagLocation.right - tagLocation.left) + "px");
+			tagData.put("box_length",
+					(int) (tagLocation.bottom - tagLocation.top) + "px");
+			tagData.put("tag_type", "object");
+			tagData.put("object_name", tagName);
+			tagData.put("photo_id", photoId);
+
+		} catch (JSONException e) {
+			Log.e(TAG, "Error forming JSON");
+		}
+		String payload = tagData.toString();
+
+		if (edit) {
+			new HttpPutTask(httpPostTaskHandler, payload)
+					.execute(NetworkManager.hostName + "/api/tags/"
+							+ currentTag.getId());
+		} else {
+			new HttpPostTask(httpPostTaskHandler, payload)
+					.execute(NetworkManager.hostName + "/api/photos/" + photoId
+							+ "/tags");
+		}
+	}
+
+	private void deleteTag() {
+		HttpTaskHandler httpDeleteTaskHandler = new HttpTaskHandler() {
+
+			@Override
+			public void taskSuccessful(String result) {
+				showTags();
+			}
+
+			@Override
+			public void taskFailed(String reason) {
+				Log.e(TAG, "Error deleting memory");
+			}
+		};
+		new HttpDeleteTask(httpDeleteTaskHandler)
+				.execute(NetworkManager.hostName + "/api/tags/"
+						+ currentTag.getId());
 	}
 
 	private void stopPlaying() {
 		isPlaying = false;
 		isPaused = false;
 		soundPlayingId = -1;
-		if (soundIcon!=null){
+		if (soundIcon != null) {
 			soundIcon.setImageResource(R.drawable.sound_small);
 		}
-		if (mediaPlayer!=null) {
+		if (mediaPlayer != null) {
 			mediaPlayer.release();
 		}
 		mediaPlayer = null;
@@ -578,12 +806,12 @@ public class PhotoActivity extends BaseActivity {
 		@Override
 		public void onClick(View v) {
 			Memory memory = (Memory) v.getTag();
-			if (memory.getId() != soundPlayingId){
+			if (memory.getId() != soundPlayingId) {
 				stopPlaying();
 				soundPlayingId = memory.getId();
 				soundIcon = (ImageView) v.findViewById(R.id.memory_icon);
 			}
-			
+
 			if (!isPlaying && !isPaused) {
 				isPlaying = true;
 				isPaused = false;
@@ -632,9 +860,9 @@ public class PhotoActivity extends BaseActivity {
 		}
 	};
 
+	@SuppressLint("ClickableViewAccessibility")
 	private OnTouchListener onPhotoTouchListener = new OnTouchListener() {
 		public boolean onTouch(View v, MotionEvent event) {
-			final Photo currentPhoto = moment.getPhoto(currentPhotoIndex);
 			// Transfer the coordinate from the image view to the
 			// photo bitmap
 			// Location on the enlarged photo
@@ -655,6 +883,14 @@ public class PhotoActivity extends BaseActivity {
 								currentPhoto.getTagList(), bitmapX, bitmapY);
 				// Set to the current image view
 				currentImageView.setImageBitmap(newBitmap);
+
+				currentTag = ImageProcessor.getSelectedTag(
+						currentPhoto.getTagList(), bitmapX, bitmapY);
+				if (currentTag != null) {
+					onTagSelected();
+				} else {
+					onTagUnselected();
+				}
 				break;
 			default:
 				break;
@@ -663,13 +899,36 @@ public class PhotoActivity extends BaseActivity {
 		}
 	};
 
-	private OnTouchListener onEditPhotoTouchListener = new OnTouchListener() {
+	@SuppressLint("ClickableViewAccessibility")
+	private OnTouchListener onAddTagTouchListener = new OnTouchListener() {
+
+		@Override
+		public boolean onTouch(View v, MotionEvent event) {
+			float bitmapX = event.getX() + photoOffsetX;
+			float bitmapY = event.getY() + photoOffsetY;
+
+			float left = Math.max(10, bitmapX - 100);
+			float top = Math.max(10, bitmapY - 100);
+			float right = left + 200;
+			float bottom = top + 200;
+
+			tagLocation = new RectF(left, top, right, bottom);
+
+			v.setOnTouchListener(null);
+			v.setOnTouchListener(onEditTagTouchListener);
+			return true;
+		}
+	};
+
+	private OnTouchListener onDeleteTagTouchListener = null;
+
+	@SuppressLint("ClickableViewAccessibility")
+	private OnTouchListener onEditTagTouchListener = new OnTouchListener() {
 		float prevBitmapX = 0;
 		float prevBitmapY = 0;
 		int movingNode = 8;
 
 		public boolean onTouch(View v, MotionEvent event) {
-			final Photo currentPhoto = moment.getPhoto(currentPhotoIndex);
 			// Transfer the coordinate from the image view to the
 			// photo bitmap
 			// Location on the enlarged photo
@@ -689,8 +948,7 @@ public class PhotoActivity extends BaseActivity {
 				// Draw new edit tag square
 				Bitmap newBitmap = ImageProcessor.drawEditSquare(
 						currentPhoto.getLargeBitmap(),
-						currentPhoto.getDarkenLargeBitmap(),
-						currentEdittedTagLocation, true);
+						currentPhoto.getDarkenLargeBitmap(), tagLocation, true);
 				currentImageView.setImageBitmap(newBitmap);
 				// Save touch location
 				prevBitmapX = bitmapX;
@@ -732,7 +990,9 @@ public class PhotoActivity extends BaseActivity {
 				final int position) {
 			Log.d(TAG, position + "");
 			ImageView imageView = new ImageView(PhotoActivity.this);
-
+			if (position == currentPhotoIndex) {
+				currentImageView = imageView;
+			}
 			imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
 			imageView.setTag(position);
 			((ViewPager) container).addView(imageView);
@@ -785,7 +1045,6 @@ public class PhotoActivity extends BaseActivity {
 	// This should be called when the current image view change
 	// Currently hardcode to tagbutton onclick listener
 	private void setPhotoOffset() {
-		Photo currentPhoto = moment.getPhoto(currentPhotoIndex);
 		isExpandHorizontal = ((float) currentPhoto.getLargeBitmap().getHeight() / currentPhoto
 				.getLargeBitmap().getWidth()) > ((float) photoImageViewHeightPX / photoImageViewWidthPX);
 		// If the photo in image view is expanded horizontally
@@ -814,10 +1073,10 @@ public class PhotoActivity extends BaseActivity {
 		// Currently decide the radius is 30, maybe changed
 		int squareRadius = 80;
 		// Calculate whether the touch location is in the edit square region
-		float left = currentEdittedTagLocation.left;
-		float right = currentEdittedTagLocation.right;
-		float top = currentEdittedTagLocation.top;
-		float bottom = currentEdittedTagLocation.bottom;
+		float left = tagLocation.left;
+		float right = tagLocation.right;
+		float top = tagLocation.top;
+		float bottom = tagLocation.bottom;
 		float[] editSquareXs = { left, (left + right) / 2, right, left, right,
 				left, (left + right) / 2, right };
 		float[] editSquareYs = { top, top, top, (top + bottom) / 2,
@@ -844,39 +1103,38 @@ public class PhotoActivity extends BaseActivity {
 			return;
 		}
 
-		Photo currentPhoto = moment.getPhoto(currentPhotoIndex);
-		float left = currentEdittedTagLocation.left;
-		float right = currentEdittedTagLocation.right;
-		float top = currentEdittedTagLocation.top;
-		float bottom = currentEdittedTagLocation.bottom;
+		float left = tagLocation.left;
+		float right = tagLocation.right;
+		float top = tagLocation.top;
+		float bottom = tagLocation.bottom;
 		float offsetX = curX - prevX;
 		float offsetY = curY - prevY;
 
 		// Change the tag location
 		if (movingMode == 0) {
 			// Change leftTop
-			currentEdittedTagLocation.set(curX, curY, right, bottom);
+			tagLocation.set(curX, curY, right, bottom);
 		} else if (movingMode == 1) {
 			// Change middleTop
-			currentEdittedTagLocation.set(left, curY, right, bottom);
+			tagLocation.set(left, curY, right, bottom);
 		} else if (movingMode == 2) {
 			// Change rightTop
-			currentEdittedTagLocation.set(left, curY, curX, bottom);
+			tagLocation.set(left, curY, curX, bottom);
 		} else if (movingMode == 3) {
 			// Change leftMiddle
-			currentEdittedTagLocation.set(curX, top, right, bottom);
+			tagLocation.set(curX, top, right, bottom);
 		} else if (movingMode == 4) {
 			// Change rightMiddle
-			currentEdittedTagLocation.set(left, top, curX, bottom);
+			tagLocation.set(left, top, curX, bottom);
 		} else if (movingMode == 5) {
 			// Change leftBottom
-			currentEdittedTagLocation.set(curX, top, right, curY);
+			tagLocation.set(curX, top, right, curY);
 		} else if (movingMode == 6) {
 			// Change middleBottom
-			currentEdittedTagLocation.set(left, top, right, curY);
+			tagLocation.set(left, top, right, curY);
 		} else if (movingMode == 7) {
 			// Change bottomRight
-			currentEdittedTagLocation.set(left, top, curX, curY);
+			tagLocation.set(left, top, curX, curY);
 		} else {
 			// Check whether the new location is in the boundary
 			boolean isInBoundary = left + offsetX >= ImageProcessor.IMAGE_BORDER_WIDTH
@@ -887,8 +1145,8 @@ public class PhotoActivity extends BaseActivity {
 							.getHeight() - ImageProcessor.IMAGE_BORDER_WIDTH;
 			// Move the tag
 			if (isInBoundary) {
-				currentEdittedTagLocation.set(left + offsetX, top + offsetY,
-						right + offsetX, bottom + offsetY);
+				tagLocation.set(left + offsetX, top + offsetY, right + offsetX,
+						bottom + offsetY);
 			}
 		}
 	}
