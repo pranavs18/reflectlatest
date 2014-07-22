@@ -44,10 +44,8 @@ import de.neofonie.mobile.app.android.widget.crouton.Style;
 public class AddSoundActivity extends BaseActivity {
 
 	private String TAG = "AddSoundActivity";
-	private int photoId;
-
+	
 	private String soundName;
-
 	private boolean soundNameSet;
 
 	private static String mFileName = null;
@@ -81,13 +79,12 @@ public class AddSoundActivity extends BaseActivity {
 		ImageView view = (ImageView) findViewById(android.R.id.home);
 		view.setPadding(10, 0, 0, 0);
 
-		photoId = getIntent().getIntExtra("photo_id", 0);
-
 		EditText soundNameText = (EditText) findViewById(R.id.sound_name);
 		if (getIntent().hasExtra("sound_name")) {
-			soundName = getIntent().getStringExtra("soundName");
+			soundName = getIntent().getStringExtra("sound_name");
 			soundNameText.setText(soundName);
 			soundNameSet = true;
+			findViewById(R.id.recorder).setVisibility(View.GONE);
 		}
 
 		soundNameText.addTextChangedListener(new TextWatcher() {
@@ -268,10 +265,29 @@ public class AddSoundActivity extends BaseActivity {
 			}
 		};
 		
+		HttpTaskHandler httpPutTaskHandler = new HttpTaskHandler() {
+			@Override
+			public void taskSuccessful(String result) {
+				finish();
+			}
+
+			@Override
+			public void taskFailed(String reason) {
+				Log.e("PUT", "Error within PUT request: " + reason);
+			}
+		};
+		
 		JSONObject storyData = new JSONObject();
 
 		try {
-			storyData.put("photo_id", photoId);
+			if (getIntent().hasExtra("tag_id")){
+				int tagId = getIntent().getIntExtra("tag_id", 0); 
+				storyData.put("tag_id", tagId);
+			}
+			else {
+				int photoId = getIntent().getIntExtra("photo_id", 0);
+				storyData.put("photo_id", photoId);
+			}
 			storyData.put("memory_type", "sound");
 			storyData.put("memory_content", soundName);
 		} catch (JSONException e) {
@@ -281,7 +297,7 @@ public class AddSoundActivity extends BaseActivity {
 
 		if (getIntent().hasExtra("memory_id")) {
 			int memoryId = getIntent().getIntExtra("memory_id", 0);
-			new HttpPutTask(httpPostTaskHandler, payload)
+			new HttpPutTask(httpPutTaskHandler, payload)
 					.execute(NetworkManager.hostName + "/api/memories/"
 							+ memoryId);
 		} else {

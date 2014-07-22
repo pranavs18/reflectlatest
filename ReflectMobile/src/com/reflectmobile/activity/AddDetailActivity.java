@@ -32,7 +32,6 @@ public class AddDetailActivity extends BaseActivity {
 
 	private String TAG = "AddDetailActivity";
 
-	private int photoId;
 	private boolean nameSet = false;
 	private boolean detailSet = false;
 
@@ -62,8 +61,6 @@ public class AddDetailActivity extends BaseActivity {
 		getActionBar().setDisplayHomeAsUpEnabled(true);
 		ImageView view = (ImageView) findViewById(android.R.id.home);
 		view.setPadding(10, 0, 0, 0);
-
-		photoId = getIntent().getIntExtra("photo_id", 0);
 
 		Spinner spinner = (Spinner) findViewById(R.id.spinner_emotions);
 		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
@@ -175,7 +172,6 @@ public class AddDetailActivity extends BaseActivity {
 	}
 
 	public void addDetail() {
-		Log.d(TAG, "PhotoId " + photoId);
 		HttpTaskHandler httpPostTaskHandler = new HttpTaskHandler() {
 			@Override
 			public void taskSuccessful(String result) {
@@ -196,7 +192,14 @@ public class AddDetailActivity extends BaseActivity {
 
 		String memoryText = name + " " + spinnerText + " " + detail;
 		try {
-			storyData.put("photo_id", photoId);
+			if (getIntent().hasExtra("tag_id")){
+				int tagId = getIntent().getIntExtra("tag_id", 0); 
+				storyData.put("tag_id", tagId);
+			}
+			else {
+				int photoId = getIntent().getIntExtra("photo_id", 0);
+				storyData.put("photo_id", photoId);
+			}
 			storyData.put("memory_type", "detail");
 			storyData.put("memory_content", memoryText);
 		} catch (JSONException e) {

@@ -37,7 +37,7 @@ public class AddStoryActivity extends BaseActivity {
 
 	private String TAG = "AddStoryActivity";
 	public static int CODE_SPEECH_RECOGNITION = 101;
-	private int photoId;
+	//private int photoId;
 
 	private String story;
 	boolean storySet = false;
@@ -63,8 +63,6 @@ public class AddStoryActivity extends BaseActivity {
 		getActionBar().setDisplayHomeAsUpEnabled(true);
 		ImageView view = (ImageView) findViewById(android.R.id.home);
 		view.setPadding(10, 0, 0, 0);
-
-		photoId = getIntent().getIntExtra("photo_id", 0);
 
 		EditText storyText = (EditText) findViewById(R.id.story_text);
 		if (getIntent().hasExtra("story")) {
@@ -171,7 +169,6 @@ public class AddStoryActivity extends BaseActivity {
 	}
 
 	public void addStory() {
-		Log.d(TAG, "PhotoId " + photoId);
 		HttpTaskHandler httpPostTaskHandler = new HttpTaskHandler() {
 			@Override
 			public void taskSuccessful(String result) {
@@ -187,7 +184,14 @@ public class AddStoryActivity extends BaseActivity {
 		JSONObject storyData = new JSONObject();
 
 		try {
-			storyData.put("photo_id", photoId);
+			if (getIntent().hasExtra("tag_id")){
+				int tagId = getIntent().getIntExtra("tag_id", 0); 
+				storyData.put("tag_id", tagId);
+			}
+			else {
+				int photoId = getIntent().getIntExtra("photo_id", 0);
+				storyData.put("photo_id", photoId);
+			}
 			storyData.put("memory_type", "story");
 			storyData.put("memory_content", story);
 		} catch (JSONException e) {

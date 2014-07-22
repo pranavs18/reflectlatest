@@ -74,12 +74,15 @@ public class PhotoActivity extends BaseActivity {
 
 	private String TAG = "PhotoActivity";
 	private Moment moment;
-	private Memory[] mMemories;
+	private int memoryCount = 0;
+	private int memoryPhotoId;
+	private Integer memoryTagId;
 	private LayoutInflater mInflater;
 
 	private int communityId;
 	private int momentId;
 
+	// Menu items
 	private MenuItem add_photo;
 	private MenuItem delete_photo;
 	private MenuItem edit_tag;
@@ -114,7 +117,7 @@ public class PhotoActivity extends BaseActivity {
 
 	// Set when the image changes
 	private int currentPhotoIndex = 0;
-	private int photoId = 0;
+	private int currentPhotoId = 0;
 	private Photo currentPhoto;
 
 	private ImageView currentImageView = null;
@@ -128,6 +131,8 @@ public class PhotoActivity extends BaseActivity {
 	private RectF tagLocation = null;
 	private Tag currentTag = null;
 
+	private boolean newTagMode = false;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		hasNavigationDrawer = false;
@@ -152,7 +157,7 @@ public class PhotoActivity extends BaseActivity {
 
 		communityId = getIntent().getIntExtra("community_id", 0);
 		momentId = getIntent().getIntExtra("moment_id", 0);
-		photoId = getIntent().getIntExtra("photo_id", 0);
+		currentPhotoId = getIntent().getIntExtra("photo_id", 0);
 
 		mInflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
@@ -169,7 +174,7 @@ public class PhotoActivity extends BaseActivity {
 
 				int index = 0;
 				for (int count = 0; count < moment.getNumOfPhotos(); count++) {
-					if (moment.getPhoto(count).getId() == photoId) {
+					if (moment.getPhoto(count).getId() == currentPhotoId) {
 						index = count;
 						break;
 					}
@@ -213,13 +218,18 @@ public class PhotoActivity extends BaseActivity {
 
 	@Override
 	public void onBackPressed() {
-		Intent intent = new Intent(PhotoActivity.this, MomentActivity.class);
-		intent.putExtra("moment_id", momentId);
-		intent.putExtra("community_id", communityId);
-		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-				| Intent.FLAG_ACTIVITY_CLEAR_TASK);
-		startActivity(intent);
-		super.onBackPressed();
+		if (newTagMode) {
+			newTagMode = false;
+			showTags();
+		}
+		else {
+			Intent intent = new Intent(PhotoActivity.this, MomentActivity.class);
+			intent.putExtra("moment_id", momentId);
+			intent.putExtra("community_id", communityId);
+			intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+					| Intent.FLAG_ACTIVITY_CLEAR_TASK);
+			startActivity(intent);
+		}
 	}
 
 	@Override
@@ -306,10 +316,7 @@ public class PhotoActivity extends BaseActivity {
 				img.setImageURI(selectedImageUri);
 			}
 		}
-		finish();
-		Intent intent = this.getIntent();
-		intent.putExtra("photo_id", photoId);
-		startActivity(intent);
+		reloadMemories();
 	}
 
 	public String getPath(Uri uri) {
@@ -325,16 +332,11 @@ public class PhotoActivity extends BaseActivity {
 	public void onPhotoSelected(final int position) {
 		currentPhotoIndex = position;
 		currentPhoto = moment.getPhoto(position);
-		photoId = currentPhoto.getId();
+		currentPhotoId = currentPhoto.getId();
 
 		ViewPager viewPager = (ViewPager) findViewById(R.id.view_pager);
 		currentImageView = (ImageView) viewPager
 				.findViewWithTag(currentPhotoIndex);
-
-		final ViewGroup memoryContainer = (ViewGroup) findViewById(R.id.memories_container);
-		memoryContainer.removeAllViews();
-		final TextView memoryCaption = (TextView) findViewById(R.id.memories_caption);
-		memoryCaption.setText("0 MEMORIES");
 
 		ToggleButton tagButton = (ToggleButton) findViewById(R.id.button_photo_tag);
 		tagButton.setActivated(false);
@@ -359,7 +361,10 @@ public class PhotoActivity extends BaseActivity {
 			public void onClick(View arg0) {
 				Intent intent = new Intent(PhotoActivity.this,
 						AddSoundActivity.class);
-				intent.putExtra("photo_id", moment.getPhoto(position).getId());
+				intent.putExtra("photo_id", currentPhotoId);
+				if (currentTag != null) {
+					intent.putExtra("tag_id", currentTag.getId());
+				}
 				startActivityForResult(intent, CODE_ADD_SOUND);
 			}
 		});
@@ -371,7 +376,10 @@ public class PhotoActivity extends BaseActivity {
 			public void onClick(View arg0) {
 				Intent intent = new Intent(PhotoActivity.this,
 						AddStoryActivity.class);
-				intent.putExtra("photo_id", moment.getPhoto(position).getId());
+				intent.putExtra("photo_id", currentPhotoId);
+				if (currentTag != null) {
+					intent.putExtra("tag_id", currentTag.getId());
+				}
 				startActivityForResult(intent, CODE_ADD_STORY);
 			}
 		});
@@ -383,74 +391,119 @@ public class PhotoActivity extends BaseActivity {
 			public void onClick(View arg0) {
 				Intent intent = new Intent(PhotoActivity.this,
 						AddDetailActivity.class);
-				intent.putExtra("photo_id", moment.getPhoto(position).getId());
+				intent.putExtra("photo_id", currentPhotoId);
+				if (currentTag != null) {
+					intent.putExtra("tag_id", currentTag.getId());
+					intent.putExtra("name", currentTag.getName());
+				}
 				startActivityForResult(intent, CODE_ADD_DETAIL);
 			}
 		});
 
-		final HttpTaskHandler getMemoriesHandler = new HttpTaskHandler() {
+		loadTags();
+	}
+
+	private void loadTags() {
+		// Load list of tags
+		final HttpTaskHandler getTagsHandler = new HttpTaskHandler() {
+
 			@Override
 			public void taskSuccessful(String result) {
-				// Parse JSON to the list of memories
-				mMemories = Memory.getMemoriesInfo(result);
-				if (mMemories.length == 1) {
-					memoryCaption.setText(mMemories.length + " MEMORY");
-				} else {
-					memoryCaption.setText(mMemories.length + " MEMORIES");
-				}
-				for (int count = 0; count < mMemories.length; count++) {
-					View card = mInflater.inflate(R.layout.card_memory,
-							memoryContainer, false);
-					ImageView memoryIcon = (ImageView) card
-							.findViewById(R.id.memory_icon);
-					TextView memoryText = (TextView) card
-							.findViewById(R.id.memory_text);
-					TextView memoryInfo = (TextView) card
-							.findViewById(R.id.memory_info);
-					final ImageButton dotMenu = (ImageButton) card
-							.findViewById(R.id.memory_card_dot);
-					final Memory memory = mMemories[count];
-
-					if (memory.getType().equals("sound")) {
-						card.setTag(memory);
-						card.setOnClickListener(onSoundPlayClicked);
+				Log.d(TAG, result);
+				JSONArray tagJSONArray;
+				try {
+					currentPhoto.setTagList(new ArrayList<Tag>());
+					tagJSONArray = new JSONArray(result);
+					for (int j = 0; j <= tagJSONArray.length() - 1; j++) {
+						Tag tag = Tag.getTagInfo(tagJSONArray.getString(j));
+						currentPhoto.addTag(tag);
 					}
-					memoryIcon.setImageResource(memory.getResourceId());
-					memoryText.setText(memory.getContent());
-					memoryInfo.setText(memory.getInfo());
-					memoryContainer.addView(card);
-					dotMenu.setOnClickListener(new OnClickListener() {
+					loadMemories(currentPhotoId);
+				} catch (JSONException e) {
+					Log.e(TAG, "Error parse the tag json");
+				}
+			}
 
-						@Override
-						public void onClick(View arg0) {
-							// Creating the instance of PopupMenu
-							PopupMenu popup = new PopupMenu(PhotoActivity.this,
-									dotMenu);
-							// Inflating the Popup using xml file
-							popup.getMenuInflater().inflate(
-									R.menu.popup_memory, popup.getMenu());
+			@Override
+			public void taskFailed(String reason) {
+				Log.e(TAG, "Error downloading the tag");
+			}
+		};
 
-							// registering popup with OnMenuItemClickListener
-							popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-								public boolean onMenuItemClick(MenuItem item) {
-									switch (item.getItemId()) {
-									case R.id.action_edit_memory:
-										editMemory(memory,
-												moment.getPhoto(position)
-														.getId());
-										return true;
-									case R.id.action_delete_memory:
-										deleteMemory(memory.getId());
-										return true;
-									default:
-										return true;
-									}
-								}
-							});
+		new HttpGetTask(getTagsHandler).execute(NetworkManager.hostName
+				+ "/api/photos/" + currentPhotoId + "/tags");
+	}
 
-							popup.show();// showing popup menu
+	private void reloadMemories() {
+		loadMemories(memoryPhotoId, memoryTagId, true);
+	}
+
+	private void loadMemories(int photoId) {
+		loadMemories(photoId, null, false);
+	}
+
+	private void loadMemories(int photoId, Integer tagId) {
+		loadMemories(photoId, tagId, false);
+	}
+
+	private void loadMemories(final int photoId, final Integer tagId,
+			boolean reload) {
+		// If we already loaded the data - do not load it again
+		if (!reload && tagId == memoryTagId && photoId == memoryPhotoId) {
+			return;
+		}
+		memoryPhotoId = photoId;
+		memoryTagId = tagId;
+
+		final ViewGroup memoryContainer = (ViewGroup) findViewById(R.id.memories_container);
+		memoryContainer.removeAllViews();
+		final TextView memoryCaption = (TextView) findViewById(R.id.memories_caption);
+		memoryCount = 0;
+		memoryCaption.setText("0 MEMORIES");
+
+		final HttpTaskHandler getMemoriesHandler = new HttpTaskHandler() {
+			final private int loadPhotoId = photoId;
+			final private Integer loadTagId = tagId;
+
+			@Override
+			public void taskSuccessful(String result) {
+				if (loadPhotoId == memoryPhotoId && loadTagId == memoryTagId) {
+					// Parse JSON to the list of memories
+					Memory[] mMemories = Memory.getMemoriesInfo(result);
+					memoryCount += mMemories.length;
+
+					if (memoryCount == 1) {
+						memoryCaption.setText(memoryCount + " MEMORY");
+					} else {
+						memoryCaption.setText(memoryCount + " MEMORIES");
+					}
+
+					for (int count = 0; count < mMemories.length; count++) {
+						View card = mInflater.inflate(R.layout.card_memory,
+								memoryContainer, false);
+						ImageView memoryIcon = (ImageView) card
+								.findViewById(R.id.memory_icon);
+						TextView memoryText = (TextView) card
+								.findViewById(R.id.memory_text);
+						TextView memoryInfo = (TextView) card
+								.findViewById(R.id.memory_info);
+						final ImageButton dotMenu = (ImageButton) card
+								.findViewById(R.id.memory_card_dot);
+						final Memory memory = mMemories[count];
+
+						if (memory.getType().equals("sound")) {
+							card.setTag(memory);
+							card.setOnClickListener(onSoundPlayClicked);
 						}
-					});
+
+						memoryIcon.setImageResource(memory.getResourceId());
+						memoryText.setText(memory.getContent());
+						memoryInfo.setText(memory.getInfo());
+						dotMenu.setTag(memory);
+						dotMenu.setOnClickListener(onDotMenuClicked);
+
+						memoryContainer.addView(card);
+					}
 				}
 			}
 
@@ -460,10 +513,52 @@ public class PhotoActivity extends BaseActivity {
 			}
 		};
 
-		new HttpGetTask(getMemoriesHandler)
-				.execute(NetworkManager.hostName + "/api/memories?photo_id="
-						+ moment.getPhoto(position).getId());
+		if (tagId == null) {
+			new HttpGetTask(getMemoriesHandler).execute(NetworkManager.hostName
+					+ "/api/memories?photo_id=" + photoId);
+			for (Tag tag : currentPhoto.getTagList()) {
+				new HttpGetTask(getMemoriesHandler)
+						.execute(NetworkManager.hostName
+								+ "/api/memories?tag_id=" + tag.getId());
+			}
+		} else {
+			new HttpGetTask(getMemoriesHandler).execute(NetworkManager.hostName
+					+ "/api/memories?tag_id=" + tagId);
+		}
+
 	}
+
+	private OnClickListener onDotMenuClicked = new OnClickListener() {
+
+		@Override
+		public void onClick(View v) {
+			final Memory memory = (Memory) v.getTag();
+
+			// Creating the instance of PopupMenu
+			PopupMenu popup = new PopupMenu(PhotoActivity.this, v);
+			// Inflating the Popup using xml file
+			popup.getMenuInflater().inflate(R.menu.popup_memory,
+					popup.getMenu());
+			// registering popup with OnMenuItemClickListener
+			popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+				public boolean onMenuItemClick(MenuItem item) {
+					switch (item.getItemId()) {
+					case R.id.action_edit_memory:
+						editMemory(memory, currentPhotoId);
+						return true;
+					case R.id.action_delete_memory:
+						deleteMemory(memory.getId());
+						return true;
+					default:
+						return true;
+					}
+				}
+			});
+
+			// showing popup menu
+			popup.show();
+		}
+	};
 
 	private void editMemory(Memory memory, int photoId) {
 		String type = memory.getType();
@@ -472,6 +567,9 @@ public class PhotoActivity extends BaseActivity {
 					AddDetailActivity.class);
 			intent.putExtra("memory_id", memory.getId());
 			intent.putExtra("photo_id", photoId);
+			if (currentTag != null) {
+				intent.putExtra("tag_id", currentTag.getId());
+			}
 			Pattern pattern = Pattern.compile("(.*) (WAS [A-Z]*) (.*)");
 			Matcher matcher = pattern.matcher(memory.getContent());
 			if (matcher.find()) {
@@ -486,9 +584,20 @@ public class PhotoActivity extends BaseActivity {
 			intent.putExtra("memory_id", memory.getId());
 			intent.putExtra("story", memory.getContent());
 			intent.putExtra("photo_id", photoId);
+			if (currentTag != null) {
+				intent.putExtra("tag_id", currentTag.getId());
+			}
 			startActivityForResult(intent, CODE_ADD_STORY);
 		} else if (type.equals("sound")) {
-
+			Intent intent = new Intent(PhotoActivity.this,
+					AddSoundActivity.class);
+			intent.putExtra("memory_id", memory.getId());
+			intent.putExtra("sound_name", memory.getContent());
+			intent.putExtra("photo_id", photoId);
+			if (currentTag != null) {
+				intent.putExtra("tag_id", currentTag.getId());
+			}
+			startActivityForResult(intent, CODE_ADD_SOUND);
 		}
 	}
 
@@ -497,9 +606,7 @@ public class PhotoActivity extends BaseActivity {
 
 			@Override
 			public void taskSuccessful(String result) {
-				Intent intent = getIntent();
-				finish();
-				startActivity(intent);
+				reloadMemories();
 			}
 
 			@Override
@@ -626,7 +733,7 @@ public class PhotoActivity extends BaseActivity {
 				currentPhoto.setLargeBitmap(((BitmapDrawable) drawable)
 						.getBitmap());
 				new HttpGetTask(getTagsHandler).execute(NetworkManager.hostName
-						+ "/api/photos/" + photoId + "/tags");
+						+ "/api/photos/" + currentPhotoId + "/tags");
 			}
 
 			@Override
@@ -641,7 +748,7 @@ public class PhotoActivity extends BaseActivity {
 					.getImageLargeURL());
 		} else {
 			new HttpGetTask(getTagsHandler).execute(NetworkManager.hostName
-					+ "/api/photos/" + photoId + "/tags");
+					+ "/api/photos/" + currentPhotoId + "/tags");
 		}
 	}
 
@@ -655,7 +762,8 @@ public class PhotoActivity extends BaseActivity {
 		// Hide add tag button
 		findViewById(R.id.add_tag).setVisibility(View.GONE);
 
-		// TODO: Load Memories related to tag
+		// Load Memories related to tag
+		loadMemories(currentPhotoId, currentTag.getId());
 	}
 
 	private void onTagUnselected() {
@@ -668,10 +776,13 @@ public class PhotoActivity extends BaseActivity {
 		// Show add tag button
 		findViewById(R.id.add_tag).setVisibility(View.VISIBLE);
 
-		// TODO: Load Memories related to photo
+		// Load Memories related to tag
+		loadMemories(currentPhotoId);
 	}
 
 	private void addTag() {
+		newTagMode = true;
+		
 		// Show corresponding menu
 		showMenuAddTag();
 
@@ -752,7 +863,7 @@ public class PhotoActivity extends BaseActivity {
 					(int) (tagLocation.bottom - tagLocation.top) + "px");
 			tagData.put("tag_type", "object");
 			tagData.put("object_name", tagName);
-			tagData.put("photo_id", photoId);
+			tagData.put("photo_id", currentPhotoId);
 
 		} catch (JSONException e) {
 			Log.e(TAG, "Error forming JSON");
@@ -765,8 +876,8 @@ public class PhotoActivity extends BaseActivity {
 							+ currentTag.getId());
 		} else {
 			new HttpPostTask(httpPostTaskHandler, payload)
-					.execute(NetworkManager.hostName + "/api/photos/" + photoId
-							+ "/tags");
+					.execute(NetworkManager.hostName + "/api/photos/"
+							+ currentPhotoId + "/tags");
 		}
 	}
 
