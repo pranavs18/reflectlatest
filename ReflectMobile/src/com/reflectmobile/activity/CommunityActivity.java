@@ -181,6 +181,14 @@ public class CommunityActivity extends BaseActivity {
 		startActivityForResult(intent, CODE_ADD_PHOTO);
 	}
 
+	private void addPhotoForMoment(int momentId) {
+		Intent intent = new Intent(CommunityActivity.this,
+				GalleryActivity.class);
+		intent.putExtra("community_id", communityId);
+		intent.putExtra("moment_id", momentId);
+		startActivityForResult(intent, CODE_ADD_PHOTO);
+	}
+
 	public void createMoment() {
 		Intent intent = new Intent(CommunityActivity.this,
 				AddMomentActivity.class);
@@ -328,7 +336,8 @@ public class CommunityActivity extends BaseActivity {
 		}
 
 		@Override
-		public View getView(final int position, View convertView, ViewGroup parentView) {
+		public View getView(final int position, View convertView,
+				ViewGroup parentView) {
 			// If there is no view to recycle - create a new one
 			final Moment moment = community.getMoment(position);
 
@@ -374,7 +383,40 @@ public class CommunityActivity extends BaseActivity {
 			}
 
 			final CardViewHolder holder = (CardViewHolder) convertView.getTag();
-			
+
+			if (moment.getPeopleList() == null) {
+				moment.setPeopleList(new ArrayList<String>());
+				for (int count = 0; count < moment.getNumOfPhotos(); count++) {
+					final HttpTaskHandler getTagsHandler = new HttpTaskHandler() {
+						@Override
+						public void taskSuccessful(String result) {
+							Log.d(TAG, result);
+							JSONArray tagJSONArray;
+							try {
+								tagJSONArray = new JSONArray(result);
+								for (int j = 0; j <= tagJSONArray.length() - 1; j++) {
+									Tag tag = Tag.getTagInfo(tagJSONArray
+											.getString(j));
+									moment.addPerson(tag.getName());
+								}
+							} catch (JSONException e) {
+								Log.e(TAG, "Error parse the tag json");
+							}
+							notifyDataSetChanged();
+						}
+
+						@Override
+						public void taskFailed(String reason) {
+							Log.e(TAG, "Error downloading the tag");
+						}
+					};
+
+					new HttpGetTask(getTagsHandler)
+							.execute(NetworkManager.hostName + "/api/photos/"
+									+ moment.getPhoto(count).getId() + "/tags");
+				}
+			}
+
 			holder.totalPhoto.setTag(position);
 			setPeopleNames(position, holder.people);
 			holder.name.setText(moment.getName());
@@ -409,43 +451,20 @@ public class CommunityActivity extends BaseActivity {
 									mContext.startActivity(intent);
 								}
 							});
-				} else {
+				} else if (count == numOfPhotos) {
 					holder.photos[count].setImageDrawable(getResources()
-							.getDrawable(R.drawable.add_photo_dark));
+							.getDrawable(R.drawable.add_photo_community));
 					holder.photos[count].setScaleType(ScaleType.CENTER);
-				}
-			}
-			
-			if (moment.getPeopleList() == null) {
-				moment.setPeopleList(new ArrayList<String>());
-				for (int count = 0; count < moment.getNumOfPhotos(); count++) {
-					final HttpTaskHandler getTagsHandler = new HttpTaskHandler() {
-						@Override
-						public void taskSuccessful(String result) {
-							Log.d(TAG, result);
-							JSONArray tagJSONArray;
-							try {
-								tagJSONArray = new JSONArray(result);
-								for (int j = 0; j <= tagJSONArray.length() - 1; j++) {
-									Tag tag = Tag.getTagInfo(tagJSONArray
-											.getString(j));
-									moment.addPerson(tag.getName());
+					holder.photos[count]
+							.setOnClickListener(new OnClickListener() {
+								public void onClick(View v) {
+									addPhotoForMoment(community.getMoment(
+											position).getId());
 								}
-							} catch (JSONException e) {
-								Log.e(TAG, "Error parse the tag json");
-							}
-							notifyDataSetChanged();
-						}
-
-						@Override
-						public void taskFailed(String reason) {
-							Log.e(TAG, "Error downloading the tag");
-						}
-					};
-					
-					new HttpGetTask(getTagsHandler)
-							.execute(NetworkManager.hostName + "/api/photos/"
-									+ moment.getPhoto(count).getId() + "/tags");
+							});
+				} else {
+					holder.photos[count].setImageDrawable(null);
+					holder.photos[count].setOnClickListener(null);
 				}
 			}
 

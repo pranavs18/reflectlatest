@@ -161,7 +161,7 @@ public class Community {
 						.getString("first_photo");
 				String date = momentJSONObject.getString("date");
 				if (date.equals("null")) {
-					if (firstPhoto != null) {
+					if (!firstPhoto.equals("null")) {
 						JSONObject JSONFirstPhoto = momentJSONObject
 								.getJSONObject("first_photo");
 						String takenAt = JSONFirstPhoto.getString("taken_at");
