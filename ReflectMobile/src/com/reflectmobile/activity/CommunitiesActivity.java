@@ -189,7 +189,7 @@ public class CommunitiesActivity extends BaseActivity {
 		public View getView(int position, View convertView, ViewGroup parentView) {
 			// If there is no view to recycle - create a new one
 			if (convertView == null) {
-				convertView = mInflater.inflate(R.layout.card, parentView,
+				convertView = mInflater.inflate(R.layout.card_community, parentView,
 						false);
 				final CardViewHolder holder = new CardViewHolder();
 				holder.text = (TextView) convertView
