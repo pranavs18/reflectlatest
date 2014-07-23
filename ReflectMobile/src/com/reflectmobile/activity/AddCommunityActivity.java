@@ -27,6 +27,7 @@ import com.reflectmobile.data.Network;
 import com.reflectmobile.utility.NetworkManager;
 import com.reflectmobile.utility.NetworkManager.HttpGetTask;
 import com.reflectmobile.utility.NetworkManager.HttpPostTask;
+import com.reflectmobile.utility.NetworkManager.HttpPutTask;
 import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
 
 import de.neofonie.mobile.app.android.widget.crouton.Crouton;
@@ -70,7 +71,18 @@ public class AddCommunityActivity extends BaseActivity {
 		view.setPadding(10, 0, 0, 0);
 
 		EditText communityName = (EditText) findViewById(R.id.community_name);
+		if (getIntent().hasExtra("name")) {
+			name = getIntent().getStringExtra("name");
+			communityName.setText(name);
+			nameSet = true;
+		}
+
 		EditText communityDesc = (EditText) findViewById(R.id.community_description);
+		if (getIntent().hasExtra("description")) {
+			description = getIntent().getStringExtra("description");
+			communityDesc.setText(description);
+			descriptionSet = true;
+		}
 
 		communityName.addTextChangedListener(new TextWatcher() {
 			@Override
@@ -140,6 +152,14 @@ public class AddCommunityActivity extends BaseActivity {
 						.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 				spinner.setAdapter(spinnerArrayAdapter);
 
+				if (getIntent().hasExtra("network_id")) {
+					int networkId = getIntent().getIntExtra("network_id", 0);
+					for (int count = 0; count < mNetworks.length; count++) {
+						if (mNetworks[count].getId() == networkId) {
+							spinner.setSelection(count+1);
+						}
+					}
+				}
 				spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
 
 					public void onItemSelected(AdapterView<?> parent,
@@ -163,8 +183,8 @@ public class AddCommunityActivity extends BaseActivity {
 				Log.e(TAG, "Error within GET request: " + reason);
 			}
 		};
-		new HttpGetTask(getNetworksHandler)
-				.execute(NetworkManager.hostName+"/api/networks");
+		new HttpGetTask(getNetworksHandler).execute(NetworkManager.hostName
+				+ "/api/networks");
 
 	}
 
@@ -206,6 +226,7 @@ public class AddCommunityActivity extends BaseActivity {
 			@Override
 			public void taskSuccessful(String result) {
 				Log.d("POST", result);
+				setResult(RESULT_OK);
 				finish();
 			}
 
@@ -223,9 +244,17 @@ public class AddCommunityActivity extends BaseActivity {
 			Log.e(TAG, "Error forming JSON");
 		}
 		String payload = communityData.toString();
-		new HttpPostTask(httpPostTaskHandler, payload)
-				.execute(NetworkManager.hostName+"/api/communities?network_id="
-						+ networkId);
+
+		if (getIntent().hasExtra("community_id")) {
+			int communityId = getIntent().getIntExtra("community_id", 0);
+			new HttpPutTask(httpPostTaskHandler, payload)
+					.execute(NetworkManager.hostName + "/api/communities/"
+							+ communityId);
+		} else {
+			new HttpPostTask(httpPostTaskHandler, payload)
+					.execute(NetworkManager.hostName
+							+ "/api/communities?network_id=" + networkId);
+		}
 
 	}
 

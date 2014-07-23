@@ -109,5 +109,7 @@
     <string name="tag_name">Tag Name</string>
     <string name="new_tag">New Tag</string>
     <string name="action_delete_photo">Delete Photo</string>
+    <string name="edit_community">Edit Community</string>
+    <string name="action_edit_community">Edit Community</string>
 
 </resources>

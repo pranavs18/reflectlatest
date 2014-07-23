@@ -13,7 +13,6 @@ import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Xfermode;
-import android.graphics.PorterDuff.Mode;
 
 public class ImageProcessor {
 	public final static int IMAGE_BORDER_WIDTH = 20;

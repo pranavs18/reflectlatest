@@ -16,7 +16,6 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.facebook.Session;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.plus.Plus;
 import com.reflectmobile.R;
@@ -150,13 +149,6 @@ public abstract class BaseActivity extends Activity {
 		}
 	}
 
-	private static void facebookSignOut() {
-		Session facebookSession = Session.getActiveSession();
-		if (!facebookSession.isClosed()) {
-			facebookSession.closeAndClearTokenInformation();
-		}
-	}
-
 	protected static void setSignInStatus(int newStatus) {
 		signInStatus = newStatus;
 	}
@@ -166,9 +158,6 @@ public abstract class BaseActivity extends Activity {
 		switch (signInStatus) {
 		case SIGNED_IN_GOOGLE:
 			googleSignOut();
-			break;
-		case SIGNED_IN_FACEBOOK:
-			facebookSignOut();
 			break;
 		default:
 			break;

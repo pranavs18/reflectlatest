@@ -432,7 +432,7 @@ public class AddPhotosActivity extends BaseActivity {
 			if (position > 0 && position == getCount() - 1) {
 				((TextView) convertView)
 						.setCompoundDrawablesWithIntrinsicBounds(
-								R.drawable.plus_white, 0, 0, 0);
+								R.drawable.plus_green, 0, 0, 0);
 				((TextView) convertView).setCompoundDrawablePadding(10);
 
 			} else {

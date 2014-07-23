@@ -53,6 +53,7 @@ public class CommunityActivity extends BaseActivity {
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		hasNavigationDrawer = false;
 		// It is important to set content view before calling super.onCreate
 		// because BaseActivity uses references to side menu
 		setContentView(R.layout.activity_community);
@@ -69,6 +70,10 @@ public class CommunityActivity extends BaseActivity {
 		ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) title
 				.getLayoutParams();
 		mlp.setMargins(5, 0, 0, 0);
+
+		getActionBar().setDisplayHomeAsUpEnabled(true);
+		ImageView view = (ImageView) findViewById(android.R.id.home);
+		view.setPadding(10, 0, 0, 0);
 
 		communityId = getIntent().getIntExtra("community_id", 0);
 
@@ -135,6 +140,9 @@ public class CommunityActivity extends BaseActivity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		// Handle action buttons
 		switch (item.getItemId()) {
+		case android.R.id.home:
+			onBackPressed();
+			return true;
 		// If the filter item is selected
 		case R.id.action_add_photo:
 			addPhoto();

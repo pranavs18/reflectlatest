@@ -12,9 +12,12 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.View.OnClickListener;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
+import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.ImageView.ScaleType;
 import android.widget.TextView;
 
@@ -50,7 +53,7 @@ public class CommunitiesActivity extends BaseActivity {
 				"fonts/RobotoCondensed-Regular.ttf"));
 
 		setTitle("My Communities");
-		
+
 		// Set margin before title
 		ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) title
 				.getLayoutParams();
@@ -73,8 +76,8 @@ public class CommunitiesActivity extends BaseActivity {
 			}
 		};
 
-		new HttpGetTask(getCommunitiesHandler)
-				.execute(NetworkManager.hostName+"/api/communities");
+		new HttpGetTask(getCommunitiesHandler).execute(NetworkManager.hostName
+				+ "/api/communities");
 
 	}
 
@@ -176,10 +179,10 @@ public class CommunitiesActivity extends BaseActivity {
 
 		// Uses common Android ViewHolder pattern
 		private class CardViewHolder {
-			public View view;
 			public ImageView image;
 			public TextView text;
 			public int position;
+			public ImageButton menu;
 		}
 
 		@Override
@@ -189,13 +192,12 @@ public class CommunitiesActivity extends BaseActivity {
 				convertView = mInflater.inflate(R.layout.card, parentView,
 						false);
 				final CardViewHolder holder = new CardViewHolder();
-				holder.view = convertView;
 				holder.text = (TextView) convertView
 						.findViewById(R.id.card_text);
 				holder.image = (ImageView) convertView
 						.findViewById(R.id.card_image);
 				holder.image.setScaleType(ScaleType.CENTER_CROP);
-				holder.view.setOnClickListener(new View.OnClickListener() {
+				holder.image.setOnClickListener(new View.OnClickListener() {
 					@Override
 					public void onClick(View v) {
 						int position = ((CardViewHolder) v.getTag()).position;
@@ -208,6 +210,11 @@ public class CommunitiesActivity extends BaseActivity {
 						mContext.startActivity(intent);
 					}
 				});
+				holder.menu = (ImageButton) convertView
+						.findViewById(R.id.card_menu);
+				holder.menu.setOnClickListener(onCardMenuClicked);
+				holder.menu.setTag(position);
+				holder.image.setTag(holder);
 				convertView.setTag(holder);
 			}
 
@@ -219,6 +226,47 @@ public class CommunitiesActivity extends BaseActivity {
 
 			return convertView;
 		}
+	}
+
+	private OnClickListener onCardMenuClicked = new OnClickListener() {
+
+		@Override
+		public void onClick(View v) {
+			final int position = (Integer) v.getTag();
+
+			// Creating the instance of PopupMenu
+			PopupMenu popup = new PopupMenu(CommunitiesActivity.this, v);
+			// Inflating the Popup using xml file
+			popup.getMenuInflater().inflate(R.menu.popup_community,
+					popup.getMenu());
+			// registering popup with OnMenuItemClickListener
+			popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+				public boolean onMenuItemClick(MenuItem item) {
+					switch (item.getItemId()) {
+					case R.id.action_edit_community:
+						editCommunity(position);
+						return true;
+					default:
+						return true;
+					}
+				}
+			});
+
+			// showing popup menu
+			popup.show();
+		}
+	};
+
+	private void editCommunity(int position) {
+		Intent intent = new Intent(CommunitiesActivity.this,
+				AddCommunityActivity.class);
+		Community community = communities[position];
+		intent.putExtra("network_id", community.getNetworkId());
+		intent.putExtra("name", community.getName());
+		intent.putExtra("description", community.getDescription());
+		intent.putExtra("community_id", community.getId());
+
+		startActivityForResult(intent, CODE_ADD_COMMUNITY);
 	}
 
 }

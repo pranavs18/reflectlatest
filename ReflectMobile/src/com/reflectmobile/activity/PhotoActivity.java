@@ -1031,8 +1031,6 @@ public class PhotoActivity extends BaseActivity {
 		}
 	};
 
-	private OnTouchListener onDeleteTagTouchListener = null;
-
 	@SuppressLint("ClickableViewAccessibility")
 	private OnTouchListener onEditTagTouchListener = new OnTouchListener() {
 		float prevBitmapX = 0;

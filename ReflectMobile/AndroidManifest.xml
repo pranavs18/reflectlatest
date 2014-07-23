@@ -67,7 +67,7 @@
             android:label=""
             android:parentActivityName="com.reflectmobile.activity.BaseActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/CustomActionBarTheme" >
+            android:theme="@style/ContextualActionBarTheme" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.reflectmobile.activity.BaseActivity" />
@@ -79,7 +79,7 @@
             android:label=""
             android:parentActivityName="com.reflectmobile.activity.BaseActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/CustomActionBarTheme" >
+            android:theme="@style/ContextualActionBarTheme" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.reflectmobile.activity.BaseActivity" />

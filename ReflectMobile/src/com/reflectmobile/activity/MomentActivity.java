@@ -37,6 +37,7 @@ public class MomentActivity extends BaseActivity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		hasNavigationDrawer = false;
 		// It is important to set content view before calling super.onCreate
 		// because BaseActivity uses references to side menu
 		setContentView(R.layout.activity_moment);
@@ -53,6 +54,10 @@ public class MomentActivity extends BaseActivity {
 		ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) title
 				.getLayoutParams();
 		mlp.setMargins(5, 0, 0, 0);
+
+		getActionBar().setDisplayHomeAsUpEnabled(true);
+		ImageView view = (ImageView) findViewById(android.R.id.home);
+		view.setPadding(10, 0, 0, 0);
 
 		momentId = getIntent().getIntExtra("moment_id", 0);
 		communityId = getIntent().getIntExtra("community_id", 0);
@@ -101,6 +106,9 @@ public class MomentActivity extends BaseActivity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		// Handle action buttons
 		switch (item.getItemId()) {
+		case android.R.id.home:
+			onBackPressed();
+			return true;
 		case R.id.action_add_photo:
 			addPhoto();
 			return true;

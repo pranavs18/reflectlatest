@@ -12,6 +12,7 @@ public class Community {
 	private static String TAG = "Community";
 
 	private int id;
+	private int networkId;
 	private String name;
 	private String description;
 	private ArrayList<Moment> momentList;
@@ -101,10 +102,14 @@ public class Community {
 				JSONObject communityData = mJSONArray.getJSONObject(mJSONArray
 						.length() - 1 - count);
 				String communityName = communityData.getString("name");
+				String communityDesc = communityData.getString("description");
 				int communityId = communityData.getInt("id");
+				int networkId = communityData.getInt("network_id");
 
 				communities[count].setName(communityName);
+				communities[count].setDescription(communityDesc);
 				communities[count].setId(communityId);
+				communities[count].setNetworkId(networkId);
 
 				if (!communityData.isNull("first_photo")) {
 					JSONObject firstPhoto = communityData
@@ -131,10 +136,11 @@ public class Community {
 			String communityName = communityJSONObject.getString("name");
 			String communityDescription = communityJSONObject
 					.getString("description");
+			int networkId = communityJSONObject.getInt("network_id");
 
 			Community community = new Community(communityID, communityName,
 					communityDescription, communityJSONObject.toString());
-
+			community.setNetworkId(networkId);
 			// get moments
 			JSONArray momentJSONArray = new JSONArray(
 					communityJSONObject.getString("moments"));
@@ -170,5 +176,13 @@ public class Community {
 			Log.e(TAG, "Error parsing JSON");
 		}
 		return null;
+	}
+
+	public int getNetworkId() {
+		return networkId;
+	}
+
+	public void setNetworkId(int networkId) {
+		this.networkId = networkId;
 	}
 }
