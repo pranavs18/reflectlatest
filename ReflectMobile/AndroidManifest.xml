@@ -35,7 +35,6 @@
             android:name=".activity.LoginActivity"
             android:configChanges="orientation"
             android:label="@string/title_activity_login"
-            android:parentActivityName="com.reflectmobile.activity.BaseActivity"
             android:screenOrientation="portrait"
             android:theme="@android:style/Theme.Holo.NoActionBar" >
             <meta-data
@@ -53,7 +52,6 @@
             android:configChanges="orientation"
             android:icon="@drawable/action_bar_icon_logo"
             android:label=""
-            android:parentActivityName="com.reflectmobile.activity.BaseActivity"
             android:screenOrientation="portrait"
             android:theme="@style/CustomActionBarTheme" >
             <meta-data
@@ -65,7 +63,6 @@
             android:configChanges="orientation"
             android:icon="@drawable/action_bar_icon_logo"
             android:label=""
-            android:parentActivityName="com.reflectmobile.activity.BaseActivity"
             android:screenOrientation="portrait"
             android:theme="@style/ContextualActionBarTheme" >
             <meta-data
@@ -77,7 +74,6 @@
             android:configChanges="orientation"
             android:icon="@drawable/action_bar_icon_logo"
             android:label=""
-            android:parentActivityName="com.reflectmobile.activity.BaseActivity"
             android:screenOrientation="portrait"
             android:theme="@style/ContextualActionBarTheme" >
             <meta-data
@@ -89,7 +85,6 @@
             android:configChanges="orientation"
             android:icon="@drawable/action_bar_icon_logo"
             android:label=""
-            android:parentActivityName="com.reflectmobile.activity.BaseActivity"
             android:screenOrientation="portrait"
             android:theme="@style/ContextualActionBarTheme" >
             <meta-data
@@ -101,7 +96,6 @@
             android:configChanges="orientation"
             android:icon="@drawable/action_bar_icon_logo"
             android:label="@string/title_photo_gallery"
-            android:parentActivityName="com.reflectmobile.activity.BaseActivity"
             android:screenOrientation="portrait"
             android:theme="@style/ContextualActionBarTheme" >
             <meta-data
@@ -113,7 +107,6 @@
             android:configChanges="orientation"
             android:icon="@drawable/action_bar_icon_logo"
             android:label="@string/add_new_community"
-            android:parentActivityName="com.reflectmobile.activity.BaseActivity"
             android:screenOrientation="portrait"
             android:theme="@style/ContextualActionBarTheme" >
             <meta-data
@@ -125,7 +118,6 @@
             android:configChanges="orientation"
             android:icon="@drawable/action_bar_icon_logo"
             android:label="@string/add_new_story"
-            android:parentActivityName="com.reflectmobile.activity.BaseActivity"
             android:screenOrientation="portrait"
             android:theme="@style/ContextualActionBarTheme"
             android:windowSoftInputMode="stateVisible" >
@@ -138,7 +130,6 @@
             android:configChanges="orientation"
             android:icon="@drawable/action_bar_icon_logo"
             android:label="@string/add_new_detail"
-            android:parentActivityName="com.reflectmobile.activity.BaseActivity"
             android:screenOrientation="portrait"
             android:theme="@style/ContextualActionBarTheme" >
             <meta-data
@@ -150,7 +141,6 @@
             android:configChanges="orientation"
             android:icon="@drawable/action_bar_icon_logo"
             android:label="@string/add_new_moment"
-            android:parentActivityName="com.reflectmobile.activity.BaseActivity"
             android:screenOrientation="portrait"
             android:theme="@style/ContextualActionBarTheme" >
             <meta-data
@@ -162,7 +152,6 @@
             android:configChanges="orientation"
             android:icon="@drawable/action_bar_icon_logo"
             android:label="@string/add_photos"
-            android:parentActivityName="com.reflectmobile.activity.BaseActivity"
             android:screenOrientation="portrait"
             android:theme="@style/ContextualActionBarTheme" >
             <meta-data
@@ -174,7 +163,6 @@
             android:configChanges="orientation"
             android:icon="@drawable/action_bar_icon_logo"
             android:label="@string/add_new_sound"
-            android:parentActivityName="com.reflectmobile.activity.BaseActivity"
             android:screenOrientation="portrait"
             android:theme="@style/ContextualActionBarTheme" >
             <meta-data

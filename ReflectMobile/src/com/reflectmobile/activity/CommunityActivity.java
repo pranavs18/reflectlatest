@@ -22,7 +22,9 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.Toast;
 import android.widget.ImageView.ScaleType;
 import android.widget.ListView;
@@ -32,6 +34,7 @@ import com.reflectmobile.R;
 import com.reflectmobile.data.Community;
 import com.reflectmobile.data.Moment;
 import com.reflectmobile.utility.NetworkManager;
+import com.reflectmobile.utility.NetworkManager.HttpDeleteTask;
 import com.reflectmobile.utility.NetworkManager.HttpGetImageTask;
 import com.reflectmobile.utility.NetworkManager.HttpGetTask;
 import com.reflectmobile.utility.NetworkManager.HttpImageTaskHandler;
@@ -50,7 +53,7 @@ public class CommunityActivity extends BaseActivity {
 
 	private String inviteLink = "";
 	String photoPath;
-	
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		hasNavigationDrawer = false;
@@ -97,34 +100,28 @@ public class CommunityActivity extends BaseActivity {
 			}
 		};
 
-		new HttpGetTask(getCommunityHandler)
-				.execute(NetworkManager.hostName+"/api/communities/"
-						+ communityId);
+		new HttpGetTask(getCommunityHandler).execute(NetworkManager.hostName
+				+ "/api/communities/" + communityId);
 		// Retreive data from the web
-    	final HttpTaskHandler getInviteHandler = new HttpTaskHandler() {
+		final HttpTaskHandler getInviteHandler = new HttpTaskHandler() {
 			@Override
 			public void taskSuccessful(String result) {
-               Log.d(TAG, result);	
-               inviteLink = inviteLink + result;
-               
+				Log.d(TAG, result);
+				inviteLink = inviteLink + result;
+
 			}
 
 			@Override
 			public void taskFailed(String reason) {
 				Log.e(TAG, "Error within GET request: " + reason);
-				
+
 			}
-			
-			
+
 		};
-        
-		new HttpGetTask(getInviteHandler)
-				.execute(NetworkManager.hostName+"/api/invites/link/"
-						+ communityId);
-        Log.d(TAG, NetworkManager.hostName+"/api/invites/link/"
-				+ communityId );
-      
-		
+
+		new HttpGetTask(getInviteHandler).execute(NetworkManager.hostName
+				+ "/api/invites/link/" + communityId);
+		Log.d(TAG, NetworkManager.hostName + "/api/invites/link/" + communityId);
 
 	}
 
@@ -143,7 +140,7 @@ public class CommunityActivity extends BaseActivity {
 		case android.R.id.home:
 			onBackPressed();
 			return true;
-		// If the filter item is selected
+			// If the filter item is selected
 		case R.id.action_add_photo:
 			addPhoto();
 			return true;
@@ -235,28 +232,30 @@ public class CommunityActivity extends BaseActivity {
 							}
 						}).setCustomTitle(title).setCancelable(false).show();
 	}
-	
-    public void inviteToCommunity(){
-        Intent i = new Intent(Intent.ACTION_SEND);
-    	i.setType("message/rfc822");
-    	i.putExtra(Intent.EXTRA_EMAIL  , new String[]{""});
-    	i.putExtra(Intent.EXTRA_SUBJECT, "Rewyndr Community Invite Link");
-    	Log.d(TAG, "sending the generated invite link " + inviteLink);
-    	getIntent().addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-        
-        i.putExtra(Intent.EXTRA_TEXT , inviteLink);
-    	
-    	try {
-    	    startActivity(Intent.createChooser(i, "Send mail..."));
-    		} 
-    	catch (android.content.ActivityNotFoundException ex) {
-    	    Toast.makeText(CommunityActivity.this, "There are no email clients installed.", Toast.LENGTH_SHORT).show();
-    		}
-    	Toast.makeText(CommunityActivity.this, "Just one more step.... ", Toast.LENGTH_SHORT).show();
-    	//Log.d(sendInvite.class.getSimpleName(), "Sending Invitation.... ");
-    	//inviteLink = "";
-    
-    }
+
+	public void inviteToCommunity() {
+		Intent i = new Intent(Intent.ACTION_SEND);
+		i.setType("message/rfc822");
+		i.putExtra(Intent.EXTRA_EMAIL, new String[] { "" });
+		i.putExtra(Intent.EXTRA_SUBJECT, "Rewyndr Community Invite Link");
+		Log.d(TAG, "sending the generated invite link " + inviteLink);
+		getIntent().addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+
+		i.putExtra(Intent.EXTRA_TEXT, inviteLink);
+
+		try {
+			startActivity(Intent.createChooser(i, "Send mail..."));
+		} catch (android.content.ActivityNotFoundException ex) {
+			Toast.makeText(CommunityActivity.this,
+					"There are no email clients installed.", Toast.LENGTH_SHORT)
+					.show();
+		}
+		Toast.makeText(CommunityActivity.this, "Just one more step.... ",
+				Toast.LENGTH_SHORT).show();
+		// Log.d(sendInvite.class.getSimpleName(), "Sending Invitation.... ");
+		// inviteLink = "";
+
+	}
 
 	// Specific adapter for Community Activity
 	private class CardListViewAdapter extends BaseAdapter {
@@ -319,6 +318,7 @@ public class CommunityActivity extends BaseActivity {
 			public Button totalPhoto;
 			public ImageView[] photos = new ImageView[3];
 			public TextView people;
+			public ImageButton menu;
 		}
 
 		@Override
@@ -358,6 +358,11 @@ public class CommunityActivity extends BaseActivity {
 						mContext.startActivity(intent);
 					}
 				});
+				holder.menu = (ImageButton) convertView
+						.findViewById(R.id.card_menu);
+				holder.menu.setOnClickListener(onCardMenuClicked);
+				holder.menu.setTag(position);
+				
 				convertView.setTag(holder);
 			}
 
@@ -471,6 +476,69 @@ public class CommunityActivity extends BaseActivity {
 			finish();
 			startActivity(intent);
 		}
+	}
+
+	private OnClickListener onCardMenuClicked = new OnClickListener() {
+
+		@Override
+		public void onClick(View v) {
+			final int position = (Integer) v.getTag();
+
+			// Creating the instance of PopupMenu
+			PopupMenu popup = new PopupMenu(CommunityActivity.this, v);
+			// Inflating the Popup using xml file
+			popup.getMenuInflater().inflate(R.menu.popup_moment,
+					popup.getMenu());
+			// registering popup with OnMenuItemClickListener
+			popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+				public boolean onMenuItemClick(MenuItem item) {
+					switch (item.getItemId()) {
+					case R.id.action_edit_moment:
+						editMoment(position);
+						return true;
+					case R.id.action_delete_moment:
+						deleteMoment(position);
+						return true;
+					default:
+						return true;
+					}
+				}
+			});
+
+			// showing popup menu
+			popup.show();
+		}
+	};
+
+	private void editMoment(int position) {
+		Intent intent = new Intent(CommunityActivity.this,
+				AddMomentActivity.class);
+		Moment moment = community.getMoment(position);
+		intent.putExtra("name", moment.getName());
+		intent.putExtra("community_id", community.getId());
+		intent.putExtra("moment_id", moment.getId());
+
+		startActivityForResult(intent, CODE_ADD_MOMENT);
+	}
+
+	private void deleteMoment(int position) {
+		Moment moment = community.getMoment(position);
+		HttpTaskHandler httpDeleteTaskHandler = new HttpTaskHandler() {
+
+			@Override
+			public void taskSuccessful(String result) {
+				Intent intent = getIntent();
+				finish();
+				startActivity(intent);
+			}
+
+			@Override
+			public void taskFailed(String reason) {
+				Log.e(TAG, "Error deleting memory");
+			}
+		};
+		new HttpDeleteTask(httpDeleteTaskHandler)
+				.execute(NetworkManager.hostName + "/api/moments/" + moment.getId());
 	}
 
 }

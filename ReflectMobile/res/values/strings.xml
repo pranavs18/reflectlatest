@@ -111,5 +111,7 @@
     <string name="action_delete_photo">Delete Photo</string>
     <string name="edit_community">Edit Community</string>
     <string name="action_edit_community">Edit Community</string>
+    <string name="action_edit_moment">Edit Moment</string>
+    <string name="action_delete_moment">Delete Moment</string>
 
 </resources>

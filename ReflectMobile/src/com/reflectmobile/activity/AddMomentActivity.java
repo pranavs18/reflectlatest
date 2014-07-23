@@ -20,6 +20,7 @@ import android.widget.TextView;
 import com.reflectmobile.R;
 import com.reflectmobile.utility.NetworkManager;
 import com.reflectmobile.utility.NetworkManager.HttpPostTask;
+import com.reflectmobile.utility.NetworkManager.HttpPutTask;
 import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
 
 import de.neofonie.mobile.app.android.widget.crouton.Crouton;
@@ -59,7 +60,12 @@ public class AddMomentActivity extends BaseActivity {
 		communityId = getIntent().getIntExtra("community_id", 0);
 
 		EditText momentName = (EditText) findViewById(R.id.moment_name);
-
+		if (getIntent().hasExtra("name")) {
+			name = getIntent().getStringExtra("name");
+			momentName.setText(name);
+			nameSet = true;
+		}
+		
 		momentName.addTextChangedListener(new TextWatcher() {
 			@Override
 			public void onTextChanged(CharSequence s, int start, int before,
@@ -136,8 +142,16 @@ public class AddMomentActivity extends BaseActivity {
 			Log.e(TAG, "Error forming JSON");
 		}
 		String payload = momentData.toString();
-		new HttpPostTask(httpPostTaskHandler, payload)
-				.execute(NetworkManager.hostName+"/api/communities/"
-						+ communityId + "/moments");
+		
+		if (getIntent().hasExtra("moment_id")) {
+			int momentId = getIntent().getIntExtra("moment_id", 0);
+			new HttpPutTask(httpPostTaskHandler, payload)
+					.execute(NetworkManager.hostName + "/api/moments/"
+							+ momentId);
+		} else {
+			new HttpPostTask(httpPostTaskHandler, payload)
+					.execute(NetworkManager.hostName + "/api/communities/"
+							+ communityId + "/moments");
+		}
 	}
 }
