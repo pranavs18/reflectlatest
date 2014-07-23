@@ -299,6 +299,9 @@ public class PhotoActivity extends BaseActivity {
 		case R.id.action_delete_tag:
 			deleteTag();
 			return true;
+		case R.id.action_delete_photo:
+			deletePhoto(currentPhotoId);
+			return true;
 		case android.R.id.home:
 			onBackPressed();
 			return true;
@@ -616,6 +619,23 @@ public class PhotoActivity extends BaseActivity {
 		};
 		new HttpDeleteTask(httpDeleteTaskHandler)
 				.execute(NetworkManager.hostName + "/api/memories/" + id);
+	}
+	
+	private void deletePhoto(int id) {
+		HttpTaskHandler httpDeleteTaskHandler = new HttpTaskHandler() {
+
+			@Override
+			public void taskSuccessful(String result) {
+				onBackPressed();
+			}
+
+			@Override
+			public void taskFailed(String reason) {
+				Log.e(TAG, "Error deleting memory");
+			}
+		};
+		new HttpDeleteTask(httpDeleteTaskHandler)
+				.execute(NetworkManager.hostName + "/api/photos/" + id);
 	}
 
 	private void showMenuShowTags() {
