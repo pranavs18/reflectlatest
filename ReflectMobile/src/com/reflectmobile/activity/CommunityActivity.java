@@ -326,7 +326,7 @@ public class CommunityActivity extends BaseActivity {
 			// If there is no view to recycle - create a new one
 			Moment moment = community.getMoment(position);
 			if (convertView == null) {
-				convertView = mInflater.inflate(R.layout.card_community,
+				convertView = mInflater.inflate(R.layout.card_moment,
 						parentView, false);
 				final CardViewHolder holder = new CardViewHolder();
 				holder.name = (TextView) convertView
