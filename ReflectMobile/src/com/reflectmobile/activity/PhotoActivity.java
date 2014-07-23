@@ -132,7 +132,7 @@ public class PhotoActivity extends BaseActivity {
 	private Tag currentTag = null;
 
 	private boolean newTagMode = false;
-	
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		hasNavigationDrawer = false;
@@ -221,8 +221,7 @@ public class PhotoActivity extends BaseActivity {
 		if (newTagMode) {
 			newTagMode = false;
 			showTags();
-		}
-		else {
+		} else {
 			Intent intent = new Intent(PhotoActivity.this, MomentActivity.class);
 			intent.putExtra("moment_id", momentId);
 			intent.putExtra("community_id", communityId);
@@ -337,6 +336,9 @@ public class PhotoActivity extends BaseActivity {
 		currentPhoto = moment.getPhoto(position);
 		currentPhotoId = currentPhoto.getId();
 
+		TextView date = (TextView) findViewById(R.id.date);
+		date.setText(currentPhoto.getDate());
+
 		ViewPager viewPager = (ViewPager) findViewById(R.id.view_pager);
 		currentImageView = (ImageView) viewPager
 				.findViewWithTag(currentPhotoIndex);
@@ -424,6 +426,25 @@ public class PhotoActivity extends BaseActivity {
 					loadMemories(currentPhotoId);
 				} catch (JSONException e) {
 					Log.e(TAG, "Error parse the tag json");
+				}
+
+				TextView people = (TextView) findViewById(R.id.people);
+				ArrayList<Tag> tagList = currentPhoto.getTagList();
+				if (tagList.size() > 0) {
+					if (tagList.size() > 2) {
+						String caption = tagList.get(0).getName() + ", "
+								+ tagList.get(1).getName() + "and "
+								+ (tagList.size() - 2) + " more";
+						people.setText(caption);
+					} else if (tagList.size() == 2) {
+						String caption = tagList.get(0).getName() + " and "
+								+ tagList.get(1).getName();
+						people.setText(caption);
+					} else {
+						people.setText(tagList.get(0).getName());
+					}
+				} else {
+					people.setText("No tags");
 				}
 			}
 
@@ -620,7 +641,7 @@ public class PhotoActivity extends BaseActivity {
 		new HttpDeleteTask(httpDeleteTaskHandler)
 				.execute(NetworkManager.hostName + "/api/memories/" + id);
 	}
-	
+
 	private void deletePhoto(int id) {
 		HttpTaskHandler httpDeleteTaskHandler = new HttpTaskHandler() {
 
@@ -802,7 +823,7 @@ public class PhotoActivity extends BaseActivity {
 
 	private void addTag() {
 		newTagMode = true;
-		
+
 		// Show corresponding menu
 		showMenuAddTag();
 

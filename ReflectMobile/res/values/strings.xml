@@ -113,5 +113,6 @@
     <string name="action_edit_community">Edit Community</string>
     <string name="action_edit_moment">Edit Moment</string>
     <string name="action_delete_moment">Delete Moment</string>
+    <string name="no_tags">No tags</string>
 
 </resources>

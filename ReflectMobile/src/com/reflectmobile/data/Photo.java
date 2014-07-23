@@ -1,6 +1,9 @@
 package com.reflectmobile.data;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Locale;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -18,6 +21,7 @@ public class Photo {
 	private String imageMediumURL;
 	private String imageMediumThumbURL;
 	private String imageLargeURL;
+	private String date;
 	private ArrayList<Tag> tagList;
 
 	private Drawable mediumDrawable;
@@ -64,6 +68,14 @@ public class Photo {
 		this.imageLargeURL = imageLargeURL;
 	}
 
+	public String getDate(){
+		return date;
+	}
+	
+	public void setDate(String date){
+		this.date = date;
+	}
+	
 	public ArrayList<Tag> getTagList() {
 		return tagList;
 	}
@@ -91,6 +103,19 @@ public class Photo {
 			String photoImageLargeURL = photoJSONObject
 					.getString("image_large_url");
 			photo.setImageLargeURL(photoImageLargeURL);
+			String takenAt = photoJSONObject.getString("taken_at");
+			SimpleDateFormat formatFrom = new SimpleDateFormat(
+					"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
+			SimpleDateFormat formatTo = new SimpleDateFormat(
+					"MMMM dd yyyy", Locale.US);
+			try {
+				takenAt = formatTo.format(formatFrom.parse(takenAt));
+			} catch (ParseException e) {
+				e.printStackTrace();
+				Log.e(TAG, "Error parsing date");
+			}
+			photo.setDate(takenAt);
+			
 			return photo;
 		} catch (JSONException e) {
 			Log.e(TAG, "Error parsing JSON");

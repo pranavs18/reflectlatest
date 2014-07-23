@@ -85,7 +85,7 @@
                 android:id="@+id/people"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/whos_here"
+                android:text="@string/no_tags"
                 android:textColor="@color/black"
                 android:textSize="14sp" />
         </LinearLayout>
