@@ -2,6 +2,9 @@ package com.reflectmobile.activity;
 
 import java.util.ArrayList;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -33,6 +36,7 @@ import android.widget.TextView;
 import com.reflectmobile.R;
 import com.reflectmobile.data.Community;
 import com.reflectmobile.data.Moment;
+import com.reflectmobile.data.Tag;
 import com.reflectmobile.utility.NetworkManager;
 import com.reflectmobile.utility.NetworkManager.HttpDeleteTask;
 import com.reflectmobile.utility.NetworkManager.HttpGetImageTask;
@@ -45,6 +49,7 @@ public class CommunityActivity extends BaseActivity {
 	private static String TAG = "CommunityActivity";
 	private Community community;
 	private static int communityId;
+	private CardListViewAdapter cardListViewAdapter;
 
 	// Static identifier for receiving camera apps call back
 	private static final int CODE_ADD_MOMENT = 101;
@@ -90,8 +95,9 @@ public class CommunityActivity extends BaseActivity {
 				setTitle(community.getName());
 				// set card listview
 				ListView cardListView = (ListView) findViewById(R.id.listview_community_card_list);
-				cardListView.setAdapter(new CardListViewAdapter(
-						CommunityActivity.this));
+				cardListViewAdapter = new CardListViewAdapter(
+						CommunityActivity.this);
+				cardListView.setAdapter(cardListViewAdapter);
 			}
 
 			@Override
@@ -322,9 +328,10 @@ public class CommunityActivity extends BaseActivity {
 		}
 
 		@Override
-		public View getView(int position, View convertView, ViewGroup parentView) {
+		public View getView(final int position, View convertView, ViewGroup parentView) {
 			// If there is no view to recycle - create a new one
-			Moment moment = community.getMoment(position);
+			final Moment moment = community.getMoment(position);
+
 			if (convertView == null) {
 				convertView = mInflater.inflate(R.layout.card_moment,
 						parentView, false);
@@ -362,13 +369,14 @@ public class CommunityActivity extends BaseActivity {
 						.findViewById(R.id.card_menu);
 				holder.menu.setOnClickListener(onCardMenuClicked);
 				holder.menu.setTag(position);
-				
+
 				convertView.setTag(holder);
 			}
 
 			final CardViewHolder holder = (CardViewHolder) convertView.getTag();
+			
 			holder.totalPhoto.setTag(position);
-
+			setPeopleNames(position, holder.people);
 			holder.name.setText(moment.getName());
 
 			// set moment date
@@ -380,8 +388,7 @@ public class CommunityActivity extends BaseActivity {
 			} else {
 				holder.totalPhoto.setText(moment.getNumOfPhotos() + " photos");
 			}
-			// set moment people
-			holder.people.setText("Ellen Reflect, John Baker and 3 others");
+
 			// set moment photos
 			for (int count = 0; count < 3; count++) {
 				if (count < numOfPhotos) {
@@ -408,10 +415,62 @@ public class CommunityActivity extends BaseActivity {
 					holder.photos[count].setScaleType(ScaleType.CENTER);
 				}
 			}
+			
+			if (moment.getPeopleList() == null) {
+				moment.setPeopleList(new ArrayList<String>());
+				for (int count = 0; count < moment.getNumOfPhotos(); count++) {
+					final HttpTaskHandler getTagsHandler = new HttpTaskHandler() {
+						@Override
+						public void taskSuccessful(String result) {
+							Log.d(TAG, result);
+							JSONArray tagJSONArray;
+							try {
+								tagJSONArray = new JSONArray(result);
+								for (int j = 0; j <= tagJSONArray.length() - 1; j++) {
+									Tag tag = Tag.getTagInfo(tagJSONArray
+											.getString(j));
+									moment.addPerson(tag.getName());
+								}
+							} catch (JSONException e) {
+								Log.e(TAG, "Error parse the tag json");
+							}
+							notifyDataSetChanged();
+						}
+
+						@Override
+						public void taskFailed(String reason) {
+							Log.e(TAG, "Error downloading the tag");
+						}
+					};
+					
+					new HttpGetTask(getTagsHandler)
+							.execute(NetworkManager.hostName + "/api/photos/"
+									+ moment.getPhoto(count).getId() + "/tags");
+				}
+			}
+
 			// set moment photo list
 			return convertView;
 		}
 
+		private void setPeopleNames(int momentId, TextView people) {
+			ArrayList<String> tagList = community.getMoment(momentId)
+					.getPeopleList();
+			if (tagList.size() > 0) {
+				if (tagList.size() > 2) {
+					String caption = tagList.get(0) + ", " + tagList.get(1)
+							+ " and " + (tagList.size() - 2) + " more";
+					people.setText(caption);
+				} else if (tagList.size() == 2) {
+					String caption = tagList.get(0) + " and " + tagList.get(1);
+					people.setText(caption);
+				} else {
+					people.setText(tagList.get(0));
+				}
+			} else {
+				people.setText("No people tagged");
+			}
+		}
 	}
 
 	private class FilterListViewAdapter extends BaseAdapter {
@@ -538,7 +597,8 @@ public class CommunityActivity extends BaseActivity {
 			}
 		};
 		new HttpDeleteTask(httpDeleteTaskHandler)
-				.execute(NetworkManager.hostName + "/api/moments/" + moment.getId());
+				.execute(NetworkManager.hostName + "/api/moments/"
+						+ moment.getId());
 	}
 
 }

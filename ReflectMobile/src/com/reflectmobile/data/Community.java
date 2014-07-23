@@ -157,12 +157,14 @@ public class Community {
 				Moment moment = new Moment(momentID, momentName,
 						momentJSONObject.toString());
 
-				JSONObject firstPhoto = momentJSONObject
-						.getJSONObject("first_photo");
+				String firstPhoto = momentJSONObject
+						.getString("first_photo");
 				String date = momentJSONObject.getString("date");
 				if (date.equals("null")) {
 					if (firstPhoto != null) {
-						String takenAt = firstPhoto.getString("taken_at");
+						JSONObject JSONFirstPhoto = momentJSONObject
+								.getJSONObject("first_photo");
+						String takenAt = JSONFirstPhoto.getString("taken_at");
 						SimpleDateFormat formatFrom = new SimpleDateFormat(
 								"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
 						SimpleDateFormat formatTo = new SimpleDateFormat(
@@ -176,7 +178,7 @@ public class Community {
 						}
 						moment.setDate(takenAt);
 					} else {
-						moment.setDate("3 July 2014");
+						moment.setDate("No date");
 					}
 				} else {
 					moment.setDate(date);

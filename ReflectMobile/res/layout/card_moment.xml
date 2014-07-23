@@ -118,7 +118,7 @@
             android:layout_marginLeft="6dp"
             android:layout_toRightOf="@+id/image_community_card_people"
             android:gravity="center"
-            android:text="@string/people_names"
+            android:text=""
             android:textColor="@android:color/black" />
 
         <ImageButton

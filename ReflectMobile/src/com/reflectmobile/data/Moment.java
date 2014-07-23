@@ -15,6 +15,7 @@ public class Moment {
 	private String name;
 	private String date;
 	private ArrayList<Photo> photoList;
+	private ArrayList<String> peopleList = null;
 	private String jsonString;
 
 	public Moment(int id, String name, String jsonString) {
@@ -102,4 +103,17 @@ public class Moment {
 		}
 		return null;
 	}
+
+	public ArrayList<String> getPeopleList() {
+		return peopleList;
+	}
+
+	public void setPeopleList(ArrayList<String> peopleList) {
+		this.peopleList = peopleList;
+	}
+	
+	public void addPerson(String person) {
+		this.peopleList.add(person);
+	}
+	
 }
