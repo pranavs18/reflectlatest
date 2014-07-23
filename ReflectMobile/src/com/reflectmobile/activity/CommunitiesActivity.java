@@ -114,6 +114,13 @@ public class CommunitiesActivity extends BaseActivity {
 		startActivityForResult(intent, CODE_ADD_PHOTO);
 	}
 
+	private void addPhotoToCommunity(int communityId) {
+		Intent intent = new Intent(CommunitiesActivity.this,
+				GalleryActivity.class);
+		intent.putExtra("community_id", communityId);
+		startActivityForResult(intent, CODE_ADD_PHOTO);
+	}
+
 	public void createCommunity() {
 		Intent intent = new Intent(CommunitiesActivity.this,
 				AddCommunityActivity.class);
@@ -183,17 +190,20 @@ public class CommunitiesActivity extends BaseActivity {
 			public TextView text;
 			public int position;
 			public ImageButton menu;
+			public TextView hiddenText;
 		}
 
 		@Override
 		public View getView(int position, View convertView, ViewGroup parentView) {
 			// If there is no view to recycle - create a new one
 			if (convertView == null) {
-				convertView = mInflater.inflate(R.layout.card_community, parentView,
-						false);
+				convertView = mInflater.inflate(R.layout.card_community,
+						parentView, false);
 				final CardViewHolder holder = new CardViewHolder();
 				holder.text = (TextView) convertView
 						.findViewById(R.id.card_text);
+				holder.hiddenText = (TextView) convertView
+						.findViewById(R.id.add_photos);
 				holder.image = (ImageView) convertView
 						.findViewById(R.id.card_image);
 				holder.image.setScaleType(ScaleType.CENTER_CROP);
@@ -201,13 +211,17 @@ public class CommunitiesActivity extends BaseActivity {
 					@Override
 					public void onClick(View v) {
 						int position = ((CardViewHolder) v.getTag()).position;
-						Intent intent = new Intent(mContext,
-								CommunityActivity.class);
-						intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-								| Intent.FLAG_ACTIVITY_CLEAR_TASK);
-						intent.putExtra("community_id",
-								communities[position].getId());
-						mContext.startActivity(intent);
+						if (mDrawables[position] != null) {
+							Intent intent = new Intent(mContext,
+									CommunityActivity.class);
+							intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+									| Intent.FLAG_ACTIVITY_CLEAR_TASK);
+							intent.putExtra("community_id",
+									communities[position].getId());
+							mContext.startActivity(intent);
+						} else {
+							addPhotoToCommunity(communities[position].getId());
+						}
 					}
 				});
 				holder.menu = (ImageButton) convertView
@@ -223,6 +237,13 @@ public class CommunitiesActivity extends BaseActivity {
 
 			holder.text.setText(communities[position].getName());
 			holder.image.setImageDrawable(mDrawables[position]);
+			if (mDrawables[position] == null) {
+				holder.hiddenText.setTypeface(Typeface.createFromAsset(
+						getAssets(), "fonts/RobotoCondensed-Regular.ttf"));
+				holder.hiddenText.setVisibility(View.VISIBLE);
+			} else {
+				holder.hiddenText.setVisibility(View.GONE);
+			}
 
 			return convertView;
 		}
