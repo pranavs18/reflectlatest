@@ -427,25 +427,7 @@ public class PhotoActivity extends BaseActivity {
 				} catch (JSONException e) {
 					Log.e(TAG, "Error parse the tag json");
 				}
-
-				TextView people = (TextView) findViewById(R.id.people);
-				ArrayList<Tag> tagList = currentPhoto.getTagList();
-				if (tagList.size() > 0) {
-					if (tagList.size() > 2) {
-						String caption = tagList.get(0).getName() + ", "
-								+ tagList.get(1).getName() + "and "
-								+ (tagList.size() - 2) + " more";
-						people.setText(caption);
-					} else if (tagList.size() == 2) {
-						String caption = tagList.get(0).getName() + " and "
-								+ tagList.get(1).getName();
-						people.setText(caption);
-					} else {
-						people.setText(tagList.get(0).getName());
-					}
-				} else {
-					people.setText("No tags");
-				}
+				setPeopleNames();
 			}
 
 			@Override
@@ -456,6 +438,27 @@ public class PhotoActivity extends BaseActivity {
 
 		new HttpGetTask(getTagsHandler).execute(NetworkManager.hostName
 				+ "/api/photos/" + currentPhotoId + "/tags");
+	}
+
+	private void setPeopleNames() {
+		TextView people = (TextView) findViewById(R.id.people);
+		ArrayList<Tag> tagList = currentPhoto.getTagList();
+		if (tagList.size() > 0) {
+			if (tagList.size() > 2) {
+				String caption = tagList.get(0).getName() + ", "
+						+ tagList.get(1).getName() + "and "
+						+ (tagList.size() - 2) + " more";
+				people.setText(caption);
+			} else if (tagList.size() == 2) {
+				String caption = tagList.get(0).getName() + " and "
+						+ tagList.get(1).getName();
+				people.setText(caption);
+			} else {
+				people.setText(tagList.get(0).getName());
+			}
+		} else {
+			people.setText("No tags");
+		}
 	}
 
 	private void reloadMemories() {
@@ -747,6 +750,8 @@ public class PhotoActivity extends BaseActivity {
 						currentPhoto.addTag(tag);
 					}
 					currentPhoto.refreshTags();
+					
+					setPeopleNames();
 
 					// Set the tagged bitmap
 					currentImageView.setImageBitmap(currentPhoto
