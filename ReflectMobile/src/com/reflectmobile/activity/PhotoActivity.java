@@ -446,7 +446,7 @@ public class PhotoActivity extends BaseActivity {
 		if (tagList.size() > 0) {
 			if (tagList.size() > 2) {
 				String caption = tagList.get(0).getName() + ", "
-						+ tagList.get(1).getName() + "and "
+						+ tagList.get(1).getName() + " and "
 						+ (tagList.size() - 2) + " more";
 				people.setText(caption);
 			} else if (tagList.size() == 2) {

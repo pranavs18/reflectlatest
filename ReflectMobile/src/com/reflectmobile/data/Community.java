@@ -1,6 +1,9 @@
 package com.reflectmobile.data;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Locale;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -154,9 +157,27 @@ public class Community {
 				Moment moment = new Moment(momentID, momentName,
 						momentJSONObject.toString());
 
+				JSONObject firstPhoto = momentJSONObject
+						.getJSONObject("first_photo");
 				String date = momentJSONObject.getString("date");
 				if (date.equals("null")) {
-					moment.setDate("3 July 2014");
+					if (firstPhoto != null) {
+						String takenAt = firstPhoto.getString("taken_at");
+						SimpleDateFormat formatFrom = new SimpleDateFormat(
+								"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
+						SimpleDateFormat formatTo = new SimpleDateFormat(
+								"MMMM dd yyyy", Locale.US);
+						try {
+							takenAt = formatTo
+									.format(formatFrom.parse(takenAt));
+						} catch (ParseException e) {
+							e.printStackTrace();
+							Log.e(TAG, "Error parsing date");
+						}
+						moment.setDate(takenAt);
+					} else {
+						moment.setDate("3 July 2014");
+					}
 				} else {
 					moment.setDate(date);
 				}
