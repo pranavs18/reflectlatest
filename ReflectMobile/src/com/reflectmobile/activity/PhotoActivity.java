@@ -1095,7 +1095,7 @@ public class PhotoActivity extends BaseActivity {
 			// Location to original photo
 			bitmapX = bitmapX / photoScaleFactor;
 			bitmapY = bitmapY / photoScaleFactor;
-			for (int threshold = 20; threshold <= 90; threshold += 10) {
+			for (int threshold = 10; threshold <= 90; threshold += 5) {
 				Segmentation segmentation = new Segmentation(
 						currentPhoto.getLargeBitmap());
 				Bitmap resultBitmap = segmentation.segmentation((int) bitmapX,
