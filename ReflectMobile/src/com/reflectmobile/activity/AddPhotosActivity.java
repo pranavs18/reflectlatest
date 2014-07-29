@@ -326,6 +326,9 @@ public class AddPhotosActivity extends BaseActivity {
 
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		Intent intent = getIntent();
+		if (data.hasExtra("moment_id")){
+			intent.putExtra("moment_id", data.getIntExtra("moment_id", 0));
+		}
 		finish();
 		startActivity(intent);
 	}
