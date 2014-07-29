@@ -25,6 +25,9 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
@@ -32,7 +35,6 @@ import android.widget.Toast;
 import android.widget.ImageView.ScaleType;
 import android.widget.ListView;
 import android.widget.TextView;
-
 import com.reflectmobile.R;
 import com.reflectmobile.data.Community;
 import com.reflectmobile.data.Moment;
@@ -58,6 +60,12 @@ public class CommunityActivity extends BaseActivity {
 
 	private String inviteLink = "";
 	String photoPath;
+
+	// People name list
+	NameGridViewAdapter nameGridViewAdapter;
+	ArrayList<String> peopleNameList;
+	ArrayList<String> selectedPeopleNameList;
+	ArrayList<String> tempSelectedPeopleNameList;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -129,6 +137,18 @@ public class CommunityActivity extends BaseActivity {
 				+ "/api/invites/link/" + communityId);
 		Log.d(TAG, NetworkManager.hostName + "/api/invites/link/" + communityId);
 
+		// Generate name list
+		GridView nameGridView = (GridView) findViewById(R.id.gridview_community_people_name_list);
+		// Dummy name in the community
+		peopleNameList = new ArrayList<String>();
+		peopleNameList.add("John");
+		peopleNameList.add("David");
+		peopleNameList.add("Josh");
+		selectedPeopleNameList = new ArrayList<String>();
+		tempSelectedPeopleNameList = new ArrayList<String>();
+		// Make adapter
+		nameGridViewAdapter = new NameGridViewAdapter(CommunityActivity.this);
+		nameGridView.setAdapter(nameGridViewAdapter);
 	}
 
 	@Override
@@ -198,24 +218,17 @@ public class CommunityActivity extends BaseActivity {
 
 	@SuppressLint("InflateParams")
 	private void filterView() {
+		// Clear on temp selected Name list
+		tempSelectedPeopleNameList.clear();
 		// Initialze dialog window and set content
 		View dialogView = getLayoutInflater().inflate(
 				R.layout.dialog_community_filter, null);
 		ListView filterListView = (ListView) dialogView
 				.findViewById(R.id.listView_community_dialog_filter);
 
-		// Dummy name in the community
-		ArrayList<String> nameList = new ArrayList<String>();
-		nameList.add("123");
-		nameList.add("234");
-		nameList.add("234");
-		nameList.add("234");
-		nameList.add("234");
-		nameList.add("234");
-
 		// Generate and bind adapter
 		FilterListViewAdapter adapter = new FilterListViewAdapter(
-				CommunityActivity.this, nameList);
+				CommunityActivity.this, peopleNameList);
 
 		filterListView.setAdapter(adapter);
 
@@ -235,6 +248,10 @@ public class CommunityActivity extends BaseActivity {
 							@Override
 							public void onClick(DialogInterface dialog,
 									int which) {
+								selectedPeopleNameList.clear();
+								selectedPeopleNameList
+										.addAll(tempSelectedPeopleNameList);
+								nameGridViewAdapter.notifyDataSetChanged();
 							}
 						})
 				.setNegativeButton("Cancel",
@@ -542,6 +559,21 @@ public class CommunityActivity extends BaseActivity {
 
 			final FilterItemHolder holder = (FilterItemHolder) view.getTag();
 			holder.name.setText(nameList.get(position));
+			holder.checkBox
+					.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+
+						@Override
+						public void onCheckedChanged(CompoundButton buttonView,
+								boolean isChecked) {
+							if (isChecked) {
+								tempSelectedPeopleNameList.add(holder.name
+										.getText().toString());
+							} else {
+								tempSelectedPeopleNameList.remove(holder.name
+										.getText().toString());
+							}
+						}
+					});
 			return view;
 		}
 	}
@@ -620,4 +652,51 @@ public class CommunityActivity extends BaseActivity {
 						+ moment.getId());
 	}
 
+	private class NameGridViewAdapter extends BaseAdapter {
+		private LayoutInflater mInflater;
+		private Context mContext;
+
+		public NameGridViewAdapter(Context context) {
+			this.mContext = context;
+			this.mInflater = (LayoutInflater) this.mContext
+					.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		}
+
+		@Override
+		public int getCount() {
+			return selectedPeopleNameList.size();
+		}
+
+		@Override
+		public Object getItem(int arg0) {
+			return null;
+		}
+
+		@Override
+		public long getItemId(int position) {
+			return position;
+		}
+
+		@Override
+		public View getView(int position, View view, ViewGroup parentView) {
+			if (view == null) {
+				view = mInflater.inflate(R.layout.item_community_people_name,
+						parentView, false);
+			}
+			final TextView textView = (TextView) view
+					.findViewById(R.id.button_community_people_name);
+			textView.setText(selectedPeopleNameList.get(position));
+			view.setOnClickListener(new OnClickListener() {
+
+				@Override
+				public void onClick(View v) {
+					selectedPeopleNameList
+							.remove(textView.getText().toString());
+					notifyDataSetChanged();
+				}
+			});
+			return view;
+		}
+
+	}
 }

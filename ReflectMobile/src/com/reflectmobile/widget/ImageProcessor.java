@@ -70,7 +70,7 @@ public class ImageProcessor {
 		// Loop through the tag list and check whether the (x, y) is in any tag
 		boolean isInTag = false;
 		Tag tag = getSelectedTag(tagList, x, y);
-		if (tag != null){
+		if (tag != null) {
 			// If (x, y) is in a tag, then copy the lighter sub image
 			copySubImage(originalBitmap, newBitmap, tag.getUpLeftX(),
 					tag.getUpLeftY(), tag.getBoxWidth(), tag.getBoxLength());
@@ -81,14 +81,14 @@ public class ImageProcessor {
 			canvas.drawRoundRect(rect, 2, 2, paint);
 			isInTag = true;
 		}
-		
+
 		// Test
-		//canvas.drawPoint(x, y, paint);
+		// canvas.drawPoint(x, y, paint);
 		return isInTag ? newBitmap : taggedBitmap;
 	}
-	
-	// This function is used to 
-	public static Tag getSelectedTag(ArrayList<Tag> tagList, float x, float y){
+
+	// This function is used to
+	public static Tag getSelectedTag(ArrayList<Tag> tagList, float x, float y) {
 		for (Tag tag : tagList) {
 			boolean isInXRange = x <= tag.getUpLeftX() + tag.getBoxWidth()
 					&& x >= tag.getUpLeftX();
@@ -122,29 +122,31 @@ public class ImageProcessor {
 		bottomRightY = Math.min(bottomRightY, originalBitmap.getHeight()
 				- IMAGE_BORDER_WIDTH);
 
+		// Copy the lighter sub image
+		copySubImage(originalBitmap, newBitmap, upLeftX, upLeftY, bottomRightX
+				- upLeftX, bottomRightY - upLeftY);
+
 		// Generate brush for draw big square
 		Paint paint = new Paint();
 		paint.setColor(Color.WHITE);
 		paint.setStyle(Paint.Style.STROKE);
-		paint.setStrokeWidth(10);
+		paint.setStrokeWidth(6);
 
 		// Draw the square
 		RectF rect = new RectF(upLeftX, upLeftY, bottomRightX, bottomRightY);
 		canvas.drawRoundRect(rect, 2, 2, paint);
 
-		// Copy the lighter sub image
-		copySubImage(originalBitmap, newBitmap, upLeftX, upLeftY, bottomRightX
-				- upLeftX, bottomRightY - upLeftY);
-
 		if (withLittleSquare) {
 			// Draw the little square on the board
-			int[] littleSquareXList = { upLeftX - 3,
-					(bottomRightX + upLeftX) / 2, bottomRightX + 3,
-					upLeftX - 3, bottomRightX + 3, upLeftX - 3,
-					(bottomRightX + upLeftX) / 2, bottomRightX + 3 };
-			int[] littleSquareYList = { upLeftY - 3, upLeftY - 3, upLeftY - 3,
-					(bottomRightY + upLeftY) / 2, (bottomRightY + upLeftY) / 2,
-					bottomRightY + 3, bottomRightY + 3, bottomRightY + 3 };
+			int offset = 1;
+			int[] littleSquareXList = { upLeftX - offset,
+					(bottomRightX + upLeftX) / 2, bottomRightX + offset,
+					upLeftX - offset, bottomRightX + offset, upLeftX - offset,
+					(bottomRightX + upLeftX) / 2, bottomRightX + offset };
+			int[] littleSquareYList = { upLeftY - offset, upLeftY - offset,
+					upLeftY - offset, (bottomRightY + upLeftY) / 2,
+					(bottomRightY + upLeftY) / 2, bottomRightY + offset,
+					bottomRightY + offset, bottomRightY + offset };
 			int littleSquareRadius = 6;
 			for (int i = 0; i <= littleSquareXList.length - 1; i++) {
 				// Generate brush for draw little square border
@@ -186,13 +188,13 @@ public class ImageProcessor {
 	// Basically, it just add a fixed value to each channel of the image.
 	public static Bitmap generateDarkenImage(Bitmap originalBitmap, int value) {
 		Bitmap bitmap = originalBitmap;
-		
+
 		Xfermode xDarken = new PorterDuffXfermode(PorterDuff.Mode.DARKEN);
 		int w = bitmap.getWidth();
 		int h = bitmap.getHeight();
 
 		Bitmap newBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
-		
+
 		Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
 		p.setARGB(value, 0, 0, 0);
 		p.setXfermode(xDarken);
@@ -213,7 +215,7 @@ public class ImageProcessor {
 		int endY = Math.min(sourceImage.getHeight() - 1, upLeftY + height);
 
 		Rect src = new Rect(startX, startY, endX, endY);
-		
+
 		Canvas canvas = new Canvas(targetImage);
 		canvas.drawBitmap(sourceImage, src, src, null);
 		return;

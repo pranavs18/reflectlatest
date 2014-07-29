@@ -2,6 +2,7 @@ package com.reflectmobile.activity;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,6 +26,8 @@ import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.GestureDetector;
+import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -40,8 +43,8 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ToggleButton;
-
 import com.reflectmobile.R;
 import com.reflectmobile.data.Memory;
 import com.reflectmobile.data.Moment;
@@ -58,6 +61,7 @@ import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
 import com.reflectmobile.view.CustomScrollView;
 import com.reflectmobile.view.CustomViewPager;
 import com.reflectmobile.widget.ImageProcessor;
+import com.reflectmobile.widget.Segmentation;
 
 import de.neofonie.mobile.app.android.widget.crouton.Crouton;
 import de.neofonie.mobile.app.android.widget.crouton.Style;
@@ -132,6 +136,11 @@ public class PhotoActivity extends BaseActivity {
 	private Tag currentTag = null;
 
 	private boolean newTagMode = false;
+
+	// Segmentation related
+	private GestureDetector addTagGestureDetector;
+	private List<Bitmap> segmentationResultList = new ArrayList<Bitmap>();
+	private int currentSegmentationResultIndex = 0;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -214,6 +223,10 @@ public class PhotoActivity extends BaseActivity {
 		// Transfer image view size from dp to px
 		photoImageViewHeightPX = dpToPx(photoImageViewHeightDP);
 		photoImageViewWidthPX = dpToPx(photoImageViewWidthDP);
+
+		// Gesture detector
+		this.addTagGestureDetector = new GestureDetector(PhotoActivity.this,
+				new AddTagGestureListener());
 	}
 
 	@Override
@@ -750,7 +763,7 @@ public class PhotoActivity extends BaseActivity {
 						currentPhoto.addTag(tag);
 					}
 					currentPhoto.refreshTags();
-					
+
 					setPeopleNames();
 
 					// Set the tagged bitmap
@@ -900,6 +913,7 @@ public class PhotoActivity extends BaseActivity {
 		};
 
 		JSONObject tagData = new JSONObject();
+		tagLocation = getValidTagLocation(tagLocation);
 		try {
 			tagData.put("x_coordinate", (int) tagLocation.left + "px");
 			tagData.put("y_coordinate", (int) tagLocation.top + "px");
@@ -1056,11 +1070,47 @@ public class PhotoActivity extends BaseActivity {
 		}
 	};
 
-	@SuppressLint("ClickableViewAccessibility")
-	private OnTouchListener onAddTagTouchListener = new OnTouchListener() {
+	private class AddTagGestureListener extends SimpleOnGestureListener {
 
 		@Override
-		public boolean onTouch(View v, MotionEvent event) {
+		public boolean onDown(MotionEvent e) {
+			return true;
+		}
+
+		@Override
+		public void onLongPress(MotionEvent event) {
+			Toast.makeText(PhotoActivity.this, "Smart Mode", Toast.LENGTH_LONG)
+					.show();
+			currentImageView.setOnTouchListener(null);
+			// Initialize segmentation result
+			segmentationResultList.clear();
+			currentSegmentationResultIndex = 0;
+			currentImageView.setOnTouchListener(onSegmentationTouchListener);
+
+			// Transfer the coordinate from the image view to the
+			// photo bitmap
+			// Location on the enlarged photo
+			float bitmapX = event.getX() + photoOffsetX;
+			float bitmapY = event.getY() + photoOffsetY;
+			// Location to original photo
+			bitmapX = bitmapX / photoScaleFactor;
+			bitmapY = bitmapY / photoScaleFactor;
+			for (int threshold = 20; threshold <= 90; threshold += 10) {
+				Segmentation segmentation = new Segmentation(
+						currentPhoto.getLargeBitmap());
+				Bitmap resultBitmap = segmentation.segmentation((int) bitmapX,
+						(int) bitmapY, threshold);
+				segmentationResultList.add(resultBitmap);
+			}
+			currentSegmentationResultIndex = 2;
+			currentImageView.setImageBitmap(segmentationResultList
+					.get(currentSegmentationResultIndex));
+		}
+
+		@Override
+		public boolean onSingleTapUp(MotionEvent event) {
+			Toast.makeText(PhotoActivity.this, "Normal Mode", Toast.LENGTH_LONG)
+					.show();
 			float bitmapX = event.getX() + photoOffsetX;
 			float bitmapY = event.getY() + photoOffsetY;
 
@@ -1071,8 +1121,25 @@ public class PhotoActivity extends BaseActivity {
 
 			tagLocation = new RectF(left, top, right, bottom);
 
-			v.setOnTouchListener(null);
-			v.setOnTouchListener(onEditTagTouchListener);
+			currentImageView.setOnTouchListener(null);
+			currentImageView.setOnTouchListener(onEditTagTouchListener);
+
+			// Draw initial tag square
+			Bitmap initialBitmap = ImageProcessor.drawEditSquare(
+					currentPhoto.getLargeBitmap(),
+					currentPhoto.getDarkenLargeBitmap(), tagLocation, true);
+			currentImageView.setImageBitmap(initialBitmap);
+			return true;
+		}
+
+	}
+
+	@SuppressLint("ClickableViewAccessibility")
+	private OnTouchListener onAddTagTouchListener = new OnTouchListener() {
+
+		@Override
+		public boolean onTouch(View v, MotionEvent event) {
+			PhotoActivity.this.addTagGestureDetector.onTouchEvent(event);
 			return true;
 		}
 	};
@@ -1093,8 +1160,9 @@ public class PhotoActivity extends BaseActivity {
 			bitmapX = bitmapX / photoScaleFactor;
 			bitmapY = bitmapY / photoScaleFactor;
 
-			switch (event.getAction()) {
+			switch (event.getActionMasked()) {
 			case MotionEvent.ACTION_MOVE:
+				// Only single touch trigger this event
 				Log.d(TAG, "MovingNode:" + movingNode);
 				// During move, keep updating the edit square
 				// Change tag location based on touch location
@@ -1103,7 +1171,8 @@ public class PhotoActivity extends BaseActivity {
 				// Draw new edit tag square
 				Bitmap newBitmap = ImageProcessor.drawEditSquare(
 						currentPhoto.getLargeBitmap(),
-						currentPhoto.getDarkenLargeBitmap(), tagLocation, true);
+						currentPhoto.getDarkenLargeBitmap(),
+						getValidTagLocation(tagLocation), true);
 				currentImageView.setImageBitmap(newBitmap);
 				// Save touch location
 				prevBitmapX = bitmapX;
@@ -1116,7 +1185,25 @@ public class PhotoActivity extends BaseActivity {
 				// Clear last touch location
 				prevBitmapX = -1;
 				prevBitmapY = -1;
+				tagLocation = getValidTagLocation(tagLocation);
 				break;
+			default:
+				break;
+			}
+			return true;
+		}
+	};
+
+	@SuppressLint("ClickableViewAccessibility")
+	private OnTouchListener onSegmentationTouchListener = new OnTouchListener() {
+		@Override
+		public boolean onTouch(View view, MotionEvent event) {
+			switch (event.getActionMasked()) {
+			case MotionEvent.ACTION_DOWN:
+				currentSegmentationResultIndex = (currentSegmentationResultIndex + 1)
+						% segmentationResultList.size();
+				currentImageView.setImageBitmap(segmentationResultList
+						.get(currentSegmentationResultIndex));
 			default:
 				break;
 			}
@@ -1304,5 +1391,24 @@ public class PhotoActivity extends BaseActivity {
 						bottom + offsetY);
 			}
 		}
+	}
+
+	private RectF getValidTagLocation(RectF tagLocation) {
+		float left = tagLocation.left;
+		float right = tagLocation.right;
+		float top = tagLocation.top;
+		float bottom = tagLocation.bottom;
+		float temp = 0;
+		if (left > right) {
+			temp = left;
+			left = right;
+			right = temp;
+		}
+		if (top > bottom) {
+			temp = top;
+			top = bottom;
+			bottom = temp;
+		}
+		return new RectF(left, top, right, bottom);
 	}
 }
