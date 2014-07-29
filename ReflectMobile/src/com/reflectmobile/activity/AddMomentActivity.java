@@ -4,6 +4,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.ActionBar.LayoutParams;
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.Editable;
@@ -13,6 +15,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -85,6 +88,17 @@ public class AddMomentActivity extends BaseActivity {
 			public void afterTextChanged(Editable s) {
 			}
 		});
+		
+		momentName.requestFocus();
+		
+		momentName.postDelayed(new Runnable() {
+			
+			@Override
+			public void run() {
+				InputMethodManager inputMethodManager=(InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+			    inputMethodManager.toggleSoftInput(0, InputMethodManager.SHOW_IMPLICIT);
+			}
+		}, 200);
 	}
 
 	@Override
@@ -125,7 +139,15 @@ public class AddMomentActivity extends BaseActivity {
 			@Override
 			public void taskSuccessful(String result) {
 				Log.d("POST", result);
-				setResult(RESULT_OK);
+				try {
+					JSONObject momentData = new JSONObject(result);
+					int momentId = momentData.getInt("id");
+					Intent intent = new Intent();
+					intent.putExtra("moment_id", momentId);
+					setResult(RESULT_OK, intent);
+				} catch (JSONException e) {
+					Log.e("POST", "Error parsing JSON");
+				}
 				finish();
 			}
 

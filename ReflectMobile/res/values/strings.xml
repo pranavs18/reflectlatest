@@ -16,7 +16,7 @@
     <color name="dark_gray">#808080</color>
     <color name="semi_transparent_white">#20FFFFFF</color>
     
-    <string name="app_name">ReflectMobile</string>
+    <string name="app_name">Reflect</string>
     <string name="title_activity_login">LoginActivity</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
