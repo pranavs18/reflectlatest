@@ -227,6 +227,8 @@ public class NetworkManager {
 						httpUrlConnection.getInputStream());
 
 				data = readStream(TAG, in);
+			} catch (Exception e) {
+				e.printStackTrace();
 			} finally {
 				if (null != httpUrlConnection)
 					httpUrlConnection.disconnect();
@@ -690,7 +692,7 @@ public class NetworkManager {
 				int progress = (int) (count / 1024);
 				publishProgress(progress);
 			}
-			
+
 			return count;
 		}
 
@@ -730,14 +732,13 @@ public class NetworkManager {
 							+ attachmentFileName + "\"" + this.crlf);
 					request.writeBytes("Content-Type: audio/3gpp2" + this.crlf);
 					request.writeBytes(this.crlf);
-					
+
 					// Write data
 					File file = new File(attachmentFileName);
-					int maxProgress = (int) (file.length() / 1024); 
+					int maxProgress = (int) (file.length() / 1024);
 					dialog.setMax(maxProgress);
 					InputStream fs = new FileInputStream(attachmentFileName);
-					
-					
+
 					copy(fs, request);
 
 					request.writeBytes(this.crlf);
