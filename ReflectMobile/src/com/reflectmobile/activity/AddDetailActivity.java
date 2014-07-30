@@ -13,6 +13,7 @@ import de.neofonie.mobile.app.android.widget.crouton.Crouton;
 import de.neofonie.mobile.app.android.widget.crouton.Style;
 
 import android.app.ActionBar.LayoutParams;
+import android.content.Context;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.Editable;
@@ -22,6 +23,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -39,7 +41,8 @@ public class AddDetailActivity extends BaseActivity {
 	private String detail;
 	
 	private boolean canCreate = false;
-
+	private Menu menu;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		hasNavigationDrawer = false;
@@ -84,6 +87,14 @@ public class AddDetailActivity extends BaseActivity {
 			nameText.setText(name);
 			nameSet = true;
 		}
+		
+		nameText.postDelayed(new Runnable() {
+			@Override
+			public void run() {
+				InputMethodManager inputMethodManager=(InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+			    inputMethodManager.toggleSoftInput(0, InputMethodManager.SHOW_IMPLICIT);
+			}
+		}, 200);
 		
 		EditText detailText = (EditText) findViewById(R.id.detail_text);
 		if (getIntent().hasExtra("detail")){
@@ -141,6 +152,7 @@ public class AddDetailActivity extends BaseActivity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu items for use in the action bar
+		this.menu = menu;
 		MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.add_detail_menu, menu);
 		return super.onCreateOptionsMenu(menu);
@@ -152,7 +164,8 @@ public class AddDetailActivity extends BaseActivity {
 		switch (item.getItemId()) {
 		case R.id.action_add_detail:
 			if (canCreate){
-				canCreate = false;
+				MenuItem add_detail = menu.findItem(R.id.action_add_detail);
+				add_detail.setEnabled(false);
 				addDetail();
 			} else {
 				int red = android.R.color.holo_red_light;

@@ -39,6 +39,7 @@ public class AddStoryActivity extends BaseActivity {
 	public static int CODE_SPEECH_RECOGNITION = 101;
 	//private int photoId;
 
+	private Menu menu;
 	private String story;
 	boolean storySet = false;
 
@@ -95,6 +96,7 @@ public class AddStoryActivity extends BaseActivity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu items for use in the action bar
+		this.menu = menu;
 		MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.add_story_menu, menu);
 		return super.onCreateOptionsMenu(menu);
@@ -106,7 +108,8 @@ public class AddStoryActivity extends BaseActivity {
 		switch (item.getItemId()) {
 		case R.id.action_add_story:
 			if (storySet) {
-				storySet = false;
+				MenuItem add_story = menu.findItem(R.id.action_add_story);
+				add_story.setEnabled(false);
 				addStory();
 			} else {
 				int red = android.R.color.holo_red_light;

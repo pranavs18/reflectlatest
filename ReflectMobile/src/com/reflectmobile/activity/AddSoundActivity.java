@@ -44,7 +44,7 @@ import de.neofonie.mobile.app.android.widget.crouton.Style;
 public class AddSoundActivity extends BaseActivity {
 
 	private String TAG = "AddSoundActivity";
-	
+
 	private String soundName;
 	private boolean soundNameSet;
 
@@ -56,6 +56,7 @@ public class AddSoundActivity extends BaseActivity {
 	private MediaRecorder mRecorder = null;
 	private Chronometer mChronometer = null;
 	private boolean isRecording = false;
+	private boolean recordingCompleted = false;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -107,7 +108,6 @@ public class AddSoundActivity extends BaseActivity {
 			}
 		});
 
-		
 		try {
 			createSoundFile();
 		} catch (IOException ex) {
@@ -117,8 +117,7 @@ public class AddSoundActivity extends BaseActivity {
 		mTitle = (LinearLayout) findViewById(R.id.title);
 		mChronometer = (Chronometer) findViewById(R.id.chronometer);
 		mInstruction = (TextView) findViewById(R.id.instruction);
-		
-		
+
 		mRecordButton = (ImageButton) findViewById(R.id.record);
 		mRecordButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
@@ -129,8 +128,7 @@ public class AddSoundActivity extends BaseActivity {
 					MenuItem add_sound = menu.findItem(R.id.action_add_sound);
 					add_sound.setVisible(false);
 					startRecording();
-				}
-				else{
+				} else {
 					mTitle.setVisibility(View.VISIBLE);
 					mRecordButton.setImageResource(R.drawable.recorder_record);
 					mInstruction.setText("Done!");
@@ -138,11 +136,11 @@ public class AddSoundActivity extends BaseActivity {
 					add_sound.setVisible(true);
 					stopRecording();
 					mRecordButton.setEnabled(false);
-				} 
+				}
 				isRecording = !isRecording;
 			}
 		});
-		
+
 	}
 
 	@Override
@@ -159,17 +157,24 @@ public class AddSoundActivity extends BaseActivity {
 		// Handle action buttons
 		switch (item.getItemId()) {
 		case R.id.action_add_sound:
-			if (soundNameSet) {
-				soundNameSet = false;
+			if (soundNameSet && recordingCompleted) {
+				MenuItem add_sound = menu.findItem(R.id.action_add_sound);
+				add_sound.setEnabled(false);
 				addSound();
-			} else {
+			} else if (!soundNameSet) {
 				int red = android.R.color.holo_red_light;
 				Style CustomAlert = new Style.Builder().setDuration(2000)
 						.setHeight(LayoutParams.WRAP_CONTENT).setTextSize(16)
 						.setBackgroundColor(red).setPaddingInPixels(26).build();
 				Crouton.makeText(this, "Please, add title to the sound",
 						CustomAlert).show();
-
+			} else {
+				int red = android.R.color.holo_red_light;
+				Style CustomAlert = new Style.Builder().setDuration(2000)
+						.setHeight(LayoutParams.WRAP_CONTENT).setTextSize(16)
+						.setBackgroundColor(red).setPaddingInPixels(26).build();
+				Crouton.makeText(this, "Please, record sound first",
+						CustomAlert).show();
 			}
 			return true;
 		case android.R.id.home:
@@ -201,19 +206,20 @@ public class AddSoundActivity extends BaseActivity {
 
 		mChronometer.setBase(SystemClock.elapsedRealtime());
 		mChronometer.setText("00:00:00");
-		mChronometer.setOnChronometerTickListener(new Chronometer.OnChronometerTickListener() {
-	        @Override
-	        public void onChronometerTick(Chronometer chronometer) {
-	            CharSequence text = chronometer.getText();
-	            if (text.length()  == 5) {
-	                chronometer.setText("00:"+text);
-	            } else if (text.length() == 7) {
-	                chronometer.setText("0"+text);
-	            }
-	        }
-	    });
-        mChronometer.start();
-        
+		mChronometer
+				.setOnChronometerTickListener(new Chronometer.OnChronometerTickListener() {
+					@Override
+					public void onChronometerTick(Chronometer chronometer) {
+						CharSequence text = chronometer.getText();
+						if (text.length() == 5) {
+							chronometer.setText("00:" + text);
+						} else if (text.length() == 7) {
+							chronometer.setText("0" + text);
+						}
+					}
+				});
+		mChronometer.start();
+
 		try {
 			mRecorder.prepare();
 		} catch (IOException e) {
@@ -222,13 +228,15 @@ public class AddSoundActivity extends BaseActivity {
 
 		mRecorder.start();
 	}
-	
+
 	private void stopRecording() {
 		mRecorder.stop();
 		mRecorder.release();
 		mRecorder = null;
-		
+
 		mChronometer.stop();
+
+		recordingCompleted = true;
 	}
 
 	public void addSound() {
@@ -250,9 +258,10 @@ public class AddSoundActivity extends BaseActivity {
 				try {
 					JSONObject soundData = new JSONObject(result);
 					int soundId = soundData.getInt("id");
-					new HttpPostSoundTask(postSoundHandler, NetworkManager.SOUND_HOST_NAME
-							+ "/sounds/" + soundId,
-							AddSoundActivity.this).execute(mFileName);
+					new HttpPostSoundTask(postSoundHandler,
+							NetworkManager.SOUND_HOST_NAME + "/sounds/"
+									+ soundId, AddSoundActivity.this)
+							.execute(mFileName);
 
 				} catch (JSONException e) {
 					Log.e(TAG, "Error parsing JSON");
@@ -264,7 +273,7 @@ public class AddSoundActivity extends BaseActivity {
 				Log.e("POST", "Error within POST request: " + reason);
 			}
 		};
-		
+
 		HttpTaskHandler httpPutTaskHandler = new HttpTaskHandler() {
 			@Override
 			public void taskSuccessful(String result) {
@@ -276,15 +285,14 @@ public class AddSoundActivity extends BaseActivity {
 				Log.e("PUT", "Error within PUT request: " + reason);
 			}
 		};
-		
+
 		JSONObject storyData = new JSONObject();
 
 		try {
-			if (getIntent().hasExtra("tag_id")){
-				int tagId = getIntent().getIntExtra("tag_id", 0); 
+			if (getIntent().hasExtra("tag_id")) {
+				int tagId = getIntent().getIntExtra("tag_id", 0);
 				storyData.put("tag_id", tagId);
-			}
-			else {
+			} else {
 				int photoId = getIntent().getIntExtra("photo_id", 0);
 				storyData.put("photo_id", photoId);
 			}

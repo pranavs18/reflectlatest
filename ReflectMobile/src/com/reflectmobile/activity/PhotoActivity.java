@@ -805,9 +805,6 @@ public class PhotoActivity extends BaseActivity {
 		// Show corresponding menu
 		showMenuTagSelected();
 
-		// Hide add tag button
-		findViewById(R.id.add_tag).setVisibility(View.GONE);
-
 		// Load Memories related to tag
 		loadMemories(currentPhotoId, currentTag.getId());
 	}
@@ -818,9 +815,6 @@ public class PhotoActivity extends BaseActivity {
 
 		// Show corresponding menu
 		showMenuShowTags();
-
-		// Show add tag button
-		findViewById(R.id.add_tag).setVisibility(View.VISIBLE);
 
 		// Load Memories related to tag
 		loadMemories(currentPhotoId);

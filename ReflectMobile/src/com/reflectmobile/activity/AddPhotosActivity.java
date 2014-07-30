@@ -408,6 +408,9 @@ public class AddPhotosActivity extends BaseActivity {
 				int position = (Integer) v.getTag();
 				mList.remove(position);
 				notifyDataSetChanged();
+				Intent intent = new Intent();
+				intent.putExtra("selected_photos", mList);
+				setResult(RESULT_CANCELED, intent);
 				if (mList.size() == 0) {
 					onBackPressed();
 				}

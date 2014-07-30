@@ -9,8 +9,11 @@
     <Button
         android:id="@+id/add_tag"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="54dp"
         android:background="@color/white"
+        android:drawableLeft="@drawable/plus_green"
+        android:paddingLeft="135dp"
+        android:paddingRight="135dp"
         android:text="@string/new_tag"
         android:visibility="gone" />
 

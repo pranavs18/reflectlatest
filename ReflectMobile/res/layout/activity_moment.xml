@@ -26,17 +26,18 @@
             android:verticalSpacing="3dp" >
         </GridView>
     </RelativeLayout>
-    
+
     <!-- The navigation drawer -->
-    <ListView android:id="@+id/left_drawer"
+
+    <ListView
+        android:id="@+id/left_drawer"
         android:layout_width="320dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
+        android:background="@color/side_menu_bg"
         android:choiceMode="singleChoice"
         android:divider="@color/side_menu_divider"
-        android:dividerHeight="1dp"
-        android:background="@color/side_menu_bg">
-        
+        android:dividerHeight="1dp" >
     </ListView>
 
 </android.support.v4.widget.DrawerLayout>

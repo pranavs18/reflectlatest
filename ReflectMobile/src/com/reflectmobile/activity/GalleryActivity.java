@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Locale;
 
 import android.app.ActionBar.LayoutParams;
@@ -55,6 +56,7 @@ public class GalleryActivity extends BaseActivity {
 	String photoPath;
 
 	private static final int CODE_TAKE_PHOTO = 101;
+	private static final int CODE_ADD_PHOTOS = 102;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -149,7 +151,7 @@ public class GalleryActivity extends BaseActivity {
 							getIntent().getIntExtra("moment_id", 0));
 				}
 				intent.putExtra("images", imageAdapter.getCheckedItems());
-				startActivity(intent);
+				startActivityForResult(intent, CODE_ADD_PHOTOS);
 			} else {
 				int red = android.R.color.holo_red_light;
 				Style CustomAlert = new Style.Builder().setDuration(2000)
@@ -181,6 +183,13 @@ public class GalleryActivity extends BaseActivity {
 							Log.i("ExternalStorage", "-> uri=" + uri);
 						}
 					});
+		}
+		if (requestCode == CODE_ADD_PHOTOS) {
+			if (data!=null && data.hasExtra("selected_photos")) {
+				ArrayList<String> chosenPhotos = data
+						.getStringArrayListExtra("selected_photos");
+				imageAdapter.setSelectedPhotos(chosenPhotos);
+			}
 		}
 	}
 
@@ -239,6 +248,17 @@ public class GalleryActivity extends BaseActivity {
 			mInflater = LayoutInflater.from(mContext);
 			mSparseBooleanArray = new SparseBooleanArray();
 			mList = imageList;
+		}
+
+		public void setSelectedPhotos(ArrayList<String> photos) {
+			mSparseBooleanArray = new SparseBooleanArray();
+			HashSet<String> photoSet = new HashSet<String>(photos);
+			for (int count = 0; count < mList.size(); count++) {
+				if (photoSet.contains(mList.get(count))) {
+					mSparseBooleanArray.put(count, true);
+				}
+			}
+			notifyDataSetChanged();
 		}
 
 		public void addNewPhoto(String photoPath) {
