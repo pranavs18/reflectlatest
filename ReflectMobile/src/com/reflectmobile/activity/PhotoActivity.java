@@ -869,6 +869,9 @@ public class PhotoActivity extends BaseActivity {
 		// Hide tabs
 		findViewById(R.id.tab_view).setVisibility(View.GONE);
 
+		// Hide add tag button
+		findViewById(R.id.add_tag).setVisibility(View.GONE);
+		
 		// Show EditText instead
 		findViewById(R.id.tag_name_container).setVisibility(View.VISIBLE);
 		((EditText) findViewById(R.id.tag_name)).setText(currentTag.getName());
