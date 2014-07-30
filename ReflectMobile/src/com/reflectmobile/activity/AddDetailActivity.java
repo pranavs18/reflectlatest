@@ -61,6 +61,10 @@ public class AddDetailActivity extends BaseActivity {
 				.getLayoutParams();
 		mlp.setMargins(5, 0, 0, 0);
 		
+		if (getIntent().hasExtra("memory_id")) {
+			setTitle("Edit Detail");
+		}
+		
 		getActionBar().setDisplayHomeAsUpEnabled(true);
 		ImageView view = (ImageView) findViewById(android.R.id.home);
 		view.setPadding(10, 0, 0, 0);
@@ -152,9 +156,13 @@ public class AddDetailActivity extends BaseActivity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu items for use in the action bar
-		this.menu = menu;
 		MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.add_detail_menu, menu);
+		if (getIntent().hasExtra("memory_id")) {
+			MenuItem addDetail = menu.findItem(R.id.action_add_detail);
+			addDetail.setTitle("SAVE");
+		}
+		this.menu = menu;
 		return super.onCreateOptionsMenu(menu);
 	}
 

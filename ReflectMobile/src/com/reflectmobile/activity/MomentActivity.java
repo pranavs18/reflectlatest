@@ -68,6 +68,9 @@ public class MomentActivity extends BaseActivity {
 			public void taskSuccessful(String result) {
 				// Parse JSON to the list of communities
 				moment = Moment.getMomentInfo(result);
+				if (moment.getNumOfPhotos()==0){
+					findViewById(R.id.no_photos).setVisibility(View.VISIBLE);
+				}
 				setTitle(moment.getName());
 				GridView parentView = (GridView) findViewById(R.id.parentView);
 				parentView.setAdapter(new ImageAdapter(MomentActivity.this));

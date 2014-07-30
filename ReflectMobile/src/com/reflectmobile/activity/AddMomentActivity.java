@@ -37,6 +37,8 @@ public class AddMomentActivity extends BaseActivity {
 
 	private int communityId;
 	private String name;
+	
+	private Menu menu;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +61,10 @@ public class AddMomentActivity extends BaseActivity {
 		getActionBar().setDisplayHomeAsUpEnabled(true);
 		ImageView view = (ImageView) findViewById(android.R.id.home);
 		view.setPadding(10, 0, 0, 0);
+		
+		if (getIntent().hasExtra("moment_id")) {
+			setTitle("Edit Moment");
+		}
 
 		communityId = getIntent().getIntExtra("community_id", 0);
 
@@ -105,7 +111,12 @@ public class AddMomentActivity extends BaseActivity {
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu items for use in the action bar
 		MenuInflater inflater = getMenuInflater();
-		inflater.inflate(R.menu.add_community_menu, menu);
+		inflater.inflate(R.menu.add_moment_menu, menu);
+		if (getIntent().hasExtra("moment_id")) {
+			MenuItem addMoment = menu.findItem(R.id.action_add_moment);
+			addMoment.setTitle("SAVE");
+		}
+		this.menu = menu;
 		return super.onCreateOptionsMenu(menu);
 	}
 
@@ -113,9 +124,10 @@ public class AddMomentActivity extends BaseActivity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		// Handle action buttons
 		switch (item.getItemId()) {
-		case R.id.action_add_community:
+		case R.id.action_add_moment:
 			if (nameSet) {
-				nameSet = false;
+				MenuItem addMoment = menu.findItem(R.id.action_add_moment);
+				addMoment.setEnabled(false);
 				addMoment();
 			} else {
 				int red = android.R.color.holo_red_light;
@@ -139,6 +151,7 @@ public class AddMomentActivity extends BaseActivity {
 			@Override
 			public void taskSuccessful(String result) {
 				Log.d("POST", result);
+				setResult(RESULT_OK);
 				try {
 					JSONObject momentData = new JSONObject(result);
 					int momentId = momentData.getInt("id");

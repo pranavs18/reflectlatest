@@ -114,5 +114,6 @@
     <string name="action_edit_moment">Edit Moment</string>
     <string name="action_delete_moment">Delete Moment</string>
     <string name="no_tags">No tags</string>
+    <string name="no_photos">There are no photos in this moment. Add some!</string>
 
 </resources>

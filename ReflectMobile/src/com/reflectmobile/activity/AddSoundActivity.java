@@ -77,6 +77,11 @@ public class AddSoundActivity extends BaseActivity {
 		ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) title
 				.getLayoutParams();
 		mlp.setMargins(5, 0, 0, 0);
+		
+		if (getIntent().hasExtra("memory_id")) {
+			setTitle("Edit Sound");
+			recordingCompleted = true;
+		}
 
 		getActionBar().setDisplayHomeAsUpEnabled(true);
 		ImageView view = (ImageView) findViewById(android.R.id.home);
@@ -151,9 +156,13 @@ public class AddSoundActivity extends BaseActivity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu items for use in the action bar
-		this.menu = menu;
 		MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.add_sound_menu, menu);
+		if (getIntent().hasExtra("memory_id")) {
+			MenuItem addSound = menu.findItem(R.id.action_add_sound);
+			addSound.setTitle("SAVE");
+		}
+		this.menu = menu;
 		return super.onCreateOptionsMenu(menu);
 	}
 
