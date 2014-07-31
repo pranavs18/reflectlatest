@@ -115,5 +115,6 @@
     <string name="action_delete_moment">Delete Moment</string>
     <string name="no_tags">No tags</string>
     <string name="no_photos">There are no photos in this moment. Add some!</string>
+    <string name="campaign_option_1">Campaign Option 1</string>
 
 </resources>
