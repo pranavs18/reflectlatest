@@ -19,6 +19,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.ImageView.ScaleType;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.reflectmobile.R;
@@ -154,7 +155,7 @@ public class CommunitiesActivity extends BaseActivity {
 				// Load images asynchronously and notify about their loading
 				new HttpGetImageTask(new HttpImageTaskHandler() {
 					private int drawableIndex = index;
-
+					
 					@Override
 					public void taskSuccessful(Drawable drawable) {
 						mDrawables[drawableIndex] = drawable;
@@ -191,6 +192,7 @@ public class CommunitiesActivity extends BaseActivity {
 			public int position;
 			public ImageButton menu;
 			public TextView hiddenText;
+
 		}
 
 		@Override
@@ -207,7 +209,9 @@ public class CommunitiesActivity extends BaseActivity {
 				holder.image = (ImageView) convertView
 						.findViewById(R.id.card_image);
 				holder.image.setScaleType(ScaleType.CENTER_CROP);
+
 				holder.image.setOnClickListener(new View.OnClickListener() {
+
 					@Override
 					public void onClick(View v) {
 						int position = ((CardViewHolder) v.getTag()).position;
@@ -234,7 +238,8 @@ public class CommunitiesActivity extends BaseActivity {
 
 			final CardViewHolder holder = (CardViewHolder) convertView.getTag();
 			holder.position = position;
-
+          
+            
 			holder.text.setText(communities[position].getName());
 			holder.image.setImageDrawable(mDrawables[position]);
 			if (mDrawables[position] == null) {

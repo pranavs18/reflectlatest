@@ -30,7 +30,8 @@
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
-
+         
+        
         <activity
             android:name=".activity.LoginActivity"
             android:configChanges="orientation"
@@ -40,12 +41,12 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.reflectmobile.activity.BaseActivity" />
-
-            <intent-filter>
+             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            
         </activity>
         <activity
             android:name=".activity.CommunitiesActivity"
@@ -169,6 +170,45 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.reflectmobile.activity.BaseActivity" />
         </activity>
+        <activity
+            android:name=".activity.NotificationActivity"
+            android:configChanges="orientation"
+            android:icon="@drawable/action_bar_icon_logo"
+            android:label="Notification Activity"
+            android:parentActivityName="com.reflectmobile.activity.BaseActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/ContextualActionBarTheme" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.reflectmobile.activity.BaseActivity" />
+            </activity>
+            
+         <activity
+            android:name=".activity.StartCampaignActivity"
+            android:configChanges="orientation"
+            android:icon="@drawable/action_bar_icon_logo"
+            android:label="Start Campaign Activity"
+            android:parentActivityName="com.reflectmobile.activity.BaseActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/ContextualActionBarTheme" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.reflectmobile.activity.BaseActivity" />
+            </activity>
+        
+          <activity
+            android:name=".activity.DonationActivity"
+            android:configChanges="orientation"
+            android:icon="@drawable/action_bar_icon_logo"
+            android:label="Donation Activity"
+            android:parentActivityName="com.reflectmobile.activity.BaseActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/ContextualActionBarTheme" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.reflectmobile.activity.BaseActivity" />
+            </activity>
+        
 
         <meta-data
             android:name="com.facebook.sdk.ApplicationId"
