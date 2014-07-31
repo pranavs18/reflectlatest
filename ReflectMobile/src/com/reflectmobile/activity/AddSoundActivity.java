@@ -24,6 +24,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Chronometer;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -75,6 +77,11 @@ public class AddSoundActivity extends BaseActivity {
 		ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) title
 				.getLayoutParams();
 		mlp.setMargins(5, 0, 0, 0);
+		
+		if (getIntent().hasExtra("memory_id")) {
+			setTitle("Edit Sound");
+			recordingCompleted = true;
+		}
 
 		getActionBar().setDisplayHomeAsUpEnabled(true);
 		ImageView view = (ImageView) findViewById(android.R.id.home);
@@ -124,6 +131,8 @@ public class AddSoundActivity extends BaseActivity {
 				if (!isRecording) {
 					mTitle.setVisibility(View.INVISIBLE);
 					mRecordButton.setImageResource(R.drawable.recorder_pause);
+					Animation anim = AnimationUtils.loadAnimation(AddSoundActivity.this, R.anim.recording);
+					mRecordButton.startAnimation(anim);
 					mInstruction.setText("Press to stop");
 					MenuItem add_sound = menu.findItem(R.id.action_add_sound);
 					add_sound.setVisible(false);
@@ -131,6 +140,7 @@ public class AddSoundActivity extends BaseActivity {
 				} else {
 					mTitle.setVisibility(View.VISIBLE);
 					mRecordButton.setImageResource(R.drawable.recorder_record);
+					mRecordButton.clearAnimation();
 					mInstruction.setText("Done!");
 					MenuItem add_sound = menu.findItem(R.id.action_add_sound);
 					add_sound.setVisible(true);
@@ -146,9 +156,13 @@ public class AddSoundActivity extends BaseActivity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu items for use in the action bar
-		this.menu = menu;
 		MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.add_sound_menu, menu);
+		if (getIntent().hasExtra("memory_id")) {
+			MenuItem addSound = menu.findItem(R.id.action_add_sound);
+			addSound.setTitle("SAVE");
+		}
+		this.menu = menu;
 		return super.onCreateOptionsMenu(menu);
 	}
 
@@ -185,6 +199,12 @@ public class AddSoundActivity extends BaseActivity {
 		}
 	}
 
+	@Override
+	public void onBackPressed() {
+		stopRecording();
+		super.onBackPressed();
+	}
+	
 	private File createSoundFile() throws IOException {
 		// Create an image file name
 		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
@@ -194,6 +214,7 @@ public class AddSoundActivity extends BaseActivity {
 				.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
 		File image = new File(storageDir, imageFileName);
 		mFileName = image.getAbsolutePath();
+		Log.d("Sound filename", mFileName);
 		return image;
 	}
 
@@ -230,12 +251,12 @@ public class AddSoundActivity extends BaseActivity {
 	}
 
 	private void stopRecording() {
-		mRecorder.stop();
-		mRecorder.release();
-		mRecorder = null;
-
-		mChronometer.stop();
-
+		if (mRecorder!=null){
+			mRecorder.stop();
+			mRecorder.release();
+			mRecorder = null;
+			mChronometer.stop();
+		}
 		recordingCompleted = true;
 	}
 

@@ -451,23 +451,51 @@ public class CommunityActivity extends BaseActivity {
 			// set moment photos
 			for (int count = 0; count < 3; count++) {
 				if (count < numOfPhotos) {
-					holder.photos[count].setTag(position);
 					holder.photos[count].setImageDrawable(mDrawables[3
 							* position + count]);
 					holder.photos[count].setScaleType(ScaleType.CENTER_CROP);
+					View parent = (View) holder.photos[count].getParent();
+					parent.setTag(position);
+					holder.photos[count].setTag(count);
+					
+					if (numOfPhotos > 3) {
+						holder.photos[count]
+								.setOnClickListener(new OnClickListener() {
+									public void onClick(View v) {
+										int position = (Integer) ((View) v
+												.getParent()).getTag();
+										Intent intent = new Intent(mContext,
+												MomentActivity.class);
+										intent.putExtra("community_id",
+												communityId);
+										intent.putExtra("moment_id", community
+												.getMoment(position).getId());
+										mContext.startActivity(intent);
+									}
+								});
+					} else {
+						holder.photos[count]
+								.setOnClickListener(new OnClickListener() {
+									public void onClick(View v) {
+										int position = (Integer) ((View) v
+												.getParent()).getTag();
+										int count = (Integer) v.getTag();
+										Intent intent = new Intent(mContext,
+												PhotoActivity.class);
+										intent.putExtra("community_id",
+												communityId);
+										Moment selectedMoment = community
+												.getMoment(position);
+										intent.putExtra("moment_id",
+												selectedMoment.getId());
+										intent.putExtra("photo_id",
+												selectedMoment.getPhoto(count)
+														.getId());
 
-					holder.photos[count]
-							.setOnClickListener(new OnClickListener() {
-								public void onClick(View v) {
-									int position = (Integer) v.getTag();
-									Intent intent = new Intent(mContext,
-											MomentActivity.class);
-									intent.putExtra("community_id", communityId);
-									intent.putExtra("moment_id", community
-											.getMoment(position).getId());
-									mContext.startActivity(intent);
-								}
-							});
+										mContext.startActivity(intent);
+									}
+								});
+					}
 				} else if (count == numOfPhotos) {
 					holder.photos[count].setImageDrawable(getResources()
 							.getDrawable(R.drawable.add_photo_community));

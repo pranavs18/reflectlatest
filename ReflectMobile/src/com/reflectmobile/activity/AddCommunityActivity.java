@@ -4,6 +4,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.ActionBar.LayoutParams;
+import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.Editable;
@@ -47,6 +48,8 @@ public class AddCommunityActivity extends BaseActivity {
 	private String description;
 
 	private Network[] mNetworks;
+	
+	private Menu menu;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +72,10 @@ public class AddCommunityActivity extends BaseActivity {
 		getActionBar().setDisplayHomeAsUpEnabled(true);
 		ImageView view = (ImageView) findViewById(android.R.id.home);
 		view.setPadding(10, 0, 0, 0);
+
+		if (getIntent().hasExtra("community_id")) {
+			setTitle("Edit Community");
+		}
 
 		EditText communityName = (EditText) findViewById(R.id.community_name);
 		if (getIntent().hasExtra("name")) {
@@ -156,7 +163,7 @@ public class AddCommunityActivity extends BaseActivity {
 					int networkId = getIntent().getIntExtra("network_id", 0);
 					for (int count = 0; count < mNetworks.length; count++) {
 						if (mNetworks[count].getId() == networkId) {
-							spinner.setSelection(count+1);
+							spinner.setSelection(count + 1);
 						}
 					}
 				}
@@ -193,6 +200,11 @@ public class AddCommunityActivity extends BaseActivity {
 		// Inflate the menu items for use in the action bar
 		MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.add_community_menu, menu);
+		if (getIntent().hasExtra("community_id")) {
+			MenuItem addCommunity = menu.findItem(R.id.action_add_community);
+			addCommunity.setTitle("SAVE");
+		}
+		this.menu = menu;
 		return super.onCreateOptionsMenu(menu);
 	}
 
@@ -202,7 +214,8 @@ public class AddCommunityActivity extends BaseActivity {
 		switch (item.getItemId()) {
 		case R.id.action_add_community:
 			if (canCreate) {
-				canCreate = false;
+				MenuItem addMoment = menu.findItem(R.id.action_add_community);
+				addMoment.setEnabled(false);
 				addCommunity();
 			} else {
 				int red = android.R.color.holo_red_light;
@@ -227,6 +240,15 @@ public class AddCommunityActivity extends BaseActivity {
 			public void taskSuccessful(String result) {
 				Log.d("POST", result);
 				setResult(RESULT_OK);
+				try {
+					JSONObject communityData = new JSONObject(result);
+					int communityId = communityData.getInt("id");
+					Intent intent = new Intent();
+					intent.putExtra("community_id", communityId);
+					setResult(RESULT_OK, intent);
+				} catch (JSONException e) {
+					Log.e("POST", "Error parsing JSON");
+				}
 				finish();
 			}
 
