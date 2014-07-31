@@ -33,6 +33,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
+import android.view.inputmethod.InputMethodManager;
 import android.view.ViewGroup;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -55,6 +56,7 @@ import com.reflectmobile.utility.NetworkManager.HttpGetImageTask;
 import com.reflectmobile.utility.NetworkManager.HttpGetTask;
 import com.reflectmobile.utility.NetworkManager.HttpImageTaskHandler;
 import com.reflectmobile.utility.NetworkManager.HttpDeleteTask;
+import com.reflectmobile.utility.NetworkManager.HttpPostSoundTask;
 import com.reflectmobile.utility.NetworkManager.HttpPostTask;
 import com.reflectmobile.utility.NetworkManager.HttpPutTask;
 import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
@@ -129,6 +131,8 @@ public class PhotoActivity extends BaseActivity {
 	private float photoOffsetY = 0;
 	private float photoScaleFactor = 1;
 	private boolean isExpandHorizontal = false;
+
+	private boolean isSmartMode = false;
 	// Set when user want to edit the tag
 	// If it is in add tag mode, it should be set the the center of the image
 	// If it is in edit tag mode, it should be set to the tag location
@@ -278,6 +282,10 @@ public class PhotoActivity extends BaseActivity {
 			startActivity(intent);
 			return true;
 		case R.id.action_done_add:
+			if (isSmartMode) {
+				// TODO: get rectangle
+				tagLocation = new RectF(100, 100, 200, 200);
+			}
 			if (tagLocation != null && tagName.getText().length() > 0) {
 				persistTag(tagName.getText().toString(), false);
 				tagLocation = null;
@@ -730,6 +738,11 @@ public class PhotoActivity extends BaseActivity {
 		// Enable scrolling
 		scrollView.setScrollingEnabled(true);
 
+		// Hide keyboard
+		InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+		inputMethodManager.hideSoftInputFromWindow(findViewById(R.id.tag_name)
+				.getWindowToken(), 0);
+
 		// Show tabs
 		findViewById(R.id.tab_view).setVisibility(View.VISIBLE);
 
@@ -871,7 +884,7 @@ public class PhotoActivity extends BaseActivity {
 
 		// Hide add tag button
 		findViewById(R.id.add_tag).setVisibility(View.GONE);
-		
+
 		// Show EditText instead
 		findViewById(R.id.tag_name_container).setVisibility(View.VISIBLE);
 		((EditText) findViewById(R.id.tag_name)).setText(currentTag.getName());
@@ -897,10 +910,53 @@ public class PhotoActivity extends BaseActivity {
 	}
 
 	private void persistTag(String tagName, boolean edit) {
-		HttpTaskHandler httpPostTaskHandler = new HttpTaskHandler() {
+		final boolean sendToCustomBackend = isSmartMode;
+
+		final HttpTaskHandler postTagHandler = new HttpTaskHandler() {
 			@Override
 			public void taskSuccessful(String result) {
 				showTags();
+			}
+
+			@Override
+			public void taskFailed(String reason) {
+				Log.e(TAG, "Error within POST SOUND request: " + reason);
+			}
+		};
+
+		HttpTaskHandler httpPostTaskHandler = new HttpTaskHandler() {
+			@Override
+			public void taskSuccessful(String result) {
+				if (sendToCustomBackend) {
+					JSONObject tagData;
+					try {
+						tagData = new JSONObject(result);
+						int tagId = tagData.getInt("id");
+						JSONObject json = new JSONObject();
+						
+						JSONArray boundary = new JSONArray();
+
+						// TODO: change coordinates
+						for (int i = 0; i < 10; i++) {
+							JSONObject point = new JSONObject();
+							point.put("x", i);
+							point.put("y", i);
+							boundary.put(point);
+						}
+						json.put("boundary", boundary);
+						json.put("tag_id", tagId);
+						
+						new HttpPostTask(postTagHandler, json.toString())
+								.execute(NetworkManager.SOUND_HOST_NAME
+										+ "/tags/" + tagId + "/photo/"
+										+ currentPhotoId);
+					} catch (JSONException e) {
+						Log.e(TAG, "Error parsing JSON");
+					}
+
+				} else {
+					showTags();
+				}
 			}
 
 			@Override
@@ -1076,6 +1132,7 @@ public class PhotoActivity extends BaseActivity {
 
 		@Override
 		public void onLongPress(MotionEvent event) {
+			isSmartMode = true;
 			Toast.makeText(PhotoActivity.this, "Smart Mode", Toast.LENGTH_LONG)
 					.show();
 			currentImageView.setOnTouchListener(null);
@@ -1092,7 +1149,7 @@ public class PhotoActivity extends BaseActivity {
 			// Location to original photo
 			bitmapX = bitmapX / photoScaleFactor;
 			bitmapY = bitmapY / photoScaleFactor;
-			for (int threshold = 10; threshold <= 90; threshold += 5) {
+			for (int threshold = 10; threshold <= 20; threshold += 5) {
 				Segmentation segmentation = new Segmentation(
 						currentPhoto.getLargeBitmap());
 				Bitmap resultBitmap = segmentation.segmentation((int) bitmapX,
@@ -1106,6 +1163,7 @@ public class PhotoActivity extends BaseActivity {
 
 		@Override
 		public boolean onSingleTapUp(MotionEvent event) {
+			isSmartMode = false;
 			Toast.makeText(PhotoActivity.this, "Normal Mode", Toast.LENGTH_LONG)
 					.show();
 			float bitmapX = event.getX() + photoOffsetX;
