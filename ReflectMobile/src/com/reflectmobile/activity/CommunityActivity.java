@@ -472,81 +472,6 @@ public class CommunityActivity extends BaseActivity {
 					}
 				}
 
-<<<<<<< Updated upstream
-			holder.totalPhoto.setTag(position);
-			setPeopleNames(position, holder.people);
-			holder.name.setText(moment.getName());
-
-			// set moment date
-			holder.date.setText(moment.getDate());
-			// set moment photo total
-			int numOfPhotos = moment.getNumOfPhotos();
-			if (numOfPhotos <= 1) {
-				holder.totalPhoto.setText(moment.getNumOfPhotos() + " photo");
-			} else {
-				holder.totalPhoto.setText(moment.getNumOfPhotos() + " photos");
-			}
-
-			// set moment photos
-			for (int count = 0; count < 3; count++) {
-				if (count < numOfPhotos) {
-					holder.photos[count].setImageDrawable(mDrawables[3
-							* position + count]);
-					holder.photos[count].setScaleType(ScaleType.CENTER_CROP);
-					View parent = (View) holder.photos[count].getParent();
-					parent.setTag(position);
-					holder.photos[count].setTag(count);
-					
-					if (numOfPhotos > 3) {
-						holder.photos[count]
-								.setOnClickListener(new OnClickListener() {
-									public void onClick(View v) {
-										int position = (Integer) ((View) v
-												.getParent()).getTag();
-										Intent intent = new Intent(mContext,
-												MomentActivity.class);
-										intent.putExtra("community_id",
-												communityId);
-										intent.putExtra("moment_id", community
-												.getMoment(position).getId());
-										mContext.startActivity(intent);
-									}
-								});
-					} else {
-						holder.photos[count]
-								.setOnClickListener(new OnClickListener() {
-									public void onClick(View v) {
-										int position = (Integer) ((View) v
-												.getParent()).getTag();
-										int count = (Integer) v.getTag();
-										Intent intent = new Intent(mContext,
-												PhotoActivity.class);
-										intent.putExtra("community_id",
-												communityId);
-										Moment selectedMoment = community
-												.getMoment(position);
-										intent.putExtra("moment_id",
-												selectedMoment.getId());
-										intent.putExtra("photo_id",
-												selectedMoment.getPhoto(count)
-														.getId());
-
-										mContext.startActivity(intent);
-									}
-								});
-					}
-				} else if (count == numOfPhotos) {
-					holder.photos[count].setImageDrawable(getResources()
-							.getDrawable(R.drawable.add_photo_community));
-					holder.photos[count].setScaleType(ScaleType.CENTER);
-					holder.photos[count]
-							.setOnClickListener(new OnClickListener() {
-								public void onClick(View v) {
-									addPhotoForMoment(community.getMoment(
-											position).getId());
-								}
-							});
-=======
 				holder.totalPhoto.setTag(position);
 				setPeopleNames(position, holder.people);
 				holder.name.setText(moment.getName());
@@ -558,7 +483,6 @@ public class CommunityActivity extends BaseActivity {
 				if (numOfPhotos <= 1) {
 					holder.totalPhoto.setText(moment.getNumOfPhotos()
 							+ " photo");
->>>>>>> Stashed changes
 				} else {
 					holder.totalPhoto.setText(moment.getNumOfPhotos()
 							+ " photos");
@@ -572,11 +496,16 @@ public class CommunityActivity extends BaseActivity {
 								* position + count]);
 						holder.photos[count]
 								.setScaleType(ScaleType.CENTER_CROP);
-
+						 View parent = (View) holder.photos[count].getParent();
+		                    parent.setTag(position);
+		                    holder.photos[count].setTag(count);
+		 
+		                    if (numOfPhotos > 3) {
 						holder.photos[count]
 								.setOnClickListener(new OnClickListener() {
 									public void onClick(View v) {
-										int position = (Integer) v.getTag();
+										int position = (Integer) ((View) v
+	                                                .getParent()).getTag();
 										Intent intent = new Intent(mContext,
 												MomentActivity.class);
 										intent.putExtra("community_id",
@@ -586,7 +515,32 @@ public class CommunityActivity extends BaseActivity {
 										mContext.startActivity(intent);
 									}
 								});
-					} else if (count == numOfPhotos) {
+		                    }
+					 else {
+                        holder.photos[count]
+                                .setOnClickListener(new OnClickListener() {
+                                    public void onClick(View v) {
+                                        int position = (Integer) ((View) v
+                                                .getParent()).getTag();
+                                        int count = (Integer) v.getTag();
+                                        Intent intent = new Intent(mContext,
+                                                PhotoActivity.class);
+                                        intent.putExtra("community_id",
+                                                communityId);
+                                        Moment selectedMoment = community
+                                                .getMoment(position);
+                                        intent.putExtra("moment_id",
+                                                selectedMoment.getId());
+                                        intent.putExtra("photo_id",
+                                                selectedMoment.getPhoto(count)
+                                                        .getId());
+ 
+                                        mContext.startActivity(intent);
+                                    }
+                                });
+                       }
+					}
+					else if (count == numOfPhotos) {
 						holder.photos[count].setImageDrawable(getResources()
 								.getDrawable(R.drawable.add_photo_community));
 						holder.photos[count].setScaleType(ScaleType.CENTER);
@@ -762,7 +716,7 @@ public class CommunityActivity extends BaseActivity {
 		intent.putExtra("community_id", community.getId());
 		intent.putExtra("moment_id", moment.getId());
 
-		startActivityForResult(intent, CODE_ADD_MOMENT);
+		startActivityForResult(intent,CODE_ADD_MOMENT);
 	}
 
 	private void deleteMoment(int position) {
