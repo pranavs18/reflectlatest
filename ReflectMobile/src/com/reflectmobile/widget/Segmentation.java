@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
+import android.R.integer;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -13,48 +14,59 @@ import android.graphics.RectF;
 
 public class Segmentation {
 	private Bitmap originalBitmap;
+	private Bitmap resultBitmap;
 	private int lineColor = Color.WHITE;
 	private int dotColor = Color.YELLOW;
 	private int squareColor = Color.GREEN;
 	private int width;
 	private int height;
+	private ArrayList<Point> convevHullPointList;
+	private int touchPointX;
+	private int touchPointY;
+	private FloodFiller floodFiller;
 
 	public Segmentation(Bitmap bitmap) {
 		this.originalBitmap = bitmap;
 		this.width = originalBitmap.getWidth();
 		this.height = originalBitmap.getHeight();
+		this.floodFiller = new FloodFiller(originalBitmap);
 	}
 
-	public Bitmap segmentation(int x, int y, int threshold) {
-		FloodFiller floodFiller = new FloodFiller(originalBitmap);
-		floodFiller.setTolerance(threshold);
-		floodFiller.floodFill(x, y);
+	public void setTouchLocation(int touchPointX, int touchPointY) {
+		this.touchPointX = touchPointX;
+		this.touchPointY = touchPointY;
+	}
 
-		Bitmap resultBitmap = floodFiller.getImage();
+	public void segmentation(int threshold) {
+		floodFiller.setTolerance(threshold);
+		floodFiller.floodFill(touchPointX, touchPointY);
+
+		floodFiller.getImage();
 		ArrayList<Point> borderPointList = floodFiller.getBorderPointList();
 
 		// Convex hull
-		ArrayList<Point> convevHullPointList = findConvexHull(borderPointList);
+		convevHullPointList = findConvexHull(borderPointList);
+
+		// Copy
+		resultBitmap = copyImage(originalBitmap);
 
 		// Normolize point list
-		normilizePointList(resultBitmap, convevHullPointList);
+		normilizePointList();
 
 		// Draw square
-//		drawSquare(resultBitmap, convevHullPointList);
+		// drawSquare(resultBitmap, convevHullPointList);
 
 		// Draw lines
-		drawLines(resultBitmap, convevHullPointList);
+		drawLines();
 
 		// Draw dots
-//		drawDots(resultBitmap, convevHullPointList);
+		// drawDots(resultBitmap, convevHullPointList);
 
 		ArrayList<Point> touchPointList = new ArrayList<Point>();
-		touchPointList.add(new Point(x, y));
-		drawDots(resultBitmap, touchPointList);
+		touchPointList.add(new Point(touchPointX, touchPointY));
+		drawDots(touchPointList);
 
-		// Save
-		// saveToDisk(resultBitmap, "Test");
-		return resultBitmap;
+		return;
 	}
 
 	public ArrayList<Point> findConvexHull(ArrayList<Point> points) {
@@ -130,46 +142,46 @@ public class Segmentation {
 	/*
 	 * Make sure the point is in the border of the image
 	 */
-	private void normilizePointList(Bitmap bitmap, ArrayList<Point> pointList) {
+	private void normilizePointList() {
 		int offset = 10;
-		for (Point point : pointList) {
-			point.x = Math.min(bitmap.getWidth() - offset,
+		for (Point point : convevHullPointList) {
+			point.x = Math.min(resultBitmap.getWidth() - offset,
 					Math.max(offset, point.x));
-			point.y = Math.min(bitmap.getHeight() - offset,
+			point.y = Math.min(resultBitmap.getHeight() - offset,
 					Math.max(offset, point.y));
 		}
 
 	}
 
-	private void drawLines(Bitmap bitmap, ArrayList<Point> pointList) {
-		if (pointList.size() <= 3) {
+	private void drawLines() {
+		if (convevHullPointList.size() <= 3) {
 			return;
 		}
 		Paint paint = new Paint();
 		paint.setColor(lineColor);
 		paint.setStyle(Paint.Style.FILL);
 		paint.setStrokeWidth(6);
-		Canvas canvas = new Canvas(bitmap);
+		Canvas canvas = new Canvas(resultBitmap);
 
-		Point prevPoint = pointList.get(0);
-		for (int i = 1; i <= pointList.size() - 1; i++) {
-			Point currentPoint = pointList.get(i);
+		Point prevPoint = convevHullPointList.get(0);
+		for (int i = 1; i <= convevHullPointList.size() - 1; i++) {
+			Point currentPoint = convevHullPointList.get(i);
 			canvas.drawLine(prevPoint.x, prevPoint.y, currentPoint.x,
 					currentPoint.y, paint);
 			prevPoint = currentPoint;
 		}
-		canvas.drawLine(prevPoint.x, prevPoint.y, pointList.get(0).x,
-				pointList.get(0).y, paint);
+		canvas.drawLine(prevPoint.x, prevPoint.y, convevHullPointList.get(0).x,
+				convevHullPointList.get(0).y, paint);
 		return;
 	}
 
-	private void drawDots(Bitmap bitmap, ArrayList<Point> pointList) {
+	private void drawDots(ArrayList<Point> pointList) {
 		int littleSquareRadius = 6;
-		Canvas canvas = new Canvas(bitmap);
+		Canvas canvas = new Canvas(resultBitmap);
 		for (Point point : pointList) {
-			int x = Math.min(bitmap.getWidth() - littleSquareRadius,
+			int x = Math.min(resultBitmap.getWidth() - littleSquareRadius,
 					Math.max(littleSquareRadius, point.x));
-			int y = Math.min(bitmap.getHeight() - littleSquareRadius,
+			int y = Math.min(resultBitmap.getHeight() - littleSquareRadius,
 					Math.max(littleSquareRadius, point.y));
 			// Generate brush for draw little square border
 			Paint paint = new Paint();
@@ -193,7 +205,7 @@ public class Segmentation {
 		return;
 	}
 
-	private void drawSquare(Bitmap bitmap, ArrayList<Point> pointList) {
+	private void drawSquare(ArrayList<Point> pointList) {
 		// Calculate border
 		int left = width;
 		int right = 0;
@@ -210,8 +222,39 @@ public class Segmentation {
 		paint.setColor(squareColor);
 		paint.setStyle(Paint.Style.STROKE);
 		paint.setStrokeWidth(6);
-		Canvas canvas = new Canvas(bitmap);
+		Canvas canvas = new Canvas(resultBitmap);
 		canvas.drawRect(left, top, right, bottom, paint);
 		return;
+	}
+
+	public RectF getSquareLocation() {
+		// Calculate border
+		int left = width;
+		int right = 0;
+		int top = height;
+		int bottom = 0;
+		for (Point point : convevHullPointList) {
+			left = Math.min(left, point.x);
+			right = Math.max(right, point.x);
+			top = Math.min(top, point.y);
+			bottom = Math.max(bottom, point.y);
+		}
+		return new RectF(left, top, right, bottom);
+	}
+
+	public ArrayList<Point> getConvevHullPointList() {
+		return convevHullPointList;
+	}
+
+	public Bitmap getResultBitmap() {
+		return resultBitmap;
+	}
+
+	public Bitmap copyImage(Bitmap img) {
+		Bitmap copyedImage = Bitmap
+				.createBitmap(width, height, Bitmap.Config.RGB_565);
+		Canvas canvas = new Canvas(copyedImage);
+		canvas.drawBitmap(originalBitmap, 0, 0, null);
+		return copyedImage;
 	}
 }

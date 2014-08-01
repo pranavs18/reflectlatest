@@ -14,6 +14,7 @@ import android.annotation.SuppressLint;
 import android.app.ActionBar.LayoutParams;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Point;
 import android.graphics.RectF;
 import android.content.Intent;
 import android.graphics.Typeface;
@@ -145,6 +146,9 @@ public class PhotoActivity extends BaseActivity {
 	private GestureDetector addTagGestureDetector;
 	private List<Bitmap> segmentationResultList = new ArrayList<Bitmap>();
 	private int currentSegmentationResultIndex = 0;
+	private Segmentation segmentation;
+	private int currentThreshold = 10;
+	private int maxThreshold = 100;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -284,7 +288,9 @@ public class PhotoActivity extends BaseActivity {
 		case R.id.action_done_add:
 			if (isSmartMode) {
 				// TODO: get rectangle
-				tagLocation = new RectF(100, 100, 200, 200);
+				if (segmentation != null) {
+					tagLocation = segmentation.getSquareLocation();
+				}
 			}
 			if (tagLocation != null && tagName.getText().length() > 0) {
 				persistTag(tagName.getText().toString(), false);
@@ -869,6 +875,7 @@ public class PhotoActivity extends BaseActivity {
 		tagLocation = null;
 
 		currentImageView.setImageBitmap(currentPhoto.getLargeBitmap());
+		currentImageView.setOnTouchListener(null);
 		currentImageView.setOnTouchListener(onAddTagTouchListener);
 	}
 
@@ -933,19 +940,22 @@ public class PhotoActivity extends BaseActivity {
 						tagData = new JSONObject(result);
 						int tagId = tagData.getInt("id");
 						JSONObject json = new JSONObject();
-						
+
 						JSONArray boundary = new JSONArray();
 
 						// TODO: change coordinates
-						for (int i = 0; i < 10; i++) {
-							JSONObject point = new JSONObject();
-							point.put("x", i);
-							point.put("y", i);
-							boundary.put(point);
+						if (segmentation != null) {
+							for (Point point : segmentation
+									.getConvevHullPointList()) {
+								JSONObject jsonPoint = new JSONObject();
+								jsonPoint.put("x", point.x);
+								jsonPoint.put("y", point.y);
+								boundary.put(jsonPoint);
+							}
+							json.put("boundary", boundary);
+							json.put("tag_id", tagId);
 						}
-						json.put("boundary", boundary);
-						json.put("tag_id", tagId);
-						
+
 						new HttpPostTask(postTagHandler, json.toString())
 								.execute(NetworkManager.SOUND_HOST_NAME
 										+ "/tags/" + tagId + "/photo/"
@@ -1135,12 +1145,6 @@ public class PhotoActivity extends BaseActivity {
 			isSmartMode = true;
 			Toast.makeText(PhotoActivity.this, "Smart Mode", Toast.LENGTH_LONG)
 					.show();
-			currentImageView.setOnTouchListener(null);
-			// Initialize segmentation result
-			segmentationResultList.clear();
-			currentSegmentationResultIndex = 0;
-			currentImageView.setOnTouchListener(onSegmentationTouchListener);
-
 			// Transfer the coordinate from the image view to the
 			// photo bitmap
 			// Location on the enlarged photo
@@ -1149,16 +1153,15 @@ public class PhotoActivity extends BaseActivity {
 			// Location to original photo
 			bitmapX = bitmapX / photoScaleFactor;
 			bitmapY = bitmapY / photoScaleFactor;
-			for (int threshold = 10; threshold <= 20; threshold += 5) {
-				Segmentation segmentation = new Segmentation(
-						currentPhoto.getLargeBitmap());
-				Bitmap resultBitmap = segmentation.segmentation((int) bitmapX,
-						(int) bitmapY, threshold);
-				segmentationResultList.add(resultBitmap);
-			}
-			currentSegmentationResultIndex = 2;
-			currentImageView.setImageBitmap(segmentationResultList
-					.get(currentSegmentationResultIndex));
+			// Segmentation
+			segmentation = new Segmentation(currentPhoto.getLargeBitmap());
+			segmentation.setTouchLocation((int) bitmapX, (int) bitmapY);
+			segmentation.segmentation(currentThreshold);
+			currentImageView.setImageBitmap(segmentation.getResultBitmap());
+
+			// Set following on touch listener
+			currentImageView.setOnTouchListener(null);
+			currentImageView.setOnTouchListener(onSegmentationTouchListener);
 		}
 
 		@Override
@@ -1166,6 +1169,9 @@ public class PhotoActivity extends BaseActivity {
 			isSmartMode = false;
 			Toast.makeText(PhotoActivity.this, "Normal Mode", Toast.LENGTH_LONG)
 					.show();
+			// Transfer the coordinate from the image view to the
+			// photo bitmap
+			// Location on the enlarged photo
 			float bitmapX = event.getX() + photoOffsetX;
 			float bitmapY = event.getY() + photoOffsetY;
 
@@ -1176,14 +1182,15 @@ public class PhotoActivity extends BaseActivity {
 
 			tagLocation = new RectF(left, top, right, bottom);
 
-			currentImageView.setOnTouchListener(null);
-			currentImageView.setOnTouchListener(onEditTagTouchListener);
-
 			// Draw initial tag square
 			Bitmap initialBitmap = ImageProcessor.drawEditSquare(
 					currentPhoto.getLargeBitmap(),
 					currentPhoto.getDarkenLargeBitmap(), tagLocation, true);
 			currentImageView.setImageBitmap(initialBitmap);
+
+			// Set following on touch listener
+			currentImageView.setOnTouchListener(null);
+			currentImageView.setOnTouchListener(onEditTagTouchListener);
 			return true;
 		}
 
@@ -1255,10 +1262,11 @@ public class PhotoActivity extends BaseActivity {
 		public boolean onTouch(View view, MotionEvent event) {
 			switch (event.getActionMasked()) {
 			case MotionEvent.ACTION_DOWN:
-				currentSegmentationResultIndex = (currentSegmentationResultIndex + 1)
-						% segmentationResultList.size();
-				currentImageView.setImageBitmap(segmentationResultList
-						.get(currentSegmentationResultIndex));
+				// Add threshold
+				currentThreshold = (currentThreshold + 10) % maxThreshold;
+				// Segmentation
+				segmentation.segmentation(currentThreshold);
+				currentImageView.setImageBitmap(segmentation.getResultBitmap());
 			default:
 				break;
 			}
