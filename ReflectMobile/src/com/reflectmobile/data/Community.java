@@ -44,7 +44,7 @@ public class Community {
 	}
 
 	public Moment getMoment(int index) {
-		if (index <= momentList.size() - 1 && index >= 0) {
+		if (index <= momentList.size() - 1) {
 			return momentList.get(index);
 		} else {
 			return null;

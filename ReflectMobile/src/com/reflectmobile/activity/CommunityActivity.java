@@ -1,13 +1,11 @@
 package com.reflectmobile.activity;
 
 import java.util.ArrayList;
-import java.util.zip.Inflater;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 
 import android.annotation.SuppressLint;
-import android.app.ActionBar.LayoutParams;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -33,7 +31,6 @@ import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
-import android.widget.RelativeLayout;
 import android.widget.Toast;
 import android.widget.ImageView.ScaleType;
 import android.widget.ListView;
@@ -49,22 +46,20 @@ import com.reflectmobile.utility.NetworkManager.HttpGetTask;
 import com.reflectmobile.utility.NetworkManager.HttpImageTaskHandler;
 import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
 
-import de.neofonie.mobile.app.android.widget.crouton.Crouton;
-import de.neofonie.mobile.app.android.widget.crouton.Style;
-
 public class CommunityActivity extends BaseActivity {
 
 	private static String TAG = "CommunityActivity";
 	private Community community;
 	private static int communityId;
 	private CardListViewAdapter cardListViewAdapter;
-  
+
 	// Static identifier for receiving camera apps call back
 	private static final int CODE_ADD_MOMENT = 101;
 	private static final int CODE_ADD_PHOTO = 102;
-	public static final int MEDIA_TYPE_IMAGE = 1;
 	public static final int EMAIL_CODE = 103;
-	public static final int CODE_ADD_DONATION = 104;
+    public static final int CODE_ADD_DONATION = 104;
+	public static final int MEDIA_TYPE_IMAGE = 1;
+
 	private String inviteLink = "";
 	String photoPath;
 
@@ -187,8 +182,8 @@ public class CommunityActivity extends BaseActivity {
 			inviteToCommunity();
 			return true;
 		case R.id.action_campaign:
-			startCampaign();
-			return false;
+            startCampaign();
+            return false;
 		default:
 			return super.onOptionsItemSelected(item);
 		}
@@ -274,20 +269,20 @@ public class CommunityActivity extends BaseActivity {
 						}).setCustomTitle(title).setCancelable(false).show();
 	}
 
-	public void startCampaign() {
-		Intent intent = new Intent(CommunityActivity.this,
-				StartCampaignActivity.class);
-		intent.putExtra("community_id", communityId);
-		startActivityForResult(intent, CODE_ADD_DONATION);
-	}
-
-	public void onDonate(View button) {
-		Intent intent = new Intent(CommunityActivity.this,
-				DonationActivity.class);
-		intent.putExtra("community_id", communityId);
-		startActivityForResult(intent, CODE_ADD_DONATION);
-	}
-
+	 public void startCampaign() {
+	        Intent intent = new Intent(CommunityActivity.this,
+	                StartCampaignActivity.class);
+	        intent.putExtra("community_id", communityId);
+	        startActivityForResult(intent, CODE_ADD_DONATION);
+	    }
+	 
+	    public void onDonate(View button) {
+	        Intent intent = new Intent(CommunityActivity.this,
+	                DonationActivity.class);
+	        intent.putExtra("community_id", communityId);
+	        startActivityForResult(intent, CODE_ADD_DONATION);
+	    }
+	    
 	public void inviteToCommunity() {
 		Intent i = new Intent(Intent.ACTION_SEND);
 		i.setType("message/rfc822");
@@ -299,16 +294,14 @@ public class CommunityActivity extends BaseActivity {
 		i.putExtra(Intent.EXTRA_TEXT, inviteLink);
 
 		try {
-			startActivity(Intent.createChooser(i, "Sending email..."));
-			Log.d("Sending invitation...", "");
-			Toast.makeText(CommunityActivity.this, "Just one more step.... ",
-					Toast.LENGTH_SHORT).show();
+			startActivity(Intent.createChooser(i, "Send mail..."));
 		} catch (android.content.ActivityNotFoundException ex) {
 			Toast.makeText(CommunityActivity.this,
 					"There are no email clients installed.", Toast.LENGTH_SHORT)
 					.show();
 		}
-
+		Toast.makeText(CommunityActivity.this, "Just one more step.... ",
+				Toast.LENGTH_SHORT).show();
 		// Log.d(sendInvite.class.getSimpleName(), "Sending Invitation.... ");
 		// inviteLink = "";
 
@@ -355,7 +348,7 @@ public class CommunityActivity extends BaseActivity {
 
 		@Override
 		public int getCount() {
-			return community.getNumOfMoments() + 1;
+			return community.getNumOfMoments();
 		}
 
 		@Override
@@ -379,133 +372,117 @@ public class CommunityActivity extends BaseActivity {
 		}
 
 		@Override
-		public View getView(final int pos, View convertView,
+		public View getView(final int position, View convertView,
 				ViewGroup parentView) {
-			final int position = pos ;
 			// If there is no view to recycle - create a new one
 			final Moment moment = community.getMoment(position);
 
 			if (convertView == null) {
-				if (pos == 0 ) {
-					convertView = (RelativeLayout) mInflater.inflate(
-							R.layout.card_donation, parentView, false);
-					
-				} else {
-					convertView = mInflater.inflate(R.layout.card_moment,
-							parentView, false);
-					final CardViewHolder holder = new CardViewHolder();
-					holder.name = (TextView) convertView
-							.findViewById(R.id.text_community_card_community_name);
-					holder.date = (TextView) convertView
-							.findViewById(R.id.text_community_card_date);
-					holder.totalPhoto = (Button) convertView
-							.findViewById(R.id.button_community_card_total_photo);
-					holder.people = (TextView) convertView
-							.findViewById(R.id.text_community_card_people_name);
-					holder.photos[0] = (ImageView) convertView
-							.findViewById(R.id.card_photo_1);
-					holder.photos[1] = (ImageView) convertView
-							.findViewById(R.id.card_photo_2);
-					holder.photos[2] = (ImageView) convertView
-							.findViewById(R.id.card_photo_3);
+				convertView = mInflater.inflate(R.layout.card_moment,
+						parentView, false);
+				final CardViewHolder holder = new CardViewHolder();
+				holder.name = (TextView) convertView
+						.findViewById(R.id.text_community_card_community_name);
+				holder.date = (TextView) convertView
+						.findViewById(R.id.text_community_card_date);
+				holder.totalPhoto = (Button) convertView
+						.findViewById(R.id.button_community_card_total_photo);
+				holder.people = (TextView) convertView
+						.findViewById(R.id.text_community_card_people_name);
+				holder.photos[0] = (ImageView) convertView
+						.findViewById(R.id.card_photo_1);
+				holder.photos[1] = (ImageView) convertView
+						.findViewById(R.id.card_photo_2);
+				holder.photos[2] = (ImageView) convertView
+						.findViewById(R.id.card_photo_3);
 
-					holder.totalPhoto.setOnClickListener(new OnClickListener() {
+				holder.totalPhoto.setOnClickListener(new OnClickListener() {
+					@Override
+					public void onClick(View v) {
+						int position = (Integer) v.getTag();
+						Intent intent = new Intent(mContext,
+								MomentActivity.class);
+						intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+								| Intent.FLAG_ACTIVITY_CLEAR_TASK);
+						intent.putExtra("community_id", communityId);
+						intent.putExtra("moment_id",
+								community.getMoment(position).getId());
+						mContext.startActivity(intent);
+					}
+				});
+				holder.menu = (ImageButton) convertView
+						.findViewById(R.id.card_menu);
+				holder.menu.setOnClickListener(onCardMenuClicked);
+				holder.menu.setTag(position);
+
+				convertView.setTag(holder);
+			}
+
+			final CardViewHolder holder = (CardViewHolder) convertView.getTag();
+
+			if (moment.getPeopleList() == null) {
+				moment.setPeopleList(new ArrayList<String>());
+				for (int count = 0; count < moment.getNumOfPhotos(); count++) {
+					final HttpTaskHandler getTagsHandler = new HttpTaskHandler() {
 						@Override
-						public void onClick(View v) {
-							int position = (Integer) v.getTag();
-							Intent intent = new Intent(mContext,
-									MomentActivity.class);
-							intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-									| Intent.FLAG_ACTIVITY_CLEAR_TASK);
-							intent.putExtra("community_id", communityId);
-							intent.putExtra("moment_id",
-									community.getMoment(position).getId());
-							mContext.startActivity(intent);
+						public void taskSuccessful(String result) {
+							Log.d(TAG, result);
+							JSONArray tagJSONArray;
+							try {
+								tagJSONArray = new JSONArray(result);
+								for (int j = 0; j <= tagJSONArray.length() - 1; j++) {
+									Tag tag = Tag.getTagInfo(tagJSONArray
+											.getString(j));
+									moment.addPerson(tag.getName());
+								}
+							} catch (JSONException e) {
+								Log.e(TAG, "Error parse the tag json");
+							}
+							notifyDataSetChanged();
 						}
-					});
-					holder.menu = (ImageButton) convertView
-							.findViewById(R.id.card_menu);
-					holder.menu.setOnClickListener(onCardMenuClicked);
-					holder.menu.setTag(position);
 
-					convertView.setTag(holder);
+						@Override
+						public void taskFailed(String reason) {
+							Log.e(TAG, "Error downloading the tag");
+						}
+					};
+
+					new HttpGetTask(getTagsHandler)
+							.execute(NetworkManager.hostName + "/api/photos/"
+									+ moment.getPhoto(count).getId() + "/tags");
 				}
 			}
 
-			if (pos != 0) {
-				final CardViewHolder holder = (CardViewHolder) convertView
-						.getTag();
-                if(holder != null && moment != null ){
-                 
-                  if (moment.getPeopleList() == null) {
-					moment.setPeopleList(new ArrayList<String>());
-					for (int count = 0; count < moment.getNumOfPhotos(); count++) {
-						final HttpTaskHandler getTagsHandler = new HttpTaskHandler() {
-							@Override
-							public void taskSuccessful(String result) {
-								Log.d(TAG, result);
-								JSONArray tagJSONArray;
-								try {
-									tagJSONArray = new JSONArray(result);
-									for (int j = 0; j <= tagJSONArray.length() - 1; j++) {
-										Tag tag = Tag.getTagInfo(tagJSONArray
-												.getString(j));
-										moment.addPerson(tag.getName());
-									}
-								} catch (JSONException e) {
-									Log.e(TAG, "Error parse the tag json");
-								}
-								notifyDataSetChanged();
-							}
+			holder.totalPhoto.setTag(position);
+			setPeopleNames(position, holder.people);
+			holder.name.setText(moment.getName());
 
-							@Override
-							public void taskFailed(String reason) {
-								Log.e(TAG, "Error downloading the tag");
-							}
-						};
+			// set moment date
+			holder.date.setText(moment.getDate());
+			// set moment photo total
+			int numOfPhotos = moment.getNumOfPhotos();
+			if (numOfPhotos <= 1) {
+				holder.totalPhoto.setText(moment.getNumOfPhotos() + " photo");
+			} else {
+				holder.totalPhoto.setText(moment.getNumOfPhotos() + " photos");
+			}
 
-						new HttpGetTask(getTagsHandler)
-								.execute(NetworkManager.hostName
-										+ "/api/photos/"
-										+ moment.getPhoto(count).getId()
-										+ "/tags");
-					}
-				}
+			// set moment photos
+			for (int count = 0; count < 3; count++) {
+				if (count < numOfPhotos) {
+					holder.photos[count].setImageDrawable(mDrawables[3
+							* position + count]);
+					holder.photos[count].setScaleType(ScaleType.CENTER_CROP);
+					View parent = (View) holder.photos[count].getParent();
+					parent.setTag(position);
+					holder.photos[count].setTag(count);
 
-				holder.totalPhoto.setTag(position);
-				setPeopleNames(position, holder.people);
-				holder.name.setText(moment.getName());
-
-				// set moment date
-				holder.date.setText(moment.getDate());
-				// set moment photo total
-				int numOfPhotos = moment.getNumOfPhotos();
-				if (numOfPhotos <= 1) {
-					holder.totalPhoto.setText(moment.getNumOfPhotos()
-							+ " photo");
-				} else {
-					holder.totalPhoto.setText(moment.getNumOfPhotos()
-							+ " photos");
-				}
-
-				// set moment photos
-				for (int count = 0; count < 3; count++) {
-					if (count < numOfPhotos) {
-						holder.photos[count].setTag(position);
-						holder.photos[count].setImageDrawable(mDrawables[3
-								* position + count]);
-						holder.photos[count]
-								.setScaleType(ScaleType.CENTER_CROP);
-						 View parent = (View) holder.photos[count].getParent();
-		                    parent.setTag(position);
-		                    holder.photos[count].setTag(count);
-		 
-		                    if (numOfPhotos > 3) {
+					if (numOfPhotos > 3) {
 						holder.photos[count]
 								.setOnClickListener(new OnClickListener() {
 									public void onClick(View v) {
 										int position = (Integer) ((View) v
-	                                                .getParent()).getTag();
+												.getParent()).getTag();
 										Intent intent = new Intent(mContext,
 												MomentActivity.class);
 										intent.putExtra("community_id",
@@ -515,49 +492,46 @@ public class CommunityActivity extends BaseActivity {
 										mContext.startActivity(intent);
 									}
 								});
-		                    }
-					 else {
-                        holder.photos[count]
-                                .setOnClickListener(new OnClickListener() {
-                                    public void onClick(View v) {
-                                        int position = (Integer) ((View) v
-                                                .getParent()).getTag();
-                                        int count = (Integer) v.getTag();
-                                        Intent intent = new Intent(mContext,
-                                                PhotoActivity.class);
-                                        intent.putExtra("community_id",
-                                                communityId);
-                                        Moment selectedMoment = community
-                                                .getMoment(position);
-                                        intent.putExtra("moment_id",
-                                                selectedMoment.getId());
-                                        intent.putExtra("photo_id",
-                                                selectedMoment.getPhoto(count)
-                                                        .getId());
- 
-                                        mContext.startActivity(intent);
-                                    }
-                                });
-                       }
-					}
-					else if (count == numOfPhotos) {
-						holder.photos[count].setImageDrawable(getResources()
-								.getDrawable(R.drawable.add_photo_community));
-						holder.photos[count].setScaleType(ScaleType.CENTER);
+					} else {
 						holder.photos[count]
 								.setOnClickListener(new OnClickListener() {
 									public void onClick(View v) {
-										addPhotoForMoment(community.getMoment(
-												position).getId());
+										int position = (Integer) ((View) v
+												.getParent()).getTag();
+										int count = (Integer) v.getTag();
+										Intent intent = new Intent(mContext,
+												PhotoActivity.class);
+										intent.putExtra("community_id",
+												communityId);
+										Moment selectedMoment = community
+												.getMoment(position);
+										intent.putExtra("moment_id",
+												selectedMoment.getId());
+										intent.putExtra("photo_id",
+												selectedMoment.getPhoto(count)
+														.getId());
+
+										mContext.startActivity(intent);
 									}
 								});
-					} else {
-						holder.photos[count].setImageDrawable(null);
-						holder.photos[count].setOnClickListener(null);
 					}
+				} else if (count == numOfPhotos) {
+					holder.photos[count].setImageDrawable(getResources()
+							.getDrawable(R.drawable.add_photo_community));
+					holder.photos[count].setScaleType(ScaleType.CENTER);
+					holder.photos[count]
+							.setOnClickListener(new OnClickListener() {
+								public void onClick(View v) {
+									addPhotoForMoment(community.getMoment(
+											position).getId());
+								}
+							});
+				} else {
+					holder.photos[count].setImageDrawable(null);
+					holder.photos[count].setOnClickListener(null);
 				}
 			}
-			}
+
 			// set moment photo list
 			return convertView;
 		}
@@ -654,25 +628,10 @@ public class CommunityActivity extends BaseActivity {
 	// Photo app callback function (define how to handle the photo)
 	// Currently only add the photo to the gallery
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		switch (requestCode) {
-		case CODE_ADD_MOMENT:
-			if (resultCode == RESULT_OK) {
-				Intent intent = getIntent();
-				finish();
-				startActivity(intent);
-				break;
-			}
-
-		case EMAIL_CODE:
-			Log.d(TAG, "email sent...");
-
-			int red = android.R.color.holo_red_light;
-			Style CustomAlert = new Style.Builder().setDuration(3000)
-					.setHeight(LayoutParams.WRAP_CONTENT).setTextSize(16)
-					.setBackgroundColor(red).setPaddingInPixels(20).build();
-			Crouton.makeText(this, "Email sent", CustomAlert).show();
-
-			break;
+		if (requestCode == CODE_ADD_MOMENT && resultCode == RESULT_OK) {
+			Intent intent = getIntent();
+			finish();
+			startActivity(intent);
 		}
 	}
 
@@ -716,7 +675,7 @@ public class CommunityActivity extends BaseActivity {
 		intent.putExtra("community_id", community.getId());
 		intent.putExtra("moment_id", moment.getId());
 
-		startActivityForResult(intent,CODE_ADD_MOMENT);
+		startActivityForResult(intent, CODE_ADD_MOMENT);
 	}
 
 	private void deleteMoment(int position) {

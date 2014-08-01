@@ -55,7 +55,7 @@
             android:padding="11dp"
             android:src="@drawable/overflow_menu" />
 
-        <TextView
+        <Button
             android:id="@+id/donate_money"
             android:layout_width="wrap_content"
             android:layout_height="26dp"
@@ -65,6 +65,8 @@
             android:gravity="center"
             android:minWidth="75dp"
             android:text="Donate"
+            android:onClick="onDonate"
+            android:background="@color/white"
             android:textColor="@color/green"
             android:textSize="13sp"
             android:textStyle="bold" />
