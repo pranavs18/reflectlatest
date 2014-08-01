@@ -4,6 +4,7 @@
     android:id="@+id/card_community"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_below="@+id/RelativeLayout1"
     android:background="@drawable/card"
     tools:context=".activity.CommunityActivity$CardListViewAdapter" >
 
@@ -34,8 +35,8 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_centerVertical="true"
-            android:layout_marginRight="7dp"
             android:layout_marginLeft="7dp"
+            android:layout_marginRight="7dp"
             android:layout_toLeftOf="@+id/button_community_card_total_photo"
             android:gravity="center"
             android:text="@string/moment_date"

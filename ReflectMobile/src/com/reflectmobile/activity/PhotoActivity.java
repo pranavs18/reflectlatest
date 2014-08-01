@@ -57,7 +57,6 @@ import com.reflectmobile.utility.NetworkManager.HttpGetImageTask;
 import com.reflectmobile.utility.NetworkManager.HttpGetTask;
 import com.reflectmobile.utility.NetworkManager.HttpImageTaskHandler;
 import com.reflectmobile.utility.NetworkManager.HttpDeleteTask;
-import com.reflectmobile.utility.NetworkManager.HttpPostSoundTask;
 import com.reflectmobile.utility.NetworkManager.HttpPostTask;
 import com.reflectmobile.utility.NetworkManager.HttpPutTask;
 import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
@@ -755,6 +754,13 @@ public class PhotoActivity extends BaseActivity {
 		// Hide EditText
 		findViewById(R.id.tag_name_container).setVisibility(View.GONE);
 
+		// Hide instructions
+		findViewById(R.id.instructions).setVisibility(View.GONE);
+
+		// Show memories
+		findViewById(R.id.memories_caption).setVisibility(View.VISIBLE);
+		findViewById(R.id.memories_container).setVisibility(View.VISIBLE);
+		
 		// Show add tag button
 		findViewById(R.id.photo_description).setVisibility(View.GONE);
 		Button add_tag = (Button) findViewById(R.id.add_tag);
@@ -870,6 +876,15 @@ public class PhotoActivity extends BaseActivity {
 		// Show EditText instead
 		findViewById(R.id.tag_name_container).setVisibility(View.VISIBLE);
 		((EditText) findViewById(R.id.tag_name)).setText("");
+
+		// Hide memories
+		findViewById(R.id.memories_caption).setVisibility(View.GONE);
+		findViewById(R.id.memories_container).setVisibility(View.GONE);
+		
+		// Show instructions
+		TextView instructions = (TextView) findViewById(R.id.instructions);
+		instructions.setText("Tap photo to add tag. \n Long tap to select an object");
+		instructions.setVisibility(View.VISIBLE);
 
 		// Indicate that there is no tag
 		tagLocation = null;
@@ -1143,6 +1158,9 @@ public class PhotoActivity extends BaseActivity {
 		@Override
 		public void onLongPress(MotionEvent event) {
 			isSmartMode = true;
+			TextView instructions = (TextView) findViewById(R.id.instructions);
+			instructions.setText("Tap tap to select more.");
+			
 			Toast.makeText(PhotoActivity.this, "Smart Mode", Toast.LENGTH_LONG)
 					.show();
 			// Transfer the coordinate from the image view to the
