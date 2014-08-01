@@ -56,6 +56,8 @@ public class CommunityActivity extends BaseActivity {
 	// Static identifier for receiving camera apps call back
 	private static final int CODE_ADD_MOMENT = 101;
 	private static final int CODE_ADD_PHOTO = 102;
+	public static final int EMAIL_CODE = 103;
+    public static final int CODE_ADD_DONATION = 104;
 	public static final int MEDIA_TYPE_IMAGE = 1;
 
 	private String inviteLink = "";
@@ -178,7 +180,10 @@ public class CommunityActivity extends BaseActivity {
 			return true;
 		case R.id.action_invite:
 			inviteToCommunity();
-			return false;
+			return true;
+		case R.id.action_campaign:
+            startCampaign();
+            return false;
 		default:
 			return super.onOptionsItemSelected(item);
 		}
@@ -264,6 +269,20 @@ public class CommunityActivity extends BaseActivity {
 						}).setCustomTitle(title).setCancelable(false).show();
 	}
 
+	 public void startCampaign() {
+	        Intent intent = new Intent(CommunityActivity.this,
+	                StartCampaignActivity.class);
+	        intent.putExtra("community_id", communityId);
+	        startActivityForResult(intent, CODE_ADD_DONATION);
+	    }
+	 
+	    public void onDonate(View button) {
+	        Intent intent = new Intent(CommunityActivity.this,
+	                DonationActivity.class);
+	        intent.putExtra("community_id", communityId);
+	        startActivityForResult(intent, CODE_ADD_DONATION);
+	    }
+	    
 	public void inviteToCommunity() {
 		Intent i = new Intent(Intent.ACTION_SEND);
 		i.setType("message/rfc822");
