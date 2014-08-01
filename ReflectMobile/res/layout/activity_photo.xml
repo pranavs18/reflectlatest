@@ -168,6 +168,16 @@
                 android:paddingTop="1dp" />
 
             <TextView
+                android:id="@+id/instructions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="85dp"
+                android:background="@color/gray"
+                android:gravity="center"
+                android:textColor="@color/black"
+                android:visibility="gone" />
+
+            <TextView
                 android:id="@+id/memories_caption"
                 android:layout_width="match_parent"
                 android:layout_height="27dp"
