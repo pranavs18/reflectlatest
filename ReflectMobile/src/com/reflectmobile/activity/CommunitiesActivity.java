@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.View.OnClickListener;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -38,6 +39,7 @@ public class CommunitiesActivity extends BaseActivity {
 
 	private final static int CODE_ADD_COMMUNITY = 101;
 	private static final int CODE_ADD_PHOTO = 102;
+	private static final int CODE_ADD_DONATION = 103;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -79,7 +81,7 @@ public class CommunitiesActivity extends BaseActivity {
 
 		new HttpGetTask(getCommunitiesHandler).execute(NetworkManager.hostName
 				+ "/api/communities");
-
+        
 	}
 
 	@Override
@@ -192,7 +194,7 @@ public class CommunitiesActivity extends BaseActivity {
 			public int position;
 			public ImageButton menu;
 			public TextView hiddenText;
-
+            public Button donate;
 		}
 
 		@Override
@@ -208,8 +210,9 @@ public class CommunitiesActivity extends BaseActivity {
 						.findViewById(R.id.add_photos);
 				holder.image = (ImageView) convertView
 						.findViewById(R.id.card_image);
+				holder.donate = (Button) convertView.findViewById(R.id.donate_money);
 				holder.image.setScaleType(ScaleType.CENTER_CROP);
-
+              
 				holder.image.setOnClickListener(new View.OnClickListener() {
 
 					@Override
@@ -227,6 +230,8 @@ public class CommunitiesActivity extends BaseActivity {
 							addPhotoToCommunity(communities[position].getId());
 						}
 					}
+					
+					
 				});
 				holder.menu = (ImageButton) convertView
 						.findViewById(R.id.card_menu);
@@ -234,6 +239,21 @@ public class CommunitiesActivity extends BaseActivity {
 				holder.menu.setTag(position);
 				holder.image.setTag(holder);
 				convertView.setTag(holder);
+				
+				holder.donate.setOnClickListener(new View.OnClickListener() {
+					
+					@Override
+					public void onClick(View v) {
+						// TODO Auto-generated method stub
+						
+					        Intent intent = new Intent(CommunitiesActivity.this,
+					                DonationActivity.class);
+					        startActivityForResult(intent, CODE_ADD_DONATION);
+					    
+	
+					}
+					
+				});
 			}
 
 			final CardViewHolder holder = (CardViewHolder) convertView.getTag();
@@ -294,5 +314,6 @@ public class CommunitiesActivity extends BaseActivity {
 
 		startActivityForResult(intent, CODE_ADD_COMMUNITY);
 	}
-
+	
+	
 }
