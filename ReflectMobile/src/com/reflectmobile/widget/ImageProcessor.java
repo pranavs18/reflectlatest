@@ -8,6 +8,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
@@ -37,10 +38,23 @@ public class ImageProcessor {
 
 		// Draw tags based on tag coordinate
 		for (Tag tag : tagList) {
-			RectF rect = new RectF(tag.getUpLeftX(), tag.getUpLeftY(),
-					tag.getUpLeftX() + tag.getBoxWidth(), tag.getUpLeftY()
-							+ tag.getBoxLength());
-			canvas.drawRoundRect(rect, 2, 2, paint);
+			if (tag.isSquareTag()) {
+				RectF rect = new RectF(tag.getUpLeftX(), tag.getUpLeftY(),
+						tag.getUpLeftX() + tag.getBoxWidth(), tag.getUpLeftY()
+								+ tag.getBoxLength());
+				canvas.drawRoundRect(rect, 2, 2, paint);	
+			}
+			else {
+				Point prevPoint = tag.getPointList().get(0);
+				for (int i = 1; i <= tag.getPointList().size() - 1; i++) {
+					Point currentPoint = tag.getPointList().get(i);
+					canvas.drawLine(prevPoint.x, prevPoint.y, currentPoint.x,
+							currentPoint.y, paint);
+					prevPoint = currentPoint;
+				}
+				canvas.drawLine(prevPoint.x, prevPoint.y, tag.getPointList().get(0).x,
+						tag.getPointList().get(0).y, paint);
+			}
 		}
 		return newBitmap;
 	}

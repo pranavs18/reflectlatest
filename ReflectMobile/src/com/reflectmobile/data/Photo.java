@@ -3,14 +3,18 @@ package com.reflectmobile.data;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.reflectmobile.widget.ImageProcessor;
 
+import android.R.integer;
 import android.graphics.Bitmap;
+import android.graphics.Point;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
 
@@ -68,14 +72,14 @@ public class Photo {
 		this.imageLargeURL = imageLargeURL;
 	}
 
-	public String getDate(){
+	public String getDate() {
 		return date;
 	}
-	
-	public void setDate(String date){
+
+	public void setDate(String date) {
 		this.date = date;
 	}
-	
+
 	public ArrayList<Tag> getTagList() {
 		return tagList;
 	}
@@ -86,6 +90,35 @@ public class Photo {
 
 	public void addTag(Tag tag) {
 		this.tagList.add(tag);
+	}
+
+	public void addAllTagBoundary(String reslut) {
+		try {
+			JSONArray tagsBoundaryArray = new JSONArray(reslut);
+			for (int i = 0; i <= tagsBoundaryArray.length() - 1; i++) {
+				JSONObject tagBoundaryObject = tagsBoundaryArray.getJSONObject(i);
+				int tagId = tagBoundaryObject.getInt("tag_id");
+				JSONArray pointArray =  tagBoundaryObject.getJSONArray("boundary");
+				List<Point> pointList = new ArrayList<Point>();
+				for (int j = 0; j <= pointArray.length() - 1; j++) {
+					JSONObject pointObject = pointArray.getJSONObject(j);
+					Point point = new Point(pointObject.getInt("x"), pointObject.getInt("y"));
+					pointList.add(point);
+				}
+				addSingleTagBoundary(tagId, pointList);
+			}
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void addSingleTagBoundary(int tagId, List<Point> pointList) {
+		for (Tag tag : tagList) {
+			if (tag.getId() == tagId) {
+				tag.addBoundary(pointList);
+				break;
+			}
+		}
 	}
 
 	public static Photo getPhotoInfo(String jsonString) {
@@ -106,8 +139,8 @@ public class Photo {
 			String takenAt = photoJSONObject.getString("taken_at");
 			SimpleDateFormat formatFrom = new SimpleDateFormat(
 					"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
-			SimpleDateFormat formatTo = new SimpleDateFormat(
-					"MMMM dd yyyy", Locale.US);
+			SimpleDateFormat formatTo = new SimpleDateFormat("MMMM dd yyyy",
+					Locale.US);
 			try {
 				takenAt = formatTo.format(formatFrom.parse(takenAt));
 			} catch (ParseException e) {
@@ -115,7 +148,7 @@ public class Photo {
 				Log.e(TAG, "Error parsing date");
 			}
 			photo.setDate(takenAt);
-			
+
 			return photo;
 		} catch (JSONException e) {
 			Log.e(TAG, "Error parsing JSON");

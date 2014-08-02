@@ -1,8 +1,11 @@
 package com.reflectmobile.data;
 
+import java.util.List;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.graphics.Point;
 import android.util.Log;
 
 public class Tag {
@@ -17,6 +20,8 @@ public class Tag {
 	private int boxLength;
 	private int boxWidth;
 	private String jsonString;
+	private List<Point> pointList;
+	private boolean isSquareTag;
 	
 	public Tag(int id) {
 		this.id = id;
@@ -78,6 +83,28 @@ public class Tag {
 		this.jsonString = jsonString;
 	}
 	
+	public List<Point> getPointList() {
+		return pointList;
+	}
+
+	public void setPointList(List<Point> pointList) {
+		this.pointList = pointList;
+	}
+
+	public boolean isSquareTag() {
+		return isSquareTag;
+	}
+
+	public void setSquareTag(boolean isSquareTag) {
+		this.isSquareTag = isSquareTag;
+	}
+
+	public void addBoundary(List<Point> pointList) {
+		this.isSquareTag = false;
+		this.pointList = pointList;
+	}
+	
+	
 	public static Tag getTagInfo(String jsonString) {
 		try {
 			JSONObject tagJSONObject = new JSONObject(jsonString);
@@ -92,6 +119,7 @@ public class Tag {
 			tag.setBoxLength(tagJSONObject.getInt("box_length"));
 			tag.setBoxWidth(tagJSONObject.getInt("box_width"));
 			tag.setName(tagJSONObject.getString("object_name"));
+			tag.setSquareTag(true);
 			return tag;
 		} catch (JSONException e) {
 			Log.e(TAG, "Error parsing JSON");

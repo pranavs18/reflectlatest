@@ -449,7 +449,22 @@ public class PhotoActivity extends BaseActivity {
 						Tag tag = Tag.getTagInfo(tagJSONArray.getString(j));
 						currentPhoto.addTag(tag);
 					}
-					loadMemories(currentPhotoId);
+					
+					// Revised 8/1
+					// Get tags point list from custom server if possible
+					new HttpGetTask(new HttpTaskHandler() {
+						
+						@Override
+						public void taskSuccessful(String result) {
+							currentPhoto.addAllTagBoundary(result);
+							loadMemories(currentPhotoId);
+						}
+						
+						@Override
+						public void taskFailed(String reason) {
+							Log.e(TAG, "Error downloading the tag point list");
+						}
+					}).execute(NetworkManager.SOUND_HOST_NAME+"/tags/"+currentPhoto.getId());
 				} catch (JSONException e) {
 					Log.e(TAG, "Error parse the tag json");
 				}
@@ -787,18 +802,33 @@ public class PhotoActivity extends BaseActivity {
 						Tag tag = Tag.getTagInfo(tagJSONArray.getString(j));
 						currentPhoto.addTag(tag);
 					}
-					currentPhoto.refreshTags();
+					
+					// Get tags point list from custom server if possible
+					new HttpGetTask(new HttpTaskHandler() {
+						
+						@Override
+						public void taskSuccessful(String result) {
+							currentPhoto.addAllTagBoundary(result);
+							
+							// Revised 8/1
+							currentPhoto.refreshTags();
 
-					setPeopleNames();
+							setPeopleNames();
 
-					// Set the tagged bitmap
-					currentImageView.setImageBitmap(currentPhoto
-							.getTaggedLargeBitmap());
-					// Calculate the offset
-					setPhotoOffset();
-					// Set on touch listener for the photo
-					currentImageView.setOnTouchListener(onPhotoTouchListener);
-
+							// Set the tagged bitmap
+							currentImageView.setImageBitmap(currentPhoto
+									.getTaggedLargeBitmap());
+							// Calculate the offset
+							setPhotoOffset();
+							// Set on touch listener for the photo
+							currentImageView.setOnTouchListener(onPhotoTouchListener);
+						}
+						
+						@Override
+						public void taskFailed(String reason) {
+							Log.e(TAG, "Error downloading the tag point list");
+						}
+					}).execute(NetworkManager.SOUND_HOST_NAME+"/tags/"+currentPhoto.getId());
 				} catch (JSONException e) {
 					Log.e(TAG, "Error parse the tag json");
 				}
