@@ -116,5 +116,20 @@
     <string name="no_tags">No tags</string>
     <string name="no_photos">There are no photos in this moment. Add some!</string>
     <string name="campaign_option_1">Campaign Option 1</string>
-
+    <string name="date_donation">10-20 
+        July 2014</string>
+    <string name="dollar_amount">$0</string>
+    <string name="dance">Support Movement Dance Troupe \n By Participating</string>
+    <string name="donate">donate</string>
+    <string name="new_campaign">NEW FUNDRAISING CAMPAIGN</string>
+    <string name="imageBitmap">imageBitmap</string>
+    <string name="fundraising">Yes, the annual fundraising event is back! \n Show us some LOVE.let the legacy last.</string>
+    <string name="tuned">We are also planning to have a party in \n Septemeber.Stay Tuned !</string>
+    <string name="contributor">Top 5 Contributors</string>
+    <string name="divider">______________________________________________</string>
+    <string name="Ellen">Ellen Reflect</string>
+    <string name="david">David Palmer"</string>
+    <string name="josh">Josh Hartnet</string>
+    <string name="alex">Alexander"</string>
+    <string name="amount_2">$2000</string>
 </resources>

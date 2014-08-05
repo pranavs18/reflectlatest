@@ -23,6 +23,7 @@ import android.widget.TextView;
 
 public class StartCampaignActivity extends BaseActivity implements ColorPickerDialog.OnColorChangedListener  {
 	
+	@SuppressWarnings("unused")
 	private Menu menu;
 	private Paint mPaint;
     boolean start = false;
