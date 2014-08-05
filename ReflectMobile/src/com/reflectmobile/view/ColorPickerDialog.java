@@ -1,4 +1,4 @@
-package com.reflectmobile.activity;
+package com.reflectmobile.view;
 
 import android.app.Dialog;
 import android.content.Context;

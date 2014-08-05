@@ -3,8 +3,6 @@ package com.reflectmobile.widget;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-
-import android.R.integer;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -16,8 +14,6 @@ public class Segmentation {
 	private Bitmap originalBitmap;
 	private Bitmap resultBitmap;
 	private int lineColor = Color.WHITE;
-	private int dotColor = Color.YELLOW;
-	private int squareColor = Color.GREEN;
 	private int width;
 	private int height;
 	private ArrayList<Point> convevHullPointList;
@@ -37,6 +33,12 @@ public class Segmentation {
 		this.touchPointY = touchPointY;
 	}
 
+	/**
+	 * Main function of this class, using flood fill algorithm to
+	 * get the border point list and find convex hull list and 
+	 * draw the boundary of the convex hull list;
+	 * @param threshold - threshold of the flood fill algorithm
+	 */
 	public void segmentation(int threshold) {
 		floodFiller.setTolerance(threshold);
 		floodFiller.floodFill(touchPointX, touchPointY);
@@ -53,14 +55,8 @@ public class Segmentation {
 		// Normolize point list
 		normilizePointList();
 
-		// Draw square
-		// drawSquare(resultBitmap, convevHullPointList);
-
 		// Draw lines
 		drawLines();
-
-		// Draw dots
-		// drawDots(resultBitmap, convevHullPointList);
 
 		ArrayList<Point> touchPointList = new ArrayList<Point>();
 		touchPointList.add(new Point(touchPointX, touchPointY));
@@ -153,6 +149,9 @@ public class Segmentation {
 
 	}
 
+	/**
+	 * Draw the boundary of based for the convex hull
+	 */
 	private void drawLines() {
 		if (convevHullPointList.size() <= 3) {
 			return;
@@ -205,28 +204,10 @@ public class Segmentation {
 		return;
 	}
 
-	private void drawSquare(ArrayList<Point> pointList) {
-		// Calculate border
-		int left = width;
-		int right = 0;
-		int top = height;
-		int bottom = 0;
-		for (Point point : pointList) {
-			left = Math.min(left, point.x);
-			right = Math.max(right, point.x);
-			top = Math.min(top, point.y);
-			bottom = Math.max(bottom, point.y);
-		}
-
-		Paint paint = new Paint();
-		paint.setColor(squareColor);
-		paint.setStyle(Paint.Style.STROKE);
-		paint.setStrokeWidth(6);
-		Canvas canvas = new Canvas(resultBitmap);
-		canvas.drawRect(left, top, right, bottom, paint);
-		return;
-	}
-
+	/**
+	 * Get square coordination location of the convex hull list
+	 * @return
+	 */
 	public RectF getSquareLocation() {
 		// Calculate border
 		int left = width;

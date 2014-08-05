@@ -5,14 +5,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import com.reflectmobile.widget.ImageProcessor;
-
-import android.R.integer;
 import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.drawable.Drawable;

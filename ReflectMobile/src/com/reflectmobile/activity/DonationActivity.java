@@ -2,24 +2,16 @@ package com.reflectmobile.activity;
 
 
 import android.graphics.Bitmap;
-import android.graphics.Bitmap.Config;
-import android.graphics.BitmapFactory;
 import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 
 import android.graphics.Color;
-import android.graphics.ColorFilter;
-import android.graphics.LightingColorFilter;
 import android.graphics.Paint;
-import android.graphics.Paint.Style;
-import android.graphics.PorterDuffXfermode;
 import android.graphics.Shader.TileMode;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.widget.ImageView;
-import android.widget.ImageView.ScaleType;
 import android.widget.TextView;
 
 import com.reflectmobile.R;
@@ -27,7 +19,6 @@ import com.reflectmobile.R;
 
 public class DonationActivity extends BaseActivity {
 	
-	@SuppressWarnings("deprecation")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		

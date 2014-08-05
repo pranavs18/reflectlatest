@@ -2,14 +2,11 @@ package com.reflectmobile.activity;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import android.annotation.SuppressLint;
 import android.app.ActionBar.LayoutParams;
 import android.content.Context;
@@ -143,8 +140,6 @@ public class PhotoActivity extends BaseActivity {
 
 	// Segmentation related
 	private GestureDetector addTagGestureDetector;
-	private List<Bitmap> segmentationResultList = new ArrayList<Bitmap>();
-	private int currentSegmentationResultIndex = 0;
 	private Segmentation segmentation;
 	private int currentThreshold = 10;
 	private int maxThreshold = 100;

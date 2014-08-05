@@ -1,12 +1,7 @@
 package com.reflectmobile.widget;
 
 import java.util.ArrayList;
-
-import com.google.android.gms.drive.internal.p;
-import com.google.android.gms.internal.is;
 import com.reflectmobile.data.Tag;
-
-import android.R.integer;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -18,7 +13,6 @@ import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Xfermode;
-import android.graphics.AvoidXfermode.Mode;
 
 public class ImageProcessor {
 	public final static int IMAGE_BORDER_WIDTH = 20;
