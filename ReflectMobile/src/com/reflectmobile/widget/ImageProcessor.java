@@ -2,18 +2,23 @@ package com.reflectmobile.widget;
 
 import java.util.ArrayList;
 
+import com.google.android.gms.drive.internal.p;
+import com.google.android.gms.internal.is;
 import com.reflectmobile.data.Tag;
 
+import android.R.integer;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Xfermode;
+import android.graphics.AvoidXfermode.Mode;
 
 public class ImageProcessor {
 	public final static int IMAGE_BORDER_WIDTH = 20;
@@ -42,9 +47,8 @@ public class ImageProcessor {
 				RectF rect = new RectF(tag.getUpLeftX(), tag.getUpLeftY(),
 						tag.getUpLeftX() + tag.getBoxWidth(), tag.getUpLeftY()
 								+ tag.getBoxLength());
-				canvas.drawRoundRect(rect, 2, 2, paint);	
-			}
-			else {
+				canvas.drawRoundRect(rect, 2, 2, paint);
+			} else {
 				Point prevPoint = tag.getPointList().get(0);
 				for (int i = 1; i <= tag.getPointList().size() - 1; i++) {
 					Point currentPoint = tag.getPointList().get(i);
@@ -52,8 +56,8 @@ public class ImageProcessor {
 							currentPoint.y, paint);
 					prevPoint = currentPoint;
 				}
-				canvas.drawLine(prevPoint.x, prevPoint.y, tag.getPointList().get(0).x,
-						tag.getPointList().get(0).y, paint);
+				canvas.drawLine(prevPoint.x, prevPoint.y, tag.getPointList()
+						.get(0).x, tag.getPointList().get(0).y, paint);
 			}
 		}
 		return newBitmap;
@@ -71,28 +75,72 @@ public class ImageProcessor {
 		Bitmap bitmap = darkenTaggedBitmap;
 		// Create buffer new bitmap
 		Bitmap newBitmap = Bitmap.createBitmap(bitmap.getWidth(),
-				bitmap.getHeight(), Bitmap.Config.RGB_565);
+				bitmap.getHeight(), Bitmap.Config.ARGB_8888);
 		Canvas canvas = new Canvas(newBitmap);
-		canvas.drawBitmap(bitmap, 0, 0, null);
+		canvas.drawColor(0, android.graphics.PorterDuff.Mode.CLEAR);
 
 		// Generate brush
 		Paint paint = new Paint();
 		paint.setColor(Color.WHITE);
-		paint.setStyle(Paint.Style.STROKE);
-		paint.setStrokeWidth(5);
 
 		// Loop through the tag list and check whether the (x, y) is in any tag
 		boolean isInTag = false;
 		Tag tag = getSelectedTag(tagList, x, y);
 		if (tag != null) {
-			// If (x, y) is in a tag, then copy the lighter sub image
-			copySubImage(originalBitmap, newBitmap, tag.getUpLeftX(),
-					tag.getUpLeftY(), tag.getBoxWidth(), tag.getBoxLength());
-			// Draw the boundary of the tag
-			RectF rect = new RectF(tag.getUpLeftX(), tag.getUpLeftY(),
-					tag.getUpLeftX() + tag.getBoxWidth(), tag.getUpLeftY()
-							+ tag.getBoxLength());
-			canvas.drawRoundRect(rect, 2, 2, paint);
+			if (tag.isSquareTag()) {
+				// Set paint to draw square
+				paint.setStyle(Paint.Style.STROKE);
+				paint.setStrokeWidth(5);
+				canvas.drawBitmap(bitmap, 0, 0, null);
+				// If (x, y) is in a tag, then copy the lighter sub image
+				copySubImage(originalBitmap, newBitmap, tag.getUpLeftX(),
+						tag.getUpLeftY(), tag.getBoxWidth(), tag.getBoxLength());
+				// Draw the boundary of the tag
+				RectF rect = new RectF(tag.getUpLeftX(), tag.getUpLeftY(),
+						tag.getUpLeftX() + tag.getBoxWidth(), tag.getUpLeftY()
+								+ tag.getBoxLength());
+				canvas.drawRoundRect(rect, 2, 2, paint);
+			} else {
+				// Set paint to draw polygon
+				paint.setAntiAlias(true);
+				paint.setStyle(Paint.Style.FILL);
+				Path path = new Path();
+
+				// Create mask polygon
+				path.moveTo(tag.getPointList().get(0).x, tag.getPointList()
+						.get(0).y);
+				for (int i = 1; i <= tag.getPointList().size() - 1; i++) {
+					path.lineTo(tag.getPointList().get(i).x, tag.getPointList()
+							.get(i).y);
+				}
+				path.close();
+				canvas.drawPath(path, paint);
+
+				// Create lighten selected area
+				paint.setXfermode(new PorterDuffXfermode(
+						android.graphics.PorterDuff.Mode.SRC_IN));
+				canvas.drawBitmap(originalBitmap, 0, 0, paint);
+
+				// Create darken background
+				paint.setXfermode(new PorterDuffXfermode(
+						android.graphics.PorterDuff.Mode.DST_OVER));
+				canvas.drawBitmap(darkenTaggedBitmap, 0, 0, paint);
+
+				// Draw polygon lines
+				paint.setXfermode(null);
+				paint.setColor(Color.WHITE);
+				paint.setStyle(Paint.Style.STROKE);
+				paint.setStrokeWidth(3);
+				Point prevPoint = tag.getPointList().get(0);
+				for (int i = 1; i <= tag.getPointList().size() - 1; i++) {
+					Point currentPoint = tag.getPointList().get(i);
+					canvas.drawLine(prevPoint.x, prevPoint.y, currentPoint.x,
+							currentPoint.y, paint);
+					prevPoint = currentPoint;
+				}
+				canvas.drawLine(prevPoint.x, prevPoint.y, tag.getPointList()
+						.get(0).x, tag.getPointList().get(0).y, paint);
+			}
 			isInTag = true;
 		}
 
@@ -104,12 +152,32 @@ public class ImageProcessor {
 	// This function is used to
 	public static Tag getSelectedTag(ArrayList<Tag> tagList, float x, float y) {
 		for (Tag tag : tagList) {
-			boolean isInXRange = x <= tag.getUpLeftX() + tag.getBoxWidth()
-					&& x >= tag.getUpLeftX();
-			boolean isInYRange = y <= tag.getUpLeftY() + tag.getBoxLength()
-					&& y >= tag.getUpLeftY();
-			if (isInXRange && isInYRange) {
-				return tag;
+			if (tag.isSquareTag()) {
+				boolean isInXRange = x <= tag.getUpLeftX() + tag.getBoxWidth()
+						&& x >= tag.getUpLeftX();
+				boolean isInYRange = y <= tag.getUpLeftY() + tag.getBoxLength()
+						&& y >= tag.getUpLeftY();
+				if (isInXRange && isInYRange) {
+					return tag;
+				}
+			} else {
+				boolean isInPolygon = false;
+				int x2 = tag.getPointList().get(tag.getPointList().size() - 1).x;
+				int y2 = tag.getPointList().get(tag.getPointList().size() - 1).y;
+				int x1 = 0;
+				int y1 = 0;
+				for (int i = 0; i <= tag.getPointList().size() - 1; x2 = x1, y2 = y1, i++) {
+					x1 = tag.getPointList().get(i).x;
+					y1 = tag.getPointList().get(i).y;
+					if (((y1 < y) && (y2 >= y)) || (y1 >= y) && (y2 < y)) {
+						if ((y - y1) / (y2 - y1) * (x2 - x1) < (x - x1)) {
+							isInPolygon = !isInPolygon;
+						}
+					}
+				}
+				if (isInPolygon) {
+					return tag;
+				}
 			}
 		}
 		return null;
