@@ -5,21 +5,21 @@
     android:orientation="vertical" >
 
     <LinearLayout
-        android:id="@+id/linearLayout3"
+        android:id="@+id/linear_donationView"
         android:layout_width="match_parent"
         android:layout_height="100dp"
         android:layout_marginTop="3dp" >
 
         <TextView
-            android:id="@+id/textView1"
+            android:id="@+id/dance_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="24dp"
             android:layout_marginTop="4dp"
-            android:text="@string/dance" />
+            android:text="@string/dance"/>
 
         <Button
-            android:id="@+id/button1"
+            android:id="@+id/button_pig"
             android:layout_width="wrap_content"
             android:layout_height="35dp"
             android:layout_marginLeft="7dp"
@@ -40,7 +40,7 @@
         android:layout_marginTop="40dp" >
 
         <TextView
-            android:id="@+id/textView2"
+            android:id="@+id/text_campaign"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="30dp"
@@ -51,20 +51,21 @@
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/linearLayout4"
+        android:id="@+id/linear_bitmap"
         android:layout_width="match_parent"
         android:layout_height="130dp"
         android:layout_marginTop="120dp"
         android:orientation="horizontal" >
 
         <ImageView
+            android:contentDescription="@string/imageBitmap"
             android:id="@+id/donationView"
             android:layout_width="0dp"
             android:layout_height="130dp"
             android:layout_marginLeft="-5dp"
             android:layout_weight="1.13"
-            android:contentDescription="@string/imageBitmap"
             android:src="@drawable/testimage" />
+
     </LinearLayout>
 
     <LinearLayout
@@ -82,23 +83,23 @@
             android:text="@string/fundraising" />
 
         <TextView
-            android:id="@+id/textView4"
+            android:id="@+id/text_tuned"
             android:layout_width="263dp"
             android:layout_height="wrap_content"
             android:layout_marginLeft="40dp"
             android:layout_marginTop="15dp"
-            android:text="@string/tuned" />
+            android:text="@string/tuned"/>
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/linearLayout1"
+        android:id="@+id/linear_donation_parent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="350dp"
         android:orientation="vertical" >
 
         <TextView
-            android:id="@+id/textView5"
+            android:id="@+id/text_contributor"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="40dp"
@@ -108,7 +109,7 @@
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/textView6"
+            android:id="@+id/text_divider7"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="40dp"
@@ -117,7 +118,7 @@
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/linearLayout2"
+        android:id="@+id/linear_donation_sub"
         android:layout_width="wrap_content"
         android:layout_height="150dp"
         android:layout_alignParentLeft="true"
@@ -126,55 +127,55 @@
         android:orientation="vertical" >
 
         <TextView
-            android:id="@+id/textView7"
+            android:id="@+id/text_ellen"
             android:layout_width="97dp"
             android:layout_height="wrap_content"
-            android:text="@string/Ellen" />
+            android:text="@string/Ellen"/>
 
         <TextView
-            android:id="@+id/textView8"
+            android:id="@+id/text_divider"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/divider"
             android:textColor="@color/gray" />
 
         <TextView
-            android:id="@+id/textView9"
+            android:id="@+id/text_david"
             android:layout_width="97dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
             android:text="@string/david" />
 
         <TextView
-            android:id="@+id/textView10"
+            android:id="@+id/text_divider1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/divider"
             android:textColor="@color/gray" />
 
         <TextView
-            android:id="@+id/textView11"
+            android:id="@+id/text_josh"
             android:layout_width="97dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
-            android:text="@string/josh" />
+            android:text="@string/josh"/>
 
         <TextView
-            android:id="@+id/textView12"
+            android:id="@+id/text_divider2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/divider"
             android:textColor="@color/gray" />
 
         <TextView
-            android:id="@+id/textView13"
+            android:id="@+id/text_alex"
             android:layout_width="97dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
             android:text="@string/alex" />
 
         <TextView
-            android:id="@+id/textView14"
+            android:id="@+id/text_divider4"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/divider"
@@ -182,31 +183,31 @@
     </LinearLayout>
 
     <TextView
-        android:id="@+id/textView15"
+        android:id="@+id/text_amount"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/linearLayout2"
-        android:layout_below="@+id/linearLayout3"
+        android:layout_alignLeft="@+id/linear_donation_sub"
+        android:layout_below="@+id/linear_donationView"
         android:layout_marginLeft="14dp"
         android:text="@string/amount_2"
         android:textColor="@color/green" />
 
     <TextView
-        android:id="@+id/textView16"
+        android:id="@+id/text_dollar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/textView15"
-        android:layout_below="@+id/linearLayout4"
+        android:layout_alignLeft="@+id/text_amount"
+        android:layout_below="@+id/linear_bitmap"
         android:text="@string/dollar_amount"
         android:textColor="@color/green" />
 
     <TextView
-        android:id="@+id/textView17"
+        android:id="@+id/text_date"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/textView15"
-        android:layout_alignBottom="@+id/textView15"
-        android:layout_alignRight="@+id/linearLayout2"
+        android:layout_alignBaseline="@+id/text_amount"
+        android:layout_alignBottom="@+id/text_amount"
+        android:layout_alignRight="@+id/linear_donation_sub"
         android:layout_marginRight="20dp"
         android:text="@string/date_donation" />
 

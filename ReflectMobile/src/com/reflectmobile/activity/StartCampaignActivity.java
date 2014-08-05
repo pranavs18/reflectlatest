@@ -5,8 +5,8 @@ import java.util.Calendar;
 import java.util.Locale;
 
 import com.reflectmobile.R;
-import com.reflectmobile.view.ColorPickerDialog;
 
+import com.reflectmobile.view.ColorPickerDialog;
 import android.app.DatePickerDialog;
 import android.graphics.Paint;
 import android.graphics.Typeface;
@@ -67,7 +67,6 @@ public class StartCampaignActivity extends BaseActivity implements ColorPickerDi
 		    @Override
 		    public void onDateSet(DatePicker view, int year, int monthOfYear,
 		            int dayOfMonth) {
-		        // TODO Auto-generated method stub
 		        myCalendar.set(Calendar.YEAR, year);
 		        myCalendar.set(Calendar.MONTH, monthOfYear);
 		        myCalendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
@@ -86,7 +85,7 @@ public class StartCampaignActivity extends BaseActivity implements ColorPickerDi
 
 		        @Override
 		        public void onClick(View v) {
-		            // TODO Auto-generated method stub
+		     
 		            new DatePickerDialog(StartCampaignActivity.this, date, myCalendar
 		                    .get(Calendar.YEAR), myCalendar.get(Calendar.MONTH),
 		                    myCalendar.get(Calendar.DAY_OF_MONTH)).show();
@@ -100,7 +99,7 @@ public class StartCampaignActivity extends BaseActivity implements ColorPickerDi
 
 		        @Override
 		        public void onClick(View v) {
-		            // TODO Auto-generated method stub
+		           
 		            new DatePickerDialog(StartCampaignActivity.this, date, myCalendar
 		                    .get(Calendar.YEAR), myCalendar.get(Calendar.MONTH),
 		                    myCalendar.get(Calendar.DAY_OF_MONTH)).show();
