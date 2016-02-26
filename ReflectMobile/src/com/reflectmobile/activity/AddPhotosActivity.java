@@ -37,11 +37,11 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.SimpleImageLoadingListener;
 import com.reflectmobile.R;
-import com.reflectmobile.data.Community;
-import com.reflectmobile.utility.NetworkManager;
-import com.reflectmobile.utility.NetworkManager.HttpGetTask;
-import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
-import com.reflectmobile.utility.NetworkManager.HttpPostImageTask;
+import com.reflectmobiledemo.data.Community;
+import com.reflectmobiledemo.utility.NetworkManager;
+import com.reflectmobiledemo.utility.NetworkManager.HttpGetTask;
+import com.reflectmobiledemo.utility.NetworkManager.HttpPostImageTask;
+import com.reflectmobiledemo.utility.NetworkManager.HttpTaskHandler;
 
 import de.neofonie.mobile.app.android.widget.crouton.Crouton;
 import de.neofonie.mobile.app.android.widget.crouton.Style;
@@ -287,6 +287,7 @@ public class AddPhotosActivity extends BaseActivity {
 						intent.putExtra("community_id", communityId);
 						intent.putExtra("photo_id", photoId);
 						startActivity(intent);
+				
 					} catch (JSONException e) {
 						Log.e(TAG, "Error parsing JSON");
 					}
@@ -301,6 +302,7 @@ public class AddPhotosActivity extends BaseActivity {
 			new HttpPostImageTask(getMomentsHandler, NetworkManager.hostName
 					+ "/api/moments/" + momentId + "/photos/",
 					AddPhotosActivity.this).execute(imageUrls);
+			
 		} else {
 			int red = android.R.color.holo_red_light;
 			Style CustomAlert = new Style.Builder().setDuration(2000)

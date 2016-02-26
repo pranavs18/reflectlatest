@@ -31,20 +31,19 @@ import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
-import android.widget.Toast;
 import android.widget.ImageView.ScaleType;
 import android.widget.ListView;
 import android.widget.TextView;
 import com.reflectmobile.R;
-import com.reflectmobile.data.Community;
-import com.reflectmobile.data.Moment;
-import com.reflectmobile.data.Tag;
-import com.reflectmobile.utility.NetworkManager;
-import com.reflectmobile.utility.NetworkManager.HttpDeleteTask;
-import com.reflectmobile.utility.NetworkManager.HttpGetImageTask;
-import com.reflectmobile.utility.NetworkManager.HttpGetTask;
-import com.reflectmobile.utility.NetworkManager.HttpImageTaskHandler;
-import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
+import com.reflectmobiledemo.data.Community;
+import com.reflectmobiledemo.data.Moment;
+import com.reflectmobiledemo.data.Tag;
+import com.reflectmobiledemo.utility.NetworkManager;
+import com.reflectmobiledemo.utility.NetworkManager.HttpDeleteTask;
+import com.reflectmobiledemo.utility.NetworkManager.HttpGetImageTask;
+import com.reflectmobiledemo.utility.NetworkManager.HttpGetTask;
+import com.reflectmobiledemo.utility.NetworkManager.HttpImageTaskHandler;
+import com.reflectmobiledemo.utility.NetworkManager.HttpTaskHandler;
 
 public class CommunityActivity extends BaseActivity {
 
@@ -58,9 +57,9 @@ public class CommunityActivity extends BaseActivity {
 	private static final int CODE_ADD_PHOTO = 102;
 	public static final int EMAIL_CODE = 103;
     public static final int CODE_ADD_DONATION = 104;
+    public static final int CODE_INVITATION = 105;
 	public static final int MEDIA_TYPE_IMAGE = 1;
 
-	private String inviteLink = "";
 	String photoPath;
 
 	// People name list
@@ -118,28 +117,8 @@ public class CommunityActivity extends BaseActivity {
 
 		new HttpGetTask(getCommunityHandler).execute(NetworkManager.hostName
 				+ "/api/communities/" + communityId);
-		// Retreive data from the web
-		final HttpTaskHandler getInviteHandler = new HttpTaskHandler() {
-			@Override
-			public void taskSuccessful(String result) {
-				Log.d(TAG, result);
-				inviteLink = inviteLink + result;
 
-			}
-
-			@Override
-			public void taskFailed(String reason) {
-				Log.e(TAG, "Error within GET request: " + reason);
-
-			}
-
-		};
-
-		new HttpGetTask(getInviteHandler).execute(NetworkManager.hostName
-				+ "/api/invites/link/" + communityId);
-		Log.d(TAG, NetworkManager.hostName + "/api/invites/link/" + communityId);
-
-		// Generate name list
+  		// Generate name list
 		GridView nameGridView = (GridView) findViewById(R.id.gridview_community_people_name_list);
 		// Dummy name in the community
 		peopleNameList = new ArrayList<String>();
@@ -276,7 +255,7 @@ public class CommunityActivity extends BaseActivity {
 	        startActivityForResult(intent, CODE_ADD_DONATION);
 	    }
 	 
-	    public void onDonate(View button) {
+	 public void onDonate(View button) {
 	        Intent intent = new Intent(CommunityActivity.this,
 	                DonationActivity.class);
 	        intent.putExtra("community_id", communityId);
@@ -284,6 +263,13 @@ public class CommunityActivity extends BaseActivity {
 	    }
 	    
 	public void inviteToCommunity() {
+		Intent intent = new Intent(CommunityActivity.this,
+				InvitationActivity.class);
+		intent.putExtra("community_id", communityId);
+		startActivityForResult(intent, CODE_INVITATION);
+	}
+	    
+	/*public void inviteToCommunity() {
 		Intent i = new Intent(Intent.ACTION_SEND);
 		i.setType("message/rfc822");
 		i.putExtra(Intent.EXTRA_EMAIL, new String[] { "" });
@@ -305,7 +291,7 @@ public class CommunityActivity extends BaseActivity {
 		// Log.d(sendInvite.class.getSimpleName(), "Sending Invitation.... ");
 		// inviteLink = "";
 
-	}
+	}*/
 
 	// Specific adapter for Community Activity
 	private class CardListViewAdapter extends BaseAdapter {

@@ -1,6 +1,9 @@
 package com.reflectmobile.activity;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -13,7 +16,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.graphics.Typeface;
+import android.media.ExifInterface;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Bundle;
@@ -173,8 +180,49 @@ public class GalleryActivity extends BaseActivity {
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (requestCode == CODE_TAKE_PHOTO && resultCode == RESULT_OK) {
 			// Save to gallery
+			
+			File f = null;
+			try {
+		        f = new File(photoPath);
+		        ExifInterface exif = new ExifInterface(f.getPath());
+		        int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+
+		        int angle = 0;
+
+		        if (orientation == ExifInterface.ORIENTATION_ROTATE_90) {
+		            angle = 90;
+		        } 
+		        else if (orientation == ExifInterface.ORIENTATION_ROTATE_180) {
+		            angle = 180;
+		        } 
+		        else if (orientation == ExifInterface.ORIENTATION_ROTATE_270) {
+		            angle = 270;
+		        }
+
+		        Matrix mat = new Matrix();
+		        mat.postRotate(angle);
+
+		        Bitmap bmp = BitmapFactory.decodeStream(new FileInputStream(f), null, null);
+		        Bitmap correctBmp = Bitmap.createBitmap(bmp, 0, 0, bmp.getWidth(), bmp.getHeight(), mat, true); 
+		      //Convert bitmap to byte array
+		        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		        correctBmp.compress(CompressFormat.JPEG, 100 /*ignored for PNG*/, bos);
+		        byte[] bitmapdata = bos.toByteArray();
+
+		        //write the bytes in file
+		        FileOutputStream fos = new FileOutputStream(f);
+		        fos.write(bitmapdata);
+		        fos.flush();
+		        fos.close();
+		    }
+		    catch (IOException e) {
+		        Log.w("TAG", "-- Error in setting image");
+		    }   
+		    catch(OutOfMemoryError oom) {
+		        Log.w("TAG", "-- OOM Error in setting image");
+		    }
+			
 			imageAdapter.addNewPhoto(photoPath);
-			File f = new File(photoPath);
 			MediaScannerConnection.scanFile(GalleryActivity.this,
 					new String[] { f.toString() }, null,
 					new MediaScannerConnection.OnScanCompletedListener() {
@@ -205,7 +253,7 @@ public class GalleryActivity extends BaseActivity {
 		photoPath = image.getAbsolutePath();
 		return image;
 	}
-
+	
 	private void takePhoto() {
 		// Save current image selection
 		Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);

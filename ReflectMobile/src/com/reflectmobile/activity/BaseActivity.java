@@ -19,8 +19,8 @@ import android.widget.TextView;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.plus.Plus;
 import com.reflectmobile.R;
+import com.reflectmobiledemo.utility.NetworkManager;
 
-import com.reflectmobile.utility.NetworkManager;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;

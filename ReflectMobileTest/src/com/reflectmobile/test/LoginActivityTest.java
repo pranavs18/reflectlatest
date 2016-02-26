@@ -3,12 +3,12 @@ package com.reflectmobile.test;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import com.reflectmobile.activity.LoginActivity;
-import com.reflectmobile.utility.NetworkManager.HttpPostTask;
-import com.reflectmobile.utility.NetworkManager.HttpGetTask;
-import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
 
+import com.reflectmobile.activity.LoginActivity;
 import com.reflectmobile.R;
+import com.reflectmobiledemo.utility.NetworkManager.HttpGetTask;
+import com.reflectmobiledemo.utility.NetworkManager.HttpPostTask;
+import com.reflectmobiledemo.utility.NetworkManager.HttpTaskHandler;
 
 import android.test.ActivityInstrumentationTestCase2;
 import android.util.Log;

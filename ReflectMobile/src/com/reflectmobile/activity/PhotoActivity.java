@@ -45,22 +45,23 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 import com.reflectmobile.R;
-import com.reflectmobile.data.Memory;
-import com.reflectmobile.data.Moment;
-import com.reflectmobile.data.Photo;
-import com.reflectmobile.data.Tag;
-import com.reflectmobile.utility.NetworkManager;
-import com.reflectmobile.utility.NetworkManager.HttpGetImageTask;
-import com.reflectmobile.utility.NetworkManager.HttpGetTask;
-import com.reflectmobile.utility.NetworkManager.HttpImageTaskHandler;
-import com.reflectmobile.utility.NetworkManager.HttpDeleteTask;
-import com.reflectmobile.utility.NetworkManager.HttpPostTask;
-import com.reflectmobile.utility.NetworkManager.HttpPutTask;
-import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
-import com.reflectmobile.view.CustomScrollView;
-import com.reflectmobile.view.CustomViewPager;
-import com.reflectmobile.widget.ImageProcessor;
-import com.reflectmobile.widget.Segmentation;
+import com.reflectmobiledemo.data.Memory;
+import com.reflectmobiledemo.data.Moment;
+import com.reflectmobiledemo.data.Photo;
+import com.reflectmobiledemo.data.Tag;
+import com.reflectmobiledemo.utility.NetworkManager;
+import com.reflectmobiledemo.utility.NetworkManager.HttpDeleteTask;
+import com.reflectmobiledemo.utility.NetworkManager.HttpGetImageTask;
+import com.reflectmobiledemo.utility.NetworkManager.HttpGetTask;
+import com.reflectmobiledemo.utility.NetworkManager.HttpImageTaskHandler;
+import com.reflectmobiledemo.utility.NetworkManager.HttpPostTask;
+import com.reflectmobiledemo.utility.NetworkManager.HttpPutTask;
+import com.reflectmobiledemo.utility.NetworkManager.HttpTaskHandler;
+import com.reflectmobiledemo.view.CustomScrollView;
+import com.reflectmobiledemo.view.CustomViewPager;
+import com.reflectmobiledemo.view.TouchImageView;
+import com.reflectmobiledemo.widget.ImageProcessor;
+import com.reflectmobiledemo.widget.Segmentation;
 
 import de.neofonie.mobile.app.android.widget.crouton.Crouton;
 import de.neofonie.mobile.app.android.widget.crouton.Style;
@@ -92,12 +93,14 @@ public class PhotoActivity extends BaseActivity {
 	private MenuItem delete_tag;
 	private MenuItem done_add;
 	private MenuItem done_edit;
+	private MenuItem invite_from_photo;
 
 	/* photo gallery variables */
 	static final int CODE_ADD_STORY = 101;
 	static final int CODE_ADD_DETAIL = 102;
 	static final int CODE_ADD_SOUND = 103;
 	static final int CODE_SELECT_PICTURE = 104;
+	static final int CODE_INVITATION = 105;
 
 	/* photo gallery variables */
 	private CustomViewPager viewPager;
@@ -257,6 +260,7 @@ public class PhotoActivity extends BaseActivity {
 		delete_tag = menu.findItem(R.id.action_delete_tag);
 		done_add = menu.findItem(R.id.action_done_add);
 		done_edit = menu.findItem(R.id.action_done_edit);
+		invite_from_photo = menu.findItem(R.id.action_invite_from_photo);
 		return super.onCreateOptionsMenu(menu);
 	}
 
@@ -270,7 +274,8 @@ public class PhotoActivity extends BaseActivity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		// Handle action buttons
 		EditText tagName = (EditText) findViewById(R.id.tag_name);
-
+		
+        tagName.setText("defaultTag");
 		switch (item.getItemId()) {
 		case R.id.action_add_photo:
 			Intent intent = new Intent(PhotoActivity.this,
@@ -280,16 +285,30 @@ public class PhotoActivity extends BaseActivity {
 			startActivity(intent);
 			return true;
 		case R.id.action_done_add:
-			if (isSmartMode) {
+			/*if (isSmartMode) {
 				// TODO: get rectangle
 				if (segmentation != null) {
 					tagLocation = segmentation.getSquareLocation();
 				}
-			}
-			if (tagLocation != null && tagName.getText().length() > 0) {
+			}*/
+			if (tagLocation != null /*&& tagName.getText().length() > 0*/) {
 				persistTag(tagName.getText().toString(), false);
 				tagLocation = null;
-			} else {
+				Intent data = new Intent();
+				data.putExtra("tag_id", Math.random());
+
+				setResult(RESULT_OK, data);
+			
+				/*intent = new Intent(PhotoActivity.this,
+						PhotoActivity.class);
+				intent.putExtra("photo_id", currentPhotoId);
+				if (currentTag != null) {
+					intent.putExtra("tag_id", currentTag.getId());
+					intent.putExtra("name", currentTag.getName()); 
+				}
+				
+				startActivityForResult(intent, CODE_ADD_DETAIL);*/
+			} /*else {
 				int red = android.R.color.holo_red_light;
 				Style CustomAlert = new Style.Builder().setDuration(2000)
 						.setHeight(LayoutParams.WRAP_CONTENT).setTextSize(16)
@@ -297,7 +316,8 @@ public class PhotoActivity extends BaseActivity {
 				Crouton.makeText(this,
 						"Please, select tag and specify its name", CustomAlert)
 						.show();
-			}
+			}*/
+			
 			return true;
 		case R.id.action_edit_tag:
 			editTag();
@@ -322,11 +342,15 @@ public class PhotoActivity extends BaseActivity {
 		case R.id.action_delete_photo:
 			deletePhoto(currentPhotoId);
 			return true;
+		case R.id.action_invite_from_photo:
+			inviteFromPhoto(currentPhotoId);
+			return true;
 		case android.R.id.home:
 			onBackPressed();
 			return true;
 		default:
 			return super.onOptionsItemSelected(item);
+			
 		}
 	}
 
@@ -338,8 +362,12 @@ public class PhotoActivity extends BaseActivity {
 				System.out.println("Image Path : " + selectedImagePath);
 				img.setImageURI(selectedImageUri);
 			}
+			
+			
 		}
+	
 		reloadMemories();
+		
 	}
 
 	public String getPath(Uri uri) {
@@ -459,7 +487,7 @@ public class PhotoActivity extends BaseActivity {
 						public void taskFailed(String reason) {
 							Log.e(TAG, "Error downloading the tag point list");
 						}
-					}).execute(NetworkManager.SOUND_HOST_NAME+"/tags/"+currentPhoto.getId());
+					}).execute(NetworkManager.SOUND_HOST_NAME+"/api/tags/"+currentPhoto.getId());
 				} catch (JSONException e) {
 					Log.e(TAG, "Error parse the tag json");
 				}
@@ -697,10 +725,19 @@ public class PhotoActivity extends BaseActivity {
 		new HttpDeleteTask(httpDeleteTaskHandler)
 				.execute(NetworkManager.hostName + "/api/photos/" + id);
 	}
+	
+	private void inviteFromPhoto(int current_photo_id){
+		Intent intent = new Intent(PhotoActivity.this,
+				InvitationActivity.class);
+		intent.putExtra("community_id", communityId);
+		intent.putExtra("photo_id",current_photo_id);
+		startActivityForResult(intent, CODE_INVITATION);
+	}
 
 	private void showMenuShowTags() {
 		add_photo.setVisible(false);
 		delete_photo.setVisible(false);
+		invite_from_photo.setVisible(false);
 		edit_tag.setVisible(false);
 		delete_tag.setVisible(false);
 		done_add.setVisible(false);
@@ -710,6 +747,7 @@ public class PhotoActivity extends BaseActivity {
 	private void showMenuTagSelected() {
 		add_photo.setVisible(false);
 		delete_photo.setVisible(false);
+		invite_from_photo.setVisible(false);
 		edit_tag.setVisible(true);
 		delete_tag.setVisible(true);
 		done_add.setVisible(false);
@@ -719,6 +757,7 @@ public class PhotoActivity extends BaseActivity {
 	private void showMenuEditTag() {
 		add_photo.setVisible(false);
 		delete_photo.setVisible(false);
+		invite_from_photo.setVisible(false);
 		edit_tag.setVisible(false);
 		delete_tag.setVisible(false);
 		done_add.setVisible(false);
@@ -728,6 +767,7 @@ public class PhotoActivity extends BaseActivity {
 	private void showMenuAddTag() {
 		add_photo.setVisible(false);
 		delete_photo.setVisible(false);
+		invite_from_photo.setVisible(false);
 		edit_tag.setVisible(false);
 		delete_tag.setVisible(false);
 		done_add.setVisible(true);
@@ -737,6 +777,7 @@ public class PhotoActivity extends BaseActivity {
 	private void showMenuPhoto() {
 		add_photo.setVisible(true);
 		delete_photo.setVisible(true);
+		invite_from_photo.setVisible(true);
 		edit_tag.setVisible(false);
 		delete_tag.setVisible(false);
 		done_add.setVisible(false);
@@ -823,7 +864,7 @@ public class PhotoActivity extends BaseActivity {
 						public void taskFailed(String reason) {
 							Log.e(TAG, "Error downloading the tag point list");
 						}
-					}).execute(NetworkManager.SOUND_HOST_NAME+"/tags/"+currentPhoto.getId());
+					}).execute(NetworkManager.SOUND_HOST_NAME+"/api/tags/"+currentPhoto.getId());
 				} catch (JSONException e) {
 					Log.e(TAG, "Error parse the tag json");
 				}
@@ -893,7 +934,7 @@ public class PhotoActivity extends BaseActivity {
 		scrollView.setScrollingEnabled(false);
 
 		// Hide tabs
-		findViewById(R.id.tab_view).setVisibility(View.GONE);
+		//findViewById(R.id.tab_view).setVisibility(View.GONE);
 
 		// Hide add tag button
 		findViewById(R.id.add_tag).setVisibility(View.GONE);
@@ -908,7 +949,8 @@ public class PhotoActivity extends BaseActivity {
 		
 		// Show instructions
 		TextView instructions = (TextView) findViewById(R.id.instructions);
-		instructions.setText("Tap photo to add tag. \n Long tap to select an object");
+		//instructions.setText("Tap photo to add tag. \n Long tap to select an object");
+		instructions.setText("Tap photo to add tag.");
 		instructions.setVisibility(View.VISIBLE);
 
 		// Indicate that there is no tag
@@ -1337,7 +1379,7 @@ public class PhotoActivity extends BaseActivity {
 		public Object instantiateItem(final ViewGroup container,
 				final int position) {
 			Log.d(TAG, position + "");
-			ImageView imageView = new ImageView(PhotoActivity.this);
+			TouchImageView imageView = new TouchImageView(PhotoActivity.this);
 			if (position == currentPhotoIndex) {
 				currentImageView = imageView;
 			}
@@ -1351,7 +1393,7 @@ public class PhotoActivity extends BaseActivity {
 				@Override
 				public void taskSuccessful(Drawable drawable) {
 					moment.getPhoto(drawableIndex).setMediumDrawable(drawable);
-					ImageView imageView = (ImageView) ((ViewPager) container)
+					TouchImageView imageView = (TouchImageView) ((ViewPager) container)
 							.findViewWithTag(drawableIndex);
 					if (imageView != null) {
 						imageView.setImageDrawable(drawable);
