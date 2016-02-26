@@ -4,10 +4,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.reflectmobile.R;
-import com.reflectmobile.utility.NetworkManager;
-import com.reflectmobile.utility.NetworkManager.HttpPostTask;
-import com.reflectmobile.utility.NetworkManager.HttpPutTask;
-import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
+import com.reflectmobiledemo.utility.NetworkManager;
+import com.reflectmobiledemo.utility.NetworkManager.HttpPostTask;
+import com.reflectmobiledemo.utility.NetworkManager.HttpPutTask;
+import com.reflectmobiledemo.utility.NetworkManager.HttpTaskHandler;
 
 import de.neofonie.mobile.app.android.widget.crouton.Crouton;
 import de.neofonie.mobile.app.android.widget.crouton.Style;

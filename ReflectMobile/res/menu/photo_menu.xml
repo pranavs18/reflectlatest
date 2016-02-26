@@ -30,5 +30,9 @@
         android:showAsAction="always"
         android:title="@string/done"
         android:visible="false"/>
+    <item
+    	android:id="@+id/action_invite_from_photo"
+        android:showAsAction="never"
+        android:title="@string/Invite"/>
     
 </menu>

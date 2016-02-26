@@ -19,8 +19,8 @@ import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListe
 import com.google.android.gms.plus.Plus;
 import com.google.android.gms.plus.model.people.Person;
 import com.reflectmobile.R;
-import com.reflectmobile.utility.NetworkManager;
-import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
+import com.reflectmobiledemo.utility.NetworkManager;
+import com.reflectmobiledemo.utility.NetworkManager.HttpTaskHandler;
 
 public class LoginActivity extends BaseActivity implements ConnectionCallbacks,
 		OnConnectionFailedListener {
@@ -40,6 +40,7 @@ public class LoginActivity extends BaseActivity implements ConnectionCallbacks,
 
 	// Request code used to invoke sign in user interactions.
 	private static final int RC_SIGN_IN = 1001;
+	private static String emailID  = null;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +62,7 @@ public class LoginActivity extends BaseActivity implements ConnectionCallbacks,
 				.addOnConnectionFailedListener(this)
 				.addApi(Plus.API, new Plus.PlusOptions.Builder().build())
 				.addScope(Plus.SCOPE_PLUS_LOGIN).build();
+	 
 	}
 
 	@Override
@@ -81,7 +83,8 @@ public class LoginActivity extends BaseActivity implements ConnectionCallbacks,
 		if (!signInClicked) {
 			signInClicked = true;
 			setSignInStatus(SIGNED_IN_REFLECT);
-			String userId = "109014750652754814692";
+			//String userId = "109014750652754814692";
+			String userId ="101913420909954842982";
 			NetworkManager.setUsedId(userId);
 
 			final HttpTaskHandler loginReflectWebHandler = new HttpTaskHandler() {
@@ -163,12 +166,24 @@ public class LoginActivity extends BaseActivity implements ConnectionCallbacks,
 		Toast.makeText(this, "User is connected!", Toast.LENGTH_LONG).show();
 
 		String userId = null;
+		String firstName = null;
+		String lastName = null;
+		String emailID = null;
 		try {
 			if (Plus.PeopleApi.getCurrentPerson(mGoogleApiClient) != null) {
 				Person currentPerson = Plus.PeopleApi
 						.getCurrentPerson(mGoogleApiClient);
 				userId = currentPerson.getId();
+				firstName = currentPerson.getName().getGivenName().toString();
+				lastName = currentPerson.getName().getFamilyName().toString();
+				emailID = Plus.AccountApi.getAccountName(mGoogleApiClient);
+				//userId = "101913420909954842982";
 				NetworkManager.setUsedId(userId);
+				NetworkManager.setFirstName(firstName);
+				NetworkManager.setLastName(lastName);
+				NetworkManager.setEmailID(emailID);
+				Log.d(TAG, "Person with first name" + firstName + " and lastName" + lastName + "with email ID " + emailID + "logged in");
+				
 			} else {
 				Toast.makeText(getApplicationContext(),
 						"Person information is null", Toast.LENGTH_LONG).show();
@@ -197,6 +212,14 @@ public class LoginActivity extends BaseActivity implements ConnectionCallbacks,
 	@Override
 	public void onConnectionSuspended(int cause) {
 		mGoogleApiClient.connect();
+	}
+
+	public static String getEmailID() {
+		return emailID;
+	}
+
+	public static void setEmailID(String emailID) {
+		LoginActivity.emailID = emailID;
 	}
 
 }

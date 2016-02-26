@@ -23,12 +23,12 @@ import android.widget.ImageView.ScaleType;
 import android.widget.TextView;
 
 import com.reflectmobile.R;
-import com.reflectmobile.data.Community;
-import com.reflectmobile.utility.NetworkManager;
-import com.reflectmobile.utility.NetworkManager.HttpGetImageTask;
-import com.reflectmobile.utility.NetworkManager.HttpGetTask;
-import com.reflectmobile.utility.NetworkManager.HttpImageTaskHandler;
-import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
+import com.reflectmobiledemo.data.Community;
+import com.reflectmobiledemo.utility.NetworkManager;
+import com.reflectmobiledemo.utility.NetworkManager.HttpGetImageTask;
+import com.reflectmobiledemo.utility.NetworkManager.HttpGetTask;
+import com.reflectmobiledemo.utility.NetworkManager.HttpImageTaskHandler;
+import com.reflectmobiledemo.utility.NetworkManager.HttpTaskHandler;
 
 public class CommunitiesActivity extends BaseActivity {
 
@@ -77,7 +77,8 @@ public class CommunitiesActivity extends BaseActivity {
 				Log.e(TAG, "Error within GET request: " + reason);
 			}
 		};
-
+        
+		System.out.println("URL REQUEST SENDING TO "+ NetworkManager.hostName + "/api/communities");
 		new HttpGetTask(getCommunitiesHandler).execute(NetworkManager.hostName
 				+ "/api/communities");
         
@@ -165,7 +166,7 @@ public class CommunitiesActivity extends BaseActivity {
 
 					@Override
 					public void taskFailed(String reason) {
-						Log.e(TAG, "Error downloading the image");
+						Log.e(TAG, "Error downloading the image" + reason);
 					}
 				}).execute(communities[count].getFirstPhoto());
 			}
@@ -209,7 +210,7 @@ public class CommunitiesActivity extends BaseActivity {
 						.findViewById(R.id.add_photos);
 				holder.image = (ImageView) convertView
 						.findViewById(R.id.card_image);
-				holder.donate = (Button) convertView.findViewById(R.id.donate_money);
+				//holder.donate = (Button) convertView.findViewById(R.id.donate_money);
 				holder.image.setScaleType(ScaleType.CENTER_CROP);
               
 				holder.image.setOnClickListener(new View.OnClickListener() {
@@ -239,7 +240,7 @@ public class CommunitiesActivity extends BaseActivity {
 				holder.image.setTag(holder);
 				convertView.setTag(holder);
 				
-				holder.donate.setOnClickListener(new View.OnClickListener() {
+				/*holder.donate.setOnClickListener(new View.OnClickListener() {
 					
 					@Override
 					public void onClick(View v) {
@@ -252,7 +253,7 @@ public class CommunitiesActivity extends BaseActivity {
 	
 					}
 					
-				});
+				});*/
 			}
 
 			final CardViewHolder holder = (CardViewHolder) convertView.getTag();

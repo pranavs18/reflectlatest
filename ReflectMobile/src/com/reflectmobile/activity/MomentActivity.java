@@ -19,11 +19,12 @@ import android.widget.ImageView.ScaleType;
 import android.widget.TextView;
 
 import com.reflectmobile.R;
-import com.reflectmobile.data.Moment;
-import com.reflectmobile.utility.NetworkManager.HttpGetImageTask;
-import com.reflectmobile.utility.NetworkManager.HttpGetTask;
-import com.reflectmobile.utility.NetworkManager.HttpImageTaskHandler;
-import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
+import com.reflectmobiledemo.data.Moment;
+import com.reflectmobiledemo.utility.NetworkManager;
+import com.reflectmobiledemo.utility.NetworkManager.HttpGetImageTask;
+import com.reflectmobiledemo.utility.NetworkManager.HttpGetTask;
+import com.reflectmobiledemo.utility.NetworkManager.HttpImageTaskHandler;
+import com.reflectmobiledemo.utility.NetworkManager.HttpTaskHandler;
 
 public class MomentActivity extends BaseActivity {
 
@@ -83,7 +84,7 @@ public class MomentActivity extends BaseActivity {
 		};
 
 		new HttpGetTask(getMomentHandler)
-				.execute("http://rewyndr.truefitdemo.com/api/moments/"
+				.execute(NetworkManager.hostName+ "/api/moments/"
 						+ momentId);
 	}
 

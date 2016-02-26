@@ -5,8 +5,8 @@ import java.util.Calendar;
 import java.util.Locale;
 
 import com.reflectmobile.R;
+import com.reflectmobiledemo.view.ColorPickerDialog;
 
-import com.reflectmobile.view.ColorPickerDialog;
 import android.app.DatePickerDialog;
 import android.graphics.Paint;
 import android.graphics.Typeface;

@@ -7,10 +7,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.reflectmobile.R;
-import com.reflectmobile.utility.NetworkManager;
-import com.reflectmobile.utility.NetworkManager.HttpPostTask;
-import com.reflectmobile.utility.NetworkManager.HttpPutTask;
-import com.reflectmobile.utility.NetworkManager.HttpTaskHandler;
+import com.reflectmobiledemo.utility.NetworkManager;
+import com.reflectmobiledemo.utility.NetworkManager.HttpPostTask;
+import com.reflectmobiledemo.utility.NetworkManager.HttpPutTask;
+import com.reflectmobiledemo.utility.NetworkManager.HttpTaskHandler;
 
 import de.neofonie.mobile.app.android.widget.crouton.Crouton;
 import de.neofonie.mobile.app.android.widget.crouton.Style;
@@ -209,7 +209,7 @@ public class AddStoryActivity extends BaseActivity {
 			Log.e(TAG, "Error forming JSON");
 		}
 		String payload = storyData.toString();
-
+         Log.d(TAG, "Uploading story to server");
 		if (getIntent().hasExtra("memory_id")) {
 			int memoryId = getIntent().getIntExtra("memory_id", 0);
 			new HttpPutTask(httpPostTaskHandler, payload)
